@@ -48,6 +48,7 @@ public final class Journey {
 	private final Server server;
 	private final ProcessConsole proxy;
 	private final IdenticaMessages configured;
+	private final long created;
 
 	private int read;
 	private long console;
@@ -62,6 +63,7 @@ public final class Journey {
 		this.proxy = anvil.processes().proxy(proxy).console();
 		this.configured = new IdenticaMessages(anvil.processes().proxy(proxy).workDirectory().resolve(IdenticaNetwork.DATA));
 		this.console = this.proxy.checkpoint();
+		this.created = console;
 		this.read = messages.checkpoint();
 	}
 
@@ -255,14 +257,15 @@ public final class Journey {
 	/**
 	 * Expects the proxy to demand online authentication that this offline player cannot give: the client ends
 	 * disconnected for that cause, and the proxy reports the closed initial connection without ever reporting
-	 * the player as connected.
+	 * this client as connected. Connections of another client with the same username before this journey
+	 * started are not counted.
 	 */
 	public Journey authenticationRequired() {
 		reported("[initial connection] ", "has disconnected");
 		session.kicked(TIMEOUT);
 		assertEquals(DisconnectCause.AUTHENTICATION_REQUIRED, session.state().disconnectCause());
 		assertFalse(session.state().connected(), name + " must not be connected");
-		List<String> accepted = proxy.read(0, 2000).getLines().stream().map(line -> line.getText())
+		List<String> accepted = proxy.read(created, 2000).getLines().stream().map(line -> line.getText())
 				.filter(line -> line.contains("[connected player] " + name + " (") && line.contains("has connected"))
 				.toList();
 		assertEquals(connections, accepted.size(), "The proxy must not accept " + name + "; console: " + accepted);

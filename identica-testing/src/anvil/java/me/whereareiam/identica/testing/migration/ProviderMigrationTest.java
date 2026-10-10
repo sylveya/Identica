@@ -45,4 +45,44 @@ class ProviderMigrationTest {
 				.on(LOBBY)
 				.sees(m -> m.premium().getCompletion().getAuthentication().getBody());
 	}
+
+	@Test
+	@Identica(mode = JourneyMode.INTERACTIVE)
+	void movesACredentialAccountToPremiumAndBackWithItsExistingPassword(ScenarioContext anvil, YggdrasilMock yggdrasil) {
+		SessionIdentity account = yggdrasil.register("Steve");
+
+		Journey.premium(anvil, account).join()
+				.on(AUTH)
+				.sees(m -> m.identica().getEngine().getJourney().getStep().getEnrollment().getBody())
+				.enroll(Provider.CREDENTIAL)
+				.sees(m -> m.credential().getScenario().getRegistration().getPrompt())
+				.register(PASSWORD)
+				.on(LOBBY)
+				.sees(m -> m.credential().getCompletion().getRegistration().getBody())
+				.command("premium")
+				.sees(m -> m.premium().getCommands().getPremium().getConfirm())
+				.command("premium confirm")
+				.kickedWith(m -> m.premium().getCommands().getPremium().getConfirmed())
+				.rejoin()
+				.on(LOBBY)
+				.sees(m -> m.premium().getCompletion().getMigration().getBody())
+				.command("credential")
+				.sees(m -> m.credential().getCommands().getCredential().getConfirm())
+				.command("credential confirm")
+				.kickedWith(m -> m.credential().getCommands().getCredential().getConfirmed())
+				.rejoin()
+				.on(AUTH)
+				.sees(m -> m.credential().getScenario().getMigration().getVerification().getPrompt())
+				.login(PASSWORD)
+				.on(LOBBY)
+				.sees(m -> m.credential().getCompletion().getMigration().getBody())
+				.doesNotSee(m -> m.identica().getScenarios().getMigration().getCancelled())
+				.leave()
+				.rejoin()
+				.on(AUTH)
+				.sees(m -> m.credential().getScenario().getAuthentication().getPrompt())
+				.login(PASSWORD)
+				.on(LOBBY)
+				.sees(m -> m.credential().getCompletion().getAuthentication().getBody());
+	}
 }
