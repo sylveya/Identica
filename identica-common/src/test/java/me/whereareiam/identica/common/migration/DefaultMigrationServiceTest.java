@@ -170,7 +170,7 @@ class DefaultMigrationServiceTest {
 				.identity(new ConnectionIdentity(accountUniqueId, "PlayerOne", "127.0.0.1"))
 				.targetProviderId("premium")
 				.build());
-		pipelineState.putItem(new MigrationPendingState(
+		pipelineState.put(MigrationPendingState.KEY, new MigrationPendingState(
 				"premium",
 				1234L,
 				MigrationInitiator.ADMIN,
@@ -290,7 +290,7 @@ class DefaultMigrationServiceTest {
 				.identity(new ConnectionIdentity(accountUniqueId, "PlayerOne", "127.0.0.1"))
 				.targetProviderId("premium")
 				.build());
-		pipelineState.putItem(new MigrationPendingState(
+		pipelineState.put(MigrationPendingState.KEY, new MigrationPendingState(
 				"premium",
 				1234L,
 				MigrationInitiator.USER,

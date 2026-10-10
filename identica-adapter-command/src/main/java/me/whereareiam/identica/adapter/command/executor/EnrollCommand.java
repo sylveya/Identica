@@ -69,7 +69,7 @@ public class EnrollCommand {
 	 * applies this to the state of the run the command resumes.
 	 */
 	private void selectProvider(@NotNull PipelineState state, @NotNull String providerId) {
-		JourneyStateItem pending = state.item(JourneyStateItem.class).orElse(null);
+		JourneyStateItem pending = state.get(JourneyStateItem.KEY).orElse(null);
 		if (pending == null) return;
 
 		ScenarioContext context = state.getScenario(PipelineType.REGISTRATION);
@@ -98,7 +98,7 @@ public class EnrollCommand {
 
 		long ttlMs = engineProvider.get().getScenarios().getRegistration().pipelineTtlMillis();
 		if (ttlMs > 0) {
-			state.putItem(new JourneyStateItem(
+			state.put(JourneyStateItem.KEY, new JourneyStateItem(
 					pending.getJourneyMode(),
 					StageType.PROVIDER.id(),
 					0

@@ -7,7 +7,6 @@ import me.whereareiam.identica.model.pipeline.phase.PhaseResult;
 import me.whereareiam.identica.model.pipeline.prepare.PrepareAccountCandidateItem;
 import me.whereareiam.identica.model.pipeline.prepare.PrepareContextItem;
 import me.whereareiam.identica.model.pipeline.prepare.decision.PrepareDecision;
-import me.whereareiam.identica.model.pipeline.prepare.decision.PrepareDecisionItem;
 import me.whereareiam.identica.pipeline.PipelinePhase;
 import me.whereareiam.identica.pipeline.prepare.PrepareStateStore;
 import me.whereareiam.identica.pipeline.state.PipelineState;
@@ -47,24 +46,21 @@ public class StorePrepareDecisionPhase implements PipelinePhase<PrepareGroupStat
 		if (request == null)
 			return CompletableFuture.completedFuture(PhaseResult.pass(state));
 
-		PrepareDecisionItem decisionItem = pipelineState.item(PrepareDecisionItem.class).orElse(null);
-		PrepareDecision decision = decisionItem != null ? decisionItem.toDecision() : null;
-		if (decision == null) {
-			PrepareContextItem context = pipelineState.item(PrepareContextItem.class).orElse(new PrepareContextItem());
-			PrepareAccountCandidateItem candidate = pipelineState.item(PrepareAccountCandidateItem.class).orElse(null);
+		PrepareDecision decision = pipelineState.get(PrepareDecision.KEY).orElseGet(() -> {
+			PrepareContextItem context = pipelineState.get(PrepareContextItem.KEY).orElse(new PrepareContextItem());
+			PrepareAccountCandidateItem candidate = pipelineState.get(PrepareAccountCandidateItem.KEY).orElse(null);
 			String username = request.getIdentity().getUsername();
-			PrepareDecisionItem resolvedDecisionItem = PrepareDecisionItem.allow(
+			PrepareDecision allowed = PrepareDecision.allow(
 					context,
 					candidate != null ? candidate.getUniqueId() : null,
 					candidate != null && candidate.getEffectiveUsername() != null
 							? candidate.getEffectiveUsername()
 							: username
 			);
-			decision = resolvedDecisionItem.toDecision();
-			pipelineState.putItem(resolvedDecisionItem, 0L);
-		}
-		if (decision == null)
-			return CompletableFuture.completedFuture(PhaseResult.pass(state));
+			pipelineState.put(PrepareDecision.KEY, allowed);
+
+			return allowed;
+		});
 
 		String connectionKey = request.getConnectionKey();
 		if (connectionKey != null && !connectionKey.isBlank())

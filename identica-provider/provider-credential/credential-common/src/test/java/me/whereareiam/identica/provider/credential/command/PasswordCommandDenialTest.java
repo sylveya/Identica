@@ -4,7 +4,6 @@ import me.whereareiam.identica.ConnectionCoordinator;
 import me.whereareiam.identica.Serializer;
 import me.whereareiam.identica.identity.actor.Identity;
 import me.whereareiam.identica.model.auth.ConnectionDecision;
-import me.whereareiam.identica.model.config.Engine;
 import me.whereareiam.identica.model.pipeline.journey.JourneyStateItem;
 import me.whereareiam.identica.pipeline.state.PipelineState;
 import me.whereareiam.identica.pipeline.state.PipelineStateReference;
@@ -20,7 +19,6 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
-import java.time.Duration;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -50,7 +48,7 @@ class PasswordCommandDenialTest {
 	void pendingJourney() {
 		PipelineState state = PipelineState.initial();
 		state.setPipelineType(PipelineType.AUTHENTICATION);
-		state.putItem(new JourneyStateItem(null, null, 0), 60_000L);
+		state.put(JourneyStateItem.KEY, new JourneyStateItem(null, null, 0), 60_000L);
 		when(states.find(any(PipelineStateReference.class))).thenReturn(Optional.of(state));
 		when(identity.getConnectionUniqueId()).thenReturn(UUID.randomUUID());
 	}
@@ -71,7 +69,7 @@ class PasswordCommandDenialTest {
 	void loginDisconnectsOnDenial(ConnectionDecision decision) {
 		when(coordinator.advance(any())).thenReturn(CompletableFuture.completedFuture(decision));
 
-		new LoginCommand(coordinator, states, CredentialMessages::new, PasswordCommandDenialTest::engine).login(identity, "secret");
+		new LoginCommand(coordinator, states, CredentialMessages::new).login(identity, "secret");
 
 		verify(identity).disconnect(Component.text(decision.getMessage() == null ? "" : decision.getMessage()));
 	}
@@ -81,7 +79,7 @@ class PasswordCommandDenialTest {
 	@MethodSource("denials")
 	void passDisconnectsOnDenial(ConnectionDecision decision) {
 		when(coordinator.advance(any())).thenReturn(CompletableFuture.completedFuture(decision));
-		PassCommand command = new PassCommand(coordinator, states, CredentialMessages::new, PasswordCommandDenialTest::engine);
+		PassCommand command = new PassCommand(coordinator, states, CredentialMessages::new);
 
 		command.pass(identity, "secret");
 		command.passConfirm(identity, "secret");
@@ -89,9 +87,4 @@ class PasswordCommandDenialTest {
 		verify(identity, times(2)).disconnect(Component.text(decision.getMessage() == null ? "" : decision.getMessage()));
 	}
 
-	private static Engine engine() {
-		Engine engine = new Engine();
-		engine.getScenarios().getAuthentication().setPipelineTtl(Duration.ofMinutes(5));
-		return engine;
-	}
 }

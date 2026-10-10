@@ -11,7 +11,7 @@ import me.whereareiam.identica.model.identity.provider.AccountProviderProfile;
 import me.whereareiam.identica.model.pipeline.PipelineResult;
 import me.whereareiam.identica.model.pipeline.prepare.PrepareAccountCandidateItem;
 import me.whereareiam.identica.model.pipeline.prepare.PrepareContextItem;
-import me.whereareiam.identica.model.pipeline.prepare.decision.PrepareDecisionItem;
+import me.whereareiam.identica.model.pipeline.prepare.decision.PrepareDecision;
 import me.whereareiam.identica.model.provider.InternalProvider;
 import me.whereareiam.identica.model.provider.ProviderContext;
 import me.whereareiam.identica.model.provider.ProviderDescriptor;
@@ -62,13 +62,13 @@ class AuthoritativeUsernameConflictPhasesTest {
 		);
 
 		PipelineState pipelineState = PipelineState.initial();
-		pipelineState.putItem(new PrepareContextItem(null, providerContext(), null, null, null), 0L);
-		pipelineState.putItem(candidate(), 0L);
+		pipelineState.put(PrepareContextItem.KEY, new PrepareContextItem(null, providerContext(), null, null, null));
+		pipelineState.put(PrepareAccountCandidateItem.KEY, candidate());
 
 		phase.execute(pipelineState, new PrepareGroupState()).toCompletableFuture().join();
 
-		PrepareAccountCandidateItem candidate = pipelineState.item(PrepareAccountCandidateItem.class).orElseThrow();
-		PrepareDecisionItem decision = pipelineState.item(PrepareDecisionItem.class).orElseThrow();
+		PrepareAccountCandidateItem candidate = pipelineState.get(PrepareAccountCandidateItem.KEY).orElseThrow();
+		PrepareDecision decision = pipelineState.get(PrepareDecision.KEY).orElseThrow();
 		assertEquals("Resolved", candidate.getEffectiveUsername());
 		assertEquals("Resolved", candidate.getAccount().getUsername());
 		assertEquals("denied", decision.getDenialMessage());
@@ -83,10 +83,10 @@ class AuthoritativeUsernameConflictPhasesTest {
 				providerManager(false), persistence, resolver, this::messages
 		);
 		PipelineState pipelineState = PipelineState.initial();
-		pipelineState.putItem(new PrepareContextItem(null, providerContext(), null, null, null), 0L);
+		pipelineState.put(PrepareContextItem.KEY, new PrepareContextItem(null, providerContext(), null, null, null));
 		PrepareAccountCandidateItem candidate = candidate();
 		candidate.getProfile().setProviderUsername("ProviderName");
-		pipelineState.putItem(candidate, 0L);
+		pipelineState.put(PrepareAccountCandidateItem.KEY, candidate);
 		PrepareGroupState state = new PrepareGroupState();
 
 		assertFalse(phase.supports(pipelineState, state));
@@ -95,7 +95,7 @@ class AuthoritativeUsernameConflictPhasesTest {
 		assertEquals("Player", candidate.getAccount().getUsername());
 		assertNull(candidate.getEffectiveUsername());
 		assertNull(state.getResult());
-		assertTrue(pipelineState.item(PrepareDecisionItem.class).isEmpty());
+		assertTrue(pipelineState.get(PrepareDecision.KEY).isEmpty());
 		verifyNoInteractions(resolver, persistence);
 	}
 
@@ -125,7 +125,7 @@ class AuthoritativeUsernameConflictPhasesTest {
 
 		assertEquals("ClientName", context.getUsername());
 		assertEquals("Player", candidate.getAccount().getUsername());
-		assertTrue(pipelineState.item(UsernameStateItem.class).isEmpty());
+		assertTrue(pipelineState.get(UsernameStateItem.KEY).isEmpty());
 		verifyNoInteractions(persistence);
 	}
 
@@ -165,7 +165,7 @@ class AuthoritativeUsernameConflictPhasesTest {
 				.provider(providerContext())
 				.build();
 		pipelineState.setScenario(context);
-		pipelineState.putItem(snapshot(), 0L);
+		pipelineState.put(UsernameStateItem.KEY, snapshot());
 
 		PolicyState state = new PolicyState();
 		state.setResult(PipelineResult.complete());
@@ -198,13 +198,14 @@ class AuthoritativeUsernameConflictPhasesTest {
 				.provider(providerContext())
 				.build();
 		pipelineState.setScenario(context);
-		pipelineState.putItem(snapshot(), 0L);
+		pipelineState.put(UsernameStateItem.KEY, snapshot());
 
 		var state = new me.whereareiam.identica.pipeline.state.scenario.type.authentication.PolicyState();
 		state.setResult(PipelineResult.complete());
 		phase.execute(pipelineState, state).toCompletableFuture().join();
 
 		verify(resolver).handle(any(), eq("Player"));
+		assertEquals("Resolved", pipelineState.getScenario().getUsername());
 	}
 
 	private PrepareAccountCandidateItem candidate() {

@@ -114,7 +114,7 @@ class ResolveKnownAccountPhaseTest {
 		PipelineState pipelineState = PipelineState.initial();
 		phase.execute(pipelineState, state(stage)).toCompletableFuture().join();
 
-		return pipelineState.item(PrepareContextItem.class).orElseThrow();
+		return pipelineState.get(PrepareContextItem.KEY).orElseThrow();
 	}
 
 	private PrepareGroupState state(PrepareStage stage) {

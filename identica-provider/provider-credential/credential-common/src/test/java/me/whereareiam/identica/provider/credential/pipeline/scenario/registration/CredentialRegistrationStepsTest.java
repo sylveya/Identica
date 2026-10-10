@@ -66,20 +66,20 @@ class CredentialRegistrationStepsTest {
 						.hashingMethod("bcrypt")
 						.build()));
 
-		state.putItem(new CredentialRegistrationAttempt(PASSWORD, false), TTL);
+		state.put(CredentialRegistrationAttempt.KEY, new CredentialRegistrationAttempt(PASSWORD, false), TTL);
 		StepResult first = new CredentialRegistrationStep(this::messages, this::credentialSettings, this::settings, accountService,
 				cryptographyService, passwordRules).execute(context, state).join();
 
 		assertEquals(StepResult.StepStatus.CONTINUE, first.getStatus());
-		assertTrue(state.item(CredentialRegistrationAttempt.class).isEmpty(), "the step takes the attempt out of the run's state");
-		assertTrue(state.item(CredentialRegisterStateItem.class).isPresent(), "the step keeps the pending password in the run's state");
+		assertTrue(state.get(CredentialRegistrationAttempt.KEY).isEmpty(), "the step takes the attempt out of the run's state");
+		assertTrue(state.has(CredentialRegisterStateItem.KEY), "the step keeps the pending password in the run's state");
 
-		state.putItem(new CredentialRegistrationAttempt(PASSWORD, true), TTL);
+		state.put(CredentialRegistrationAttempt.KEY, new CredentialRegistrationAttempt(PASSWORD, true), TTL);
 		StepResult confirmation = new CredentialRegistrationConfirmStep(this::messages, this::settings, accountService,
 				cryptographyService).execute(context, state).join();
 
 		assertEquals(StepResult.StepStatus.COMPLETE, confirmation.getStatus());
-		assertTrue(state.item(CredentialRegisterStateItem.class).isEmpty());
+		assertTrue(state.get(CredentialRegisterStateItem.KEY).isEmpty());
 		verify(accountService).register("subject", "hash", "bcrypt", PasswordChangeReason.REGISTER);
 	}
 

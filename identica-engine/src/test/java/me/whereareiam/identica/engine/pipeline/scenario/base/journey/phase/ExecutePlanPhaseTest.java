@@ -221,7 +221,7 @@ class ExecutePlanPhaseTest {
 		assertEquals(PipelineStatus.WAITING, result.getState().getResult().getStatus());
 		assertEquals(connectionUniqueId, persistedContext.getConnectionUniqueId());
 		assertEquals(accountUniqueId, persistedContext.getAccountUniqueId());
-		assertTrue(pipelineState.item(JourneyStateItem.class).isPresent());
+		assertTrue(pipelineState.has(JourneyStateItem.KEY));
 	}
 
 	@DisplayName("Provider blocks enrich a missing provider subject from the selected provider resolvers")

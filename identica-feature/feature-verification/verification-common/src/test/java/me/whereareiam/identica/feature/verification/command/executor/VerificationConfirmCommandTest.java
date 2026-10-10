@@ -62,7 +62,7 @@ class VerificationConfirmCommandTest {
 		when(identity.getConnectionUniqueId()).thenReturn(UUID.randomUUID());
 
 		PipelineState state = PipelineState.initial();
-		state.putItem(new JourneyStateItem(null, null, 0), 60_000L);
+		state.put(JourneyStateItem.KEY, new JourneyStateItem(null, null, 0), 60_000L);
 		PipelineStateStore states = mock(PipelineStateStore.class);
 		when(states.find(any(PipelineStateReference.class))).thenReturn(Optional.of(state));
 

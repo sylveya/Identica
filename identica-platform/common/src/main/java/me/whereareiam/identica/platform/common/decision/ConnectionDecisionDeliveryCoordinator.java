@@ -42,7 +42,7 @@ public class ConnectionDecisionDeliveryCoordinator {
 				.connectionUniqueId(connectionUniqueId)
 				.build();
 		PipelineState state = pipelineStateStore.find(reference).orElse(null);
-		JourneyStateItem journey = state != null ? state.item(JourneyStateItem.class).orElse(null) : null;
+		JourneyStateItem journey = state != null ? state.get(JourneyStateItem.KEY).orElse(null) : null;
 
 		deliveryService.queue(DeliveryRequest.builder()
 				.id(UUID.randomUUID())

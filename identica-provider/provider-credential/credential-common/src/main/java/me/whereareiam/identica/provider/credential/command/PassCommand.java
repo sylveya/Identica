@@ -11,7 +11,6 @@ import me.whereareiam.identica.annotation.Definition;
 import me.whereareiam.identica.identity.actor.Identity;
 import me.whereareiam.identica.model.auth.ConnectionDecision;
 import me.whereareiam.identica.model.auth.request.AdvanceRequest;
-import me.whereareiam.identica.model.config.Engine;
 import me.whereareiam.identica.model.pipeline.journey.JourneyStateItem;
 import me.whereareiam.identica.pipeline.state.PipelineState;
 import me.whereareiam.identica.pipeline.state.PipelineStateReference;
@@ -28,7 +27,6 @@ public class PassCommand {
 	private final ConnectionCoordinator connectionCoordinator;
 	private final PipelineStateStore pipelineStateStore;
 	private final Provider<CredentialMessages> messagesProvider;
-	private final Provider<Engine> settingsProvider;
 
 	@Definition("pass")
 	@Command("pass <password>")
@@ -41,8 +39,7 @@ public class PassCommand {
 			return;
 		}
 
-		long ttlMs = resolveTtl(pipelineType);
-		handleDecision(identity, pipelineType, advance(identity, new CredentialRegistrationAttempt(password, false), ttlMs));
+		handleDecision(identity, pipelineType, advance(identity, new CredentialRegistrationAttempt(password, false)));
 	}
 
 	@Definition("passconfirm")
@@ -57,8 +54,7 @@ public class PassCommand {
 			return;
 		}
 
-		long ttlMs = resolveTtl(pipelineType);
-		handleDecision(identity, pipelineType, advance(identity, new CredentialRegistrationAttempt(repeat, true), ttlMs));
+		handleDecision(identity, pipelineType, advance(identity, new CredentialRegistrationAttempt(repeat, true)));
 	}
 
 	private void handleDecision(
@@ -82,11 +78,11 @@ public class PassCommand {
 	 * Continues the pending journey with the password the player typed. The pipeline puts the attempt into the
 	 * state of the run it starts.
 	 */
-	private ConnectionDecision advance(@NotNull Identity identity, @NotNull CredentialRegistrationAttempt attempt, long ttlMs) {
+	private ConnectionDecision advance(@NotNull Identity identity, @NotNull CredentialRegistrationAttempt attempt) {
 		AdvanceRequest request = AdvanceRequest.builder()
 				.connectionUniqueId(identity.getConnectionUniqueId())
 				.identity(identity)
-				.input(state -> state.putItem(attempt, ttlMs))
+				.input(state -> state.put(CredentialRegistrationAttempt.KEY, attempt))
 				.build();
 		return connectionCoordinator.advance(request).toCompletableFuture().join();
 	}
@@ -94,7 +90,7 @@ public class PassCommand {
 	private boolean hasPending(@NotNull Identity identity) {
 		PipelineState state = pipelineStateStore.find(reference(identity)).orElse(null);
 		if (state == null) return false;
-		return state.item(JourneyStateItem.class).isPresent();
+		return state.has(JourneyStateItem.KEY);
 	}
 
 	private PipelineType pendingPipelineType(@NotNull Identity identity) {
@@ -109,19 +105,6 @@ public class PassCommand {
 			return scenario.getMigration().getSetup().getStatus().getNoPending();
 
 		return scenario.getRegistration().getStatus().getNoPending();
-	}
-
-	private long resolveTtl(@NotNull PipelineType pipelineType) {
-		Engine settings = settingsProvider.get();
-		if (settings == null) return 0L;
-
-		Engine.Scenarios scenarios = settings.getScenarios();
-		if (pipelineType == PipelineType.MIGRATION)
-			return scenarios.getMigration().pipelineTtlMillis();
-		if (pipelineType == PipelineType.AUTHENTICATION)
-			return scenarios.getAuthentication().pipelineTtlMillis();
-
-		return scenarios.getRegistration().pipelineTtlMillis();
 	}
 
 	private PipelineStateReference reference(@NotNull Identity identity) {

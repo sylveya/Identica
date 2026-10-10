@@ -6,7 +6,7 @@ import me.whereareiam.identica.model.identity.IdentityReference;
 import me.whereareiam.identica.model.pipeline.ScenarioTransitionItem;
 import me.whereareiam.identica.model.provider.ProviderContext;
 import me.whereareiam.identica.pipeline.ScenarioContext;
-import me.whereareiam.identica.pipeline.state.PipelineStateItem;
+import me.whereareiam.identica.pipeline.state.StateKey;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -19,7 +19,13 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder(toBuilder = true)
-public class RegistrationContext implements ScenarioContext, PipelineStateItem {
+public class RegistrationContext implements ScenarioContext {
+	/**
+	 * Key of the registration scenario context in a pipeline state. Saved with a pending pipeline.
+	 */
+	public static final StateKey<RegistrationContext> KEY =
+			StateKey.persisted("scenario:registration", RegistrationContext.class);
+
 	@Builder.Default
 	private @NotNull IdentityReference identityReference = new IdentityReference();
 	private @NotNull ConnectionIdentity identity;

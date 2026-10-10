@@ -105,12 +105,12 @@ public class MigrationPipeline extends AbstractScenarioPipeline {
 
 	@Override
 	public boolean isPending(@NotNull PipelineState state) {
-		return state.item(JourneyStateItem.class).isPresent();
+		return state.has(JourneyStateItem.KEY);
 	}
 
 	@Override
 	protected void onStart(@NotNull PipelineState pipelineState, boolean resumed) {
-		pipelineState.putItem(new IdentityMetaItem(resumed), 0L);
+		pipelineState.put(IdentityMetaItem.KEY, new IdentityMetaItem(resumed));
 	}
 
 	@Override

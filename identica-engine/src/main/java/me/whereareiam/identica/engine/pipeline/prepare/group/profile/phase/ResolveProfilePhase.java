@@ -7,7 +7,7 @@ import me.whereareiam.identica.engine.pipeline.prepare.runtime.ConnectionProvide
 import me.whereareiam.identica.logging.Logger;
 import me.whereareiam.identica.model.pipeline.phase.PhaseResult;
 import me.whereareiam.identica.model.pipeline.prepare.PrepareContextItem;
-import me.whereareiam.identica.model.pipeline.prepare.decision.PrepareDecisionItem;
+import me.whereareiam.identica.model.pipeline.prepare.decision.PrepareDecision;
 import me.whereareiam.identica.model.provider.ProviderContext;
 import me.whereareiam.identica.pipeline.PipelinePhase;
 import me.whereareiam.identica.pipeline.state.PipelineState;
@@ -42,7 +42,7 @@ public class ResolveProfilePhase implements PipelinePhase<PrepareGroupState> {
 
 	@Override
 	public boolean supports(@NotNull PipelineState pipelineState, @NotNull PrepareGroupState state) {
-		return pipelineState.item(PrepareDecisionItem.class).isEmpty()
+		return pipelineState.get(PrepareDecision.KEY).isEmpty()
 				&& state.getRequest() != null
 				&& state.getRequest().getStage().includesProfile();
 	}
@@ -55,15 +55,15 @@ public class ResolveProfilePhase implements PipelinePhase<PrepareGroupState> {
 		var request = state.getRequest();
 		if (request == null) return CompletableFuture.completedFuture(PhaseResult.pass(state));
 
-		PrepareContextItem context = pipelineState.item(PrepareContextItem.class).orElse(new PrepareContextItem());
+		PrepareContextItem context = pipelineState.get(PrepareContextItem.KEY).orElse(new PrepareContextItem());
 		String requestedUsername = request.getIdentity().getUsername();
 		if (requestedUsername.isBlank()) {
 			Logger.warn("Prepare profile missing username key=%s", request.getConnectionKey());
-			pipelineState.putItem(PrepareDecisionItem.allow(
+			pipelineState.put(PrepareDecision.KEY, PrepareDecision.allow(
 					context,
 					null,
 					""
-			), 0L);
+			));
 
 			return CompletableFuture.completedFuture(PhaseResult.pass(state));
 		}
@@ -75,11 +75,11 @@ public class ResolveProfilePhase implements PipelinePhase<PrepareGroupState> {
 			Logger.debug("Prepare profile deferred username=%s stage=%s",
 					requestedUsername,
 					request.getStage());
-			pipelineState.putItem(PrepareDecisionItem.allow(
+			pipelineState.put(PrepareDecision.KEY, PrepareDecision.allow(
 					context,
 					null,
 					requestedUsername
-			), 0L);
+			));
 			return CompletableFuture.completedFuture(PhaseResult.pass(state));
 		}
 
@@ -89,7 +89,7 @@ public class ResolveProfilePhase implements PipelinePhase<PrepareGroupState> {
 				requestedUsername,
 				providerContextResolver.resolveSource(request.getIdentity(), resolution.getProviderId())
 		));
-		pipelineState.putItem(context, 0L);
+		pipelineState.put(PrepareContextItem.KEY, context);
 		Logger.debug("Prepare resolved provider username=%s provider=%s subject=%s",
 				requestedUsername,
 				resolution.getProviderId(),

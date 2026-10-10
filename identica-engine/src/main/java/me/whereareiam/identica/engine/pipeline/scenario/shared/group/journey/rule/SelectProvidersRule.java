@@ -217,7 +217,7 @@ public class SelectProvidersRule implements JourneyRule {
 	private @NotNull Set<String> resolveExcludedProviderIds(@NotNull JourneyRuleContext ctx) {
 		PipelineState state = ctx.getPipelineState();
 		if (state != null) {
-			JourneyOverrideItem override = state.item(JourneyOverrideItem.class).orElse(null);
+			JourneyOverrideItem override = state.get(JourneyOverrideItem.KEY).orElse(null);
 			if (override == null || override.getExcludedProviders() == null || override.getExcludedProviders().isEmpty())
 				return Set.of();
 
@@ -232,7 +232,7 @@ public class SelectProvidersRule implements JourneyRule {
 		if (stored == null)
 			return Set.of();
 
-		JourneyOverrideItem override = stored.item(JourneyOverrideItem.class).orElse(null);
+		JourneyOverrideItem override = stored.get(JourneyOverrideItem.KEY).orElse(null);
 		if (override == null || override.getExcludedProviders() == null || override.getExcludedProviders().isEmpty())
 			return Set.of();
 

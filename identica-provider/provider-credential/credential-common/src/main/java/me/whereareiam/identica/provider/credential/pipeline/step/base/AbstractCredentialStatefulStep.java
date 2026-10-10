@@ -43,8 +43,8 @@ public abstract class AbstractCredentialStatefulStep extends AbstractCredentialS
 	 * Takes the password a player gave for registration out of the run's state.
 	 */
 	protected final @Nullable CredentialRegistrationAttempt consumeRegistrationAttempt(@NotNull PipelineState state) {
-		CredentialRegistrationAttempt input = state.item(CredentialRegistrationAttempt.class).orElse(null);
-		if (input != null) state.removeItem(CredentialRegistrationAttempt.class);
+		CredentialRegistrationAttempt input = state.get(CredentialRegistrationAttempt.KEY).orElse(null);
+		if (input != null) state.remove(CredentialRegistrationAttempt.KEY);
 
 		return input;
 	}
@@ -53,14 +53,14 @@ public abstract class AbstractCredentialStatefulStep extends AbstractCredentialS
 	 * Takes the password a player gave for authentication out of the run's state.
 	 */
 	protected final @Nullable CredentialAuthenticationAttempt consumeAuthenticationAttempt(@NotNull PipelineState state) {
-		CredentialAuthenticationAttempt input = state.item(CredentialAuthenticationAttempt.class).orElse(null);
-		if (input != null) state.removeItem(CredentialAuthenticationAttempt.class);
+		CredentialAuthenticationAttempt input = state.get(CredentialAuthenticationAttempt.KEY).orElse(null);
+		if (input != null) state.remove(CredentialAuthenticationAttempt.KEY);
 
 		return input;
 	}
 
 	protected final @Nullable CredentialRegisterStateItem getRegisterState(@NotNull PipelineState state) {
-		return state.item(CredentialRegisterStateItem.class).orElse(null);
+		return state.get(CredentialRegisterStateItem.KEY).orElse(null);
 	}
 
 	protected final void storeRegisterState(
@@ -69,11 +69,11 @@ public abstract class AbstractCredentialStatefulStep extends AbstractCredentialS
 			long ttlMs
 	) {
 		if (ttlMs <= 0) return;
-		state.putItem(stateItem, ttlMs);
+		state.put(CredentialRegisterStateItem.KEY, stateItem, ttlMs);
 	}
 
 	protected final void clearRegisterState(@NotNull PipelineState state) {
-		state.removeItem(CredentialRegisterStateItem.class);
+		state.remove(CredentialRegisterStateItem.KEY);
 	}
 
 	protected static @NotNull String joinLines(@Nullable List<String> lines) {

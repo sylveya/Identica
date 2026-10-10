@@ -10,7 +10,7 @@ import me.whereareiam.identica.model.auth.handshake.HandshakeDecision;
 import me.whereareiam.identica.model.auth.handshake.HandshakeRequest;
 import me.whereareiam.identica.model.pipeline.phase.PhaseResult;
 import me.whereareiam.identica.model.pipeline.prepare.PrepareContextItem;
-import me.whereareiam.identica.model.pipeline.prepare.decision.PrepareDecisionItem;
+import me.whereareiam.identica.model.pipeline.prepare.decision.PrepareDecision;
 import me.whereareiam.identica.pipeline.PipelinePhase;
 import me.whereareiam.identica.pipeline.state.PipelineState;
 import me.whereareiam.identica.pipeline.state.prepare.PrepareGroupState;
@@ -41,7 +41,7 @@ public class EvaluateHandshakePhase implements PipelinePhase<PrepareGroupState> 
 
 	@Override
 	public boolean supports(@NotNull PipelineState pipelineState, @NotNull PrepareGroupState state) {
-		return pipelineState.item(PrepareDecisionItem.class).isEmpty();
+		return pipelineState.get(PrepareDecision.KEY).isEmpty();
 	}
 
 	@Override
@@ -52,7 +52,7 @@ public class EvaluateHandshakePhase implements PipelinePhase<PrepareGroupState> 
 		if (state.getRequest() == null)
 			return CompletableFuture.completedFuture(PhaseResult.pass(state));
 
-		PrepareContextItem context = pipelineState.item(PrepareContextItem.class).orElse(new PrepareContextItem());
+		PrepareContextItem context = pipelineState.get(PrepareContextItem.KEY).orElse(new PrepareContextItem());
 		if (context.getHandshake() != null) {
 			Logger.debug("Prepare reusing handshake username=%s stage=%s",
 					state.getRequest().getUsername(),
@@ -74,7 +74,7 @@ public class EvaluateHandshakePhase implements PipelinePhase<PrepareGroupState> 
         }
 
 		context.setHandshake(decision);
-		pipelineState.putItem(context, 0L);
+		pipelineState.put(PrepareContextItem.KEY, context);
 		return CompletableFuture.completedFuture(PhaseResult.pass(state));
 	}
 

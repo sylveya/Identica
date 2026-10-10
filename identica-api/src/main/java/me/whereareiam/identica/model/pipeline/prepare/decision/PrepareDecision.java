@@ -4,7 +4,9 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.ToString;
 import me.whereareiam.identica.model.auth.handshake.HandshakeDecision;
+import me.whereareiam.identica.model.pipeline.prepare.PrepareContextItem;
 import me.whereareiam.identica.model.provider.ProviderContext;
+import me.whereareiam.identica.pipeline.state.StateKey;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -31,6 +33,11 @@ import java.util.UUID;
 @ToString
 @Builder(toBuilder = true)
 public class PrepareDecision {
+	/**
+	 * Key of the decision a prepare run reached, in its pipeline state. Only lives during that run and is never saved.
+	 */
+	public static final StateKey<PrepareDecision> KEY = StateKey.run("prepare:decision", PrepareDecision.class);
+
 	private final @Nullable UUID accountUniqueId;
 	private final @Nullable String effectiveUsername;
 	/**
@@ -75,6 +82,58 @@ public class PrepareDecision {
 				.status(Status.DENY)
 				.denialMessage(message)
 				.build();
+	}
+
+	/**
+	 * Creates an allow decision for a prepared connection.
+	 *
+	 * @param context prepare context the decision carries the handshake, claimed UUID and provider from
+	 * @param accountUniqueId account the connection belongs to, if known
+	 * @param effectiveUsername username the player continues with
+	 * @return allow decision
+	 */
+	public static @NotNull PrepareDecision allow(
+			@Nullable PrepareContextItem context,
+			@Nullable UUID accountUniqueId,
+			@Nullable String effectiveUsername
+	) {
+		return from(context, accountUniqueId, effectiveUsername)
+				.status(Status.ALLOW)
+				.build();
+	}
+
+	/**
+	 * Creates a deny decision for a prepared connection.
+	 *
+	 * @param message denial message
+	 * @param context prepare context the decision carries the handshake, claimed UUID and provider from
+	 * @param accountUniqueId account the connection belongs to, if known
+	 * @param effectiveUsername username the player tried to continue with
+	 * @return deny decision
+	 */
+	public static @NotNull PrepareDecision deny(
+			@Nullable String message,
+			@Nullable PrepareContextItem context,
+			@Nullable UUID accountUniqueId,
+			@Nullable String effectiveUsername
+	) {
+		return from(context, accountUniqueId, effectiveUsername)
+				.status(Status.DENY)
+				.denialMessage(message)
+				.build();
+	}
+
+	private static @NotNull PrepareDecisionBuilder from(
+			@Nullable PrepareContextItem context,
+			@Nullable UUID accountUniqueId,
+			@Nullable String effectiveUsername
+	) {
+		return PrepareDecision.builder()
+				.accountUniqueId(accountUniqueId)
+				.effectiveUsername(effectiveUsername)
+				.claimedUniqueId(context != null ? context.getClaimedUniqueId() : null)
+				.handshake(context != null ? context.getHandshake() : null)
+				.provider(context != null ? context.getProvider() : null);
 	}
 
 	/**

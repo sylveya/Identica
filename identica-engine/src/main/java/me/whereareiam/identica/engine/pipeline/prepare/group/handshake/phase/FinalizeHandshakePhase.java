@@ -11,7 +11,7 @@ import me.whereareiam.identica.model.auth.handshake.HandshakeRequest;
 import me.whereareiam.identica.model.config.Messages;
 import me.whereareiam.identica.model.pipeline.phase.PhaseResult;
 import me.whereareiam.identica.model.pipeline.prepare.PrepareContextItem;
-import me.whereareiam.identica.model.pipeline.prepare.decision.PrepareDecisionItem;
+import me.whereareiam.identica.model.pipeline.prepare.decision.PrepareDecision;
 import me.whereareiam.identica.pipeline.PipelinePhase;
 import me.whereareiam.identica.pipeline.state.PipelineState;
 import me.whereareiam.identica.pipeline.state.prepare.PrepareGroupState;
@@ -43,7 +43,7 @@ public class FinalizeHandshakePhase implements PipelinePhase<PrepareGroupState> 
 
 	@Override
 	public boolean supports(@NotNull PipelineState pipelineState, @NotNull PrepareGroupState state) {
-		return pipelineState.item(PrepareDecisionItem.class).isEmpty();
+		return pipelineState.get(PrepareDecision.KEY).isEmpty();
 	}
 
 	@Override
@@ -55,7 +55,7 @@ public class FinalizeHandshakePhase implements PipelinePhase<PrepareGroupState> 
 		if (request == null)
 			return CompletableFuture.completedFuture(PhaseResult.pass(state));
 
-		PrepareContextItem context = pipelineState.item(PrepareContextItem.class).orElse(new PrepareContextItem());
+		PrepareContextItem context = pipelineState.get(PrepareContextItem.KEY).orElse(new PrepareContextItem());
 		HandshakeDecision resolvedHandshake = context.getHandshake();
 		HandshakeDecision decision = resolvedHandshake != null ? resolvedHandshake : HandshakeDecision.allow();
 		HandshakeDecisionEvent event = new HandshakeDecisionEvent(
@@ -81,24 +81,24 @@ public class FinalizeHandshakePhase implements PipelinePhase<PrepareGroupState> 
 							.getHandshakeDenied()));
 			}
 			context.setHandshake(resolved);
-			pipelineState.putItem(context, 0L);
-			pipelineState.putItem(PrepareDecisionItem.deny(
+			pipelineState.put(PrepareContextItem.KEY, context);
+			pipelineState.put(PrepareDecision.KEY, PrepareDecision.deny(
 					resolved.getMessage(),
 					context,
 					null,
 					request.getIdentity().getUsername()
-			), 0L);
+			));
 			return CompletableFuture.completedFuture(PhaseResult.pass(state));
 		}
 
 		context.setHandshake(resolved);
-		pipelineState.putItem(context, 0L);
+		pipelineState.put(PrepareContextItem.KEY, context);
 		if (!request.getStage().includesProfile()) {
-			pipelineState.putItem(PrepareDecisionItem.allow(
+			pipelineState.put(PrepareDecision.KEY, PrepareDecision.allow(
 					context,
 					null,
 					request.getIdentity().getUsername()
-			), 0L);
+			));
 		}
 		return CompletableFuture.completedFuture(PhaseResult.pass(state));
 	}

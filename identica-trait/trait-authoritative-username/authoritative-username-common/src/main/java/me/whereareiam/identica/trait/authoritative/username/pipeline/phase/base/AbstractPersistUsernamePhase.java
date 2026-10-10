@@ -47,7 +47,7 @@ public abstract class AbstractPersistUsernamePhase<S extends AbstractGroupState>
 		if (result == null || result.getStatus() != PipelineStatus.COMPLETE)
 			return CompletableFuture.completedFuture(PhaseResult.pass(state));
 
-		UsernameStateItem snapshot = pipelineState.item(UsernameStateItem.class).orElse(null);
+		UsernameStateItem snapshot = pipelineState.get(UsernameStateItem.KEY).orElse(null);
 		ScenarioContext context = scenarioContext(pipelineState, state);
 		if (snapshot == null || context == null || snapshot.getUniqueId() == null)
 			return CompletableFuture.completedFuture(PhaseResult.pass(state));

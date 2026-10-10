@@ -55,7 +55,7 @@ public class LoadContextPhase implements PipelinePhase<JourneyState> {
 		}
 
 		state.setContext(context);
-		state.setPending(pipelineState.item(JourneyStateItem.class).orElse(null));
+		state.setPending(pipelineState.get(JourneyStateItem.KEY).orElse(null));
 		return CompletableFuture.completedFuture(PhaseResult.pass(state));
 	}
 

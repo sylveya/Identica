@@ -7,7 +7,7 @@ import me.whereareiam.identica.model.pipeline.PipelineResult;
 import me.whereareiam.identica.model.pipeline.phase.PhaseResult;
 import me.whereareiam.identica.model.pipeline.prepare.PrepareAccountCandidateItem;
 import me.whereareiam.identica.model.pipeline.prepare.PrepareContextItem;
-import me.whereareiam.identica.model.pipeline.prepare.decision.PrepareDecisionItem;
+import me.whereareiam.identica.model.pipeline.prepare.decision.PrepareDecision;
 import me.whereareiam.identica.pipeline.PipelinePhase;
 import me.whereareiam.identica.pipeline.state.PipelineState;
 import me.whereareiam.identica.pipeline.state.prepare.PrepareGroupState;
@@ -57,9 +57,9 @@ public class ApplyAuthoritativeUsernamePhase extends AbstractUsernamePhase imple
 
 	@Override
 	public boolean supports(@NotNull PipelineState pipelineState, @NotNull PrepareGroupState state) {
-		if (pipelineState.item(PrepareDecisionItem.class).isPresent()) return false;
+		if (pipelineState.has(PrepareDecision.KEY)) return false;
 
-		PrepareAccountCandidateItem candidate = pipelineState.item(PrepareAccountCandidateItem.class).orElse(null);
+		PrepareAccountCandidateItem candidate = pipelineState.get(PrepareAccountCandidateItem.KEY).orElse(null);
 		return candidate != null
 				&& candidate.getAccount() != null
 				&& candidate.getLink() != null
@@ -72,8 +72,8 @@ public class ApplyAuthoritativeUsernamePhase extends AbstractUsernamePhase imple
 			@NotNull PipelineState pipelineState,
 			@NotNull PrepareGroupState state
 	) {
-		PrepareContextItem context = pipelineState.item(PrepareContextItem.class).orElse(new PrepareContextItem());
-		PrepareAccountCandidateItem candidate = pipelineState.item(PrepareAccountCandidateItem.class).orElse(null);
+		PrepareContextItem context = pipelineState.get(PrepareContextItem.KEY).orElse(new PrepareContextItem());
+		PrepareAccountCandidateItem candidate = pipelineState.get(PrepareAccountCandidateItem.KEY).orElse(null);
 		if (candidate == null || candidate.getAccount() == null || candidate.getLink() == null || candidate.getProfile() == null) {
 			state.setResult(PipelineResult.failed(join(messagesProvider.get().getPipeline().getPrepare().getFailed())));
 			return CompletableFuture.completedFuture(PhaseResult.pass(state));
@@ -97,15 +97,15 @@ public class ApplyAuthoritativeUsernamePhase extends AbstractUsernamePhase imple
 
 		candidate.getAccount().setUsername(result.getEffectiveUsername());
 		candidate.setEffectiveUsername(result.getEffectiveUsername());
-		pipelineState.putItem(candidate, 0L);
+		pipelineState.put(PrepareAccountCandidateItem.KEY, candidate);
 		if (!result.isDenied()) return CompletableFuture.completedFuture(PhaseResult.pass(state));
 
-		pipelineState.putItem(PrepareDecisionItem.deny(
+		pipelineState.put(PrepareDecision.KEY, PrepareDecision.deny(
 				result.getDenialMessage(),
 				context,
 				candidate.getUniqueId(),
 				result.getEffectiveUsername()
-		), 0L);
+		));
 		return CompletableFuture.completedFuture(PhaseResult.pass(state));
 	}
 

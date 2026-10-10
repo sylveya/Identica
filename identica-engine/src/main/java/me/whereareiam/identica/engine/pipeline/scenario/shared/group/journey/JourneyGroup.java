@@ -54,7 +54,7 @@ public class JourneyGroup implements PipelineGroup<JourneyState> {
 		}
 
 		if (result.getStatus() == PipelineStatus.COMPLETE)
-			pipelineState.removeItem(JourneyStateItem.class);
+			pipelineState.remove(JourneyStateItem.KEY);
 
 		return result.getStatus() == PipelineStatus.COMPLETE
 				? GroupOutcome.result(result)
