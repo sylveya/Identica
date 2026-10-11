@@ -178,6 +178,22 @@ public final class Administrator {
 		return this;
 	}
 
+	/**
+	 * Reloads Identica's configuration and expects it to succeed.
+	 */
+	public Administrator reloads() {
+		run("identica admin reload", configured.identica().getCommands().getReload().getSuccess());
+		return this;
+	}
+
+	/**
+	 * Reloads Identica's configuration and expects it to fail with the configured error answer.
+	 */
+	public Administrator failsToReload() {
+		run("identica admin reload", configured.identica().getCommands().getReload().getError());
+		return this;
+	}
+
 	private JoinRestrictionMessages.Commands joinRestriction() {
 		return configured.joinRestriction().getCommands();
 	}

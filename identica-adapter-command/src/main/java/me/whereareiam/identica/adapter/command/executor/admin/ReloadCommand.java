@@ -2,54 +2,54 @@ package me.whereareiam.identica.adapter.command.executor.admin;
 
 import com.google.inject.Inject;
 import com.google.inject.Provider;
-import com.google.inject.name.Named;
+import me.whereareiam.identica.Registry;
 import me.whereareiam.identica.Reloadable;
+import me.whereareiam.identica.Serializer;
 import me.whereareiam.identica.annotation.Command;
 import me.whereareiam.identica.annotation.Definition;
+import me.whereareiam.identica.logging.Logger;
 import me.whereareiam.identica.model.config.Messages;
-import me.whereareiam.identica.Serializer;
 import me.whereareiam.keystone.Actor;
-import me.whereareiam.keystone.model.SerializerContent;
-import net.kyori.adventure.text.Component;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.Set;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
+/**
+ * Reloads every component registered in the running proxy, in the registry's order. A component that fails to
+ * reload keeps what it had and the others still reload; the answer is a success only when none failed.
+ */
 public class ReloadCommand {
-	private final Provider<Set<Reloadable>> reloadablesProvider;
+	private final Registry<Reloadable> reloadables;
 	private final Provider<Messages> messagesProvider;
 
 	@Inject
-	public ReloadCommand(
-			@Named("reloadables") Provider<Set<Reloadable>> reloadablesProvider,
-			Provider<Messages> messagesProvider
-	) {
-		this.reloadablesProvider = reloadablesProvider;
+	public ReloadCommand(Registry<Reloadable> reloadables, Provider<Messages> messagesProvider) {
+		this.reloadables = reloadables;
 		this.messagesProvider = messagesProvider;
 	}
 
 	@Definition("admin-reload")
 	@Command("identica admin reload")
 	public void command(@NotNull Actor sender) {
-		Messages.Commands.Reload reload = messagesProvider.get().getCommands().getReload();
-
-		try {
-			// Reload all registered reloadable components
-			Set<Reloadable> reloadables = reloadablesProvider.get();
-			for (Reloadable reloadable : reloadables)
+		List<String> failures = new ArrayList<>();
+		for (Reloadable reloadable : reloadables.values()) {
+			try {
 				reloadable.reload();
-
-			reload = messagesProvider.get().getCommands().getReload();
-
-			Component component = Serializer.serialize(sender, reload.getSuccess());
-			sender.sendMessage(component);
-		} catch (Exception e) {
-			Component component = Serializer.serialize(SerializerContent.builder()
-					.receiver(sender)
-					.message(reload.getError())
-					.placeholder("error", e.getMessage())
-					.build());
-			sender.sendMessage(component);
+			} catch (Exception failure) {
+				String reason = failure.getMessage() != null ? failure.getMessage() : failure.getClass().getSimpleName();
+				Logger.warn("Could not reload %s: %s", reloadable.getClass().getSimpleName(), reason);
+				failures.add(reason);
+			}
 		}
+
+		Messages.Commands.Reload reload = messagesProvider.get().getCommands().getReload();
+		if (failures.isEmpty()) {
+			sender.sendMessage(Serializer.serialize(sender, reload.getSuccess()));
+			return;
+		}
+
+		sender.sendMessage(Serializer.serialize(sender, reload.getError(), Map.of("error", String.join("; ", failures))));
 	}
 }

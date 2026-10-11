@@ -27,6 +27,24 @@ class ReloadableRegistryTest {
 		assertEquals(List.of(first, second, extension), List.copyOf(registry.values()));
 	}
 
+	@DisplayName("Reloads components built from documents after every document")
+	@Test
+	void componentsComeAfterDocuments() {
+		ReloadableRegistry registry = new ReloadableRegistry();
+		Reloadable component = new AaaComponent();
+		registry.register(component);
+		Reloadable extension = new AaaExtension(registry);
+		Reloadable document = new MmmDocument(registry);
+
+		assertEquals(List.of(document, extension, component), List.copyOf(registry.values()));
+	}
+
+	private static final class AaaComponent implements Reloadable {
+		@Override
+		public void reload() {
+		}
+	}
+
 	private static final class AaaExtension extends ConfigExtensionProvider<Object> {
 		private AaaExtension(Registry<Reloadable> registry) {
 			super(Path.of("providers"), "providers", Object.class, registry);

@@ -34,7 +34,10 @@ import me.whereareiam.identica.type.pipeline.journey.JourneyMode;
 import me.whereareiam.identica.type.pipeline.journey.JourneyPolicy;
 import me.whereareiam.identica.type.routing.RoutingRetryMode;
 
+import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.util.ArrayList;
@@ -42,6 +45,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 /**
@@ -209,8 +213,46 @@ public final class ProxyConfiguration {
 	 * @param type model to read the file as
 	 */
 	public static <T> T generated(ScenarioContext anvil, String path, Class<T> type) {
-		Path dataDirectory = anvil.processes().proxy(anvil.definition().getEntrypoint()).workDirectory().resolve(IdenticaNetwork.DATA);
-		return CONFIGURA.read(dataDirectory.resolve(path), type);
+		return CONFIGURA.read(dataDirectory(anvil).resolve(path), type);
+	}
+
+	/**
+	 * Changes a file of the running proxy through one of Identica's models, as an administrator edits it. The
+	 * proxy reads the file again when its configuration is reloaded.
+	 *
+	 * @param anvil running network
+	 * @param path path inside Identica's data directory, such as {@code providers/Credential/messages.yml}
+	 * @param type model to read the file as
+	 * @param change change to the model before it is written back
+	 */
+	public static <T> void editGenerated(ScenarioContext anvil, String path, Class<T> type, Consumer<T> change) {
+		T document = generated(anvil, path, type);
+		change.accept(document);
+		writeGenerated(anvil, path, write(document));
+	}
+
+	/**
+	 * Replaces a file of the running proxy with content Identica cannot read, as an administrator's typo does.
+	 *
+	 * @param anvil running network
+	 * @param path path inside Identica's data directory
+	 * @param content unreadable content
+	 */
+	public static void corruptGenerated(ScenarioContext anvil, String path, String content) {
+		writeGenerated(anvil, path, content);
+	}
+
+	private static void writeGenerated(ScenarioContext anvil, String path, String content) {
+		Path file = dataDirectory(anvil).resolve(path);
+		try {
+			Files.writeString(file, content, StandardCharsets.UTF_8);
+		} catch (IOException failure) {
+			throw new UncheckedIOException("Could not write " + file, failure);
+		}
+	}
+
+	private static Path dataDirectory(ScenarioContext anvil) {
+		return anvil.processes().proxy(anvil.definition().getEntrypoint()).workDirectory().resolve(IdenticaNetwork.DATA);
 	}
 
 	/**

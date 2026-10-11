@@ -22,7 +22,7 @@ import me.whereareiam.identica.common.provider.library.ProviderLibraryPlanner;
 import me.whereareiam.identica.common.provider.library.SharedLibraryConflictTracker;
 import me.whereareiam.identica.common.provider.resolver.ProviderResolverRegistry;
 import me.whereareiam.identica.common.provider.resolver.ProviderWorkingPathResolver;
-import me.whereareiam.identica.common.registry.ReloadableRegistry;
+import me.whereareiam.identica.common.registry.RegistryConfiguration;
 import me.whereareiam.identica.config.ConfigProvider;
 import me.whereareiam.identica.conflict.ConflictService;
 import me.whereareiam.identica.conflict.ConflictType;
@@ -57,6 +57,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -97,6 +98,39 @@ class ProviderLifecycleControllerConfigBootstrapTest {
 
 		controller.disableProvider(provider);
 		assertEquals(1, ProbePlatformBinding.unregisterCount());
+	}
+
+	@DisplayName("A loaded provider's documents are reloaded through the core's registry until the provider is unloaded")
+	@Test
+	void providerDocumentsLeaveTheRegistryWhenTheProviderIsUnloaded(@TempDir Path tempDir) {
+		Injector injector = Guice.createInjector(new ProviderLifecycleTestModule(tempDir));
+		ProviderLifecycleController controller = injector.getInstance(ProviderLifecycleController.class);
+		Registry<Reloadable> reloadables = injector.getInstance(Key.get(new TypeLiteral<Registry<Reloadable>>() {}));
+		InternalProvider provider = discoveredProvider();
+
+		controller.loadProvider(provider);
+		controller.enableProvider(provider);
+		assertEquals(Set.of(TestCommandsProvider.class, TestMessagesProvider.class, TestSettingsProvider.class), types(reloadables));
+
+		controller.disableProvider(provider);
+		controller.unloadProvider(provider);
+		assertEquals(ProviderState.UNLOADED, provider.getState());
+		assertTrue(reloadables.values().isEmpty());
+	}
+
+	@DisplayName("A provider that fails to load after preparing its documents leaves nothing to reload")
+	@Test
+	void failedProviderLeavesNothingToReload(@TempDir Path tempDir) {
+		Injector injector = Guice.createInjector(new ProviderLifecycleTestModule(tempDir));
+		injector.getInstance(ProviderResolverRegistry.class).register(ignored -> false);
+		Registry<Reloadable> reloadables = injector.getInstance(Key.get(new TypeLiteral<Registry<Reloadable>>() {}));
+		InternalProvider provider = discoveredProvider();
+
+		injector.getInstance(ProviderLifecycleController.class).loadProvider(provider);
+
+		assertEquals(ProviderState.FAILED, provider.getState());
+		assertTrue(Files.exists(tempDir.resolve("providers/Test Provider/settings.yml")));
+		assertTrue(reloadables.values().isEmpty());
 	}
 
 	@Test
@@ -160,6 +194,10 @@ class ProviderLifecycleControllerConfigBootstrapTest {
 		}
 	}
 
+	private static Set<Class<?>> types(Registry<Reloadable> reloadables) {
+		return reloadables.values().stream().map(Object::getClass).collect(Collectors.toSet());
+	}
+
 	private static InternalProvider discoveredProvider() {
 		return InternalProvider.builder()
 				.path(Path.of("ignored.jar"))
@@ -192,12 +230,12 @@ class ProviderLifecycleControllerConfigBootstrapTest {
 			bind(ProviderInstanceFactory.class).asEagerSingleton();
 			bind(ProviderLifecycleController.class).asEagerSingleton();
 			bind(FeatureRegistry.class).toInstance(org.mockito.Mockito.mock(FeatureRegistry.class));
-			bind(new TypeLiteral<Registry<Reloadable>>() {}).to(ReloadableRegistry.class).asEagerSingleton();
+			install(new RegistryConfiguration());
 			bind(ConflictService.class).toInstance(new NoopConflictService());
 			bind(EventManager.class).toInstance(new NoopEventManager());
 			bind(HandshakeStore.class).toInstance(new NoopHandshakeStore());
 			bind(SchemaBootstrap.class).toInstance(contributor -> {});
-			bind(ProviderResolverRegistry.class).toInstance(new ProviderResolverRegistry());
+			bind(ProviderResolverRegistry.class).asEagerSingleton();
 		}
 
 		@Provides
@@ -247,63 +285,8 @@ class ProviderLifecycleControllerConfigBootstrapTest {
 
 		@Provides
 		@Singleton
-        ProviderInjectorFactory provideInjectorFactory() {
-			return new ProviderInjectorFactory(null) {
-				@Override
-				public Injector create(
-						Path workingPath,
-						ProviderDescriptor descriptor,
-						IdenticaProvider probeProvider,
-						ProviderPlatformExtension probePlatformExtension,
-						@NotNull List<Module> capabilityModules
-				) {
-					return Guice.createInjector(new ProviderRootModule(), new ProviderRuntimeModule(workingPath, probeProvider));
-				}
-			};
-		}
-	}
-
-	private static final class ProviderRootModule extends AbstractModule {
-		@Override
-		protected void configure() {
-			bind(new TypeLiteral<Registry<Reloadable>>() {}).to(ReloadableRegistry.class).asEagerSingleton();
-		}
-	}
-
-	private static final class ProviderRuntimeModule extends AbstractModule {
-		private final Path workingPath;
-		private final IdenticaProvider probeProvider;
-
-		private ProviderRuntimeModule(Path workingPath, IdenticaProvider probeProvider) {
-			this.workingPath = workingPath;
-			this.probeProvider = probeProvider;
-		}
-
-		@Override
-		protected void configure() {
-			if (probeProvider != null)
-				for (Module module : probeProvider.modules())
-					install(module);
-		}
-
-		@Provides
-		@Singleton
-		@Named("workingPath")
-		Path provideWorkingPath() {
-			return workingPath;
-		}
-
-		@Provides
-		@Singleton
-		ProviderDescriptor provideDescriptor() {
-			ProviderDescriptor descriptor = new ProviderDescriptor();
-			descriptor.setId("test-provider");
-			descriptor.setName("Test Provider");
-			descriptor.setVersion("1.0.0");
-			descriptor.setMain(TestProvider.class.getName());
-			descriptor.setSupportedPlatforms(List.of("any"));
-			descriptor.setLibraries(ProviderLibraries.empty());
-			return descriptor;
+		ProviderInjectorFactory provideInjectorFactory(Injector injector) {
+			return new ProviderInjectorFactory(injector);
 		}
 	}
 

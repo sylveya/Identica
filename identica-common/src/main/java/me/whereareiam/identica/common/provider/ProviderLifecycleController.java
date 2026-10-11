@@ -3,6 +3,8 @@ package me.whereareiam.identica.common.provider;
 import com.google.inject.*;
 import com.google.inject.Module;
 import lombok.RequiredArgsConstructor;
+import me.whereareiam.identica.Registry;
+import me.whereareiam.identica.Reloadable;
 import me.whereareiam.identica.common.config.ConfigInitializer;
 import me.whereareiam.identica.common.provider.classloader.ProviderRuntimeClassLoaderFactory;
 import me.whereareiam.identica.common.provider.factory.ProviderInstanceFactory;
@@ -41,6 +43,7 @@ import me.whereareiam.identica.type.provider.ProviderState;
 
 import java.net.URLClassLoader;
 import java.nio.file.Path;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.LinkedHashSet;
@@ -71,14 +74,34 @@ public class ProviderLifecycleController {
 	private final SchemaBootstrap schemaBootstrap;
 	private final EventManager eventManager;
 	private final HandshakeStore handshakeStore;
+	private final Registry<Reloadable> reloadables;
 
+	private final ConcurrentHashMap<InternalProvider, Set<Reloadable>> providerReloadables = new ConcurrentHashMap<>();
 	private final ConcurrentHashMap<InternalProvider, Set<HandshakePolicy>> providerHandshakePolicies = new ConcurrentHashMap<>();
 	private final ConcurrentHashMap<InternalProvider, Set<ProviderPlatformBinding>> providerPlatformBindings = new ConcurrentHashMap<>();
 
+	/**
+	 * Loads a provider in its own injector. What the provider registered for reloading while it loaded belongs to
+	 * it: it leaves the registry again when the provider fails to load or is unloaded.
+	 */
 	public void loadProvider(InternalProvider internal) {
 		if (internal == null || internal.getState() != ProviderState.DISCOVERED) return;
 		Logger.debug("Loading provider %s", safeId(internal));
 
+		Set<Reloadable> before = Set.copyOf(reloadables.values());
+		load(internal);
+
+		Set<Reloadable> registered = new HashSet<>(reloadables.values());
+		registered.removeAll(before);
+		if (internal.getState() == ProviderState.FAILED) {
+			registered.forEach(reloadables::unregister);
+			return;
+		}
+
+		providerReloadables.put(internal, Set.copyOf(registered));
+	}
+
+	private void load(InternalProvider internal) {
 		URLClassLoader classLoader = null;
 		try {
 			ProviderDescriptor descriptor = internal.getDescriptor();
@@ -231,6 +254,7 @@ public class ProviderLifecycleController {
 			Logger.warn("Failed to unload provider %s: %s", safeId(internal), e.getMessage());
 			fireProviderUnloaded(internal);
 		} finally {
+			unregisterReloadables(internal);
 			providerRuntimeClassLoaderFactory.close(internal.getClassLoader());
 		}
 	}
@@ -290,6 +314,12 @@ public class ProviderLifecycleController {
 		if (platformBindings != null)
 			for (ProviderPlatformBinding binding : platformBindings)
 				binding.register();
+	}
+
+	private void unregisterReloadables(InternalProvider internal) {
+		Set<Reloadable> owned = providerReloadables.remove(internal);
+		if (owned != null)
+			owned.forEach(reloadables::unregister);
 	}
 
 	private void applySchemaContributors(Injector injector) {

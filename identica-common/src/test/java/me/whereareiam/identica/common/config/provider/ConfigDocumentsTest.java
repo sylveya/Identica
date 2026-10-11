@@ -171,6 +171,20 @@ class ConfigDocumentsTest {
 		assertEquals(Duration.ofMinutes(10), provider.get().getBehavior().getHandshakeInstructionTtl());
 	}
 
+	@DisplayName("A document that cannot be read fails its reload, stays as written and keeps its values in use")
+	@Test
+	void unreadableDocumentKeepsPreviousValues() throws IOException {
+		EngineProvider provider = new EngineProvider(dataPath, registry());
+		Engine engine = provider.get();
+		write("engine", "behavior: [\n");
+
+		RuntimeException failure = assertThrows(RuntimeException.class, provider::reload);
+
+		assertTrue(failure.getMessage().contains("engine.yml"), failure.getMessage());
+		assertSame(engine, provider.get());
+		assertEquals("behavior: [\n", read("engine"));
+	}
+
 	@DisplayName("The core command document carries behavior next to its commands")
 	@Test
 	void coreCommandsCarryBehavior() throws IOException {
