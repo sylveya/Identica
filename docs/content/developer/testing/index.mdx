@@ -62,7 +62,7 @@ private static final class NoDisconnectMessages implements Consumer<ProxyConfigu
 }
 ```
 
-`proxy.engine()`, `proxy.routing()`, `proxy.settings()`, `proxy.providers()`, `proxy.messages()`, `proxy.credential()` (the Credential provider's settings), `proxy.sentinel()` and `proxy.recognition()` (those features' shared settings) return the models a test changes. `proxy.put(path, model)` adds another file, `proxy.omit(path)` leaves a file out, `proxy.corrupt(path, content)` writes one Identica cannot read, and `ProxyConfiguration.generated(anvil, path, type)` reads a file as the running proxy left it.
+`proxy.engine()`, `proxy.routing()`, `proxy.settings()`, `proxy.providers()`, `proxy.messages()`, `proxy.credential()` (the Credential provider's settings), `proxy.sentinel()`, `proxy.recognition()`, `proxy.verification()` and `proxy.joinRestriction()` (those features' shared settings) return the models a test changes. `proxy.put(path, model)` adds another file, `proxy.omit(path)` leaves a file out, `proxy.corrupt(path, content)` writes one Identica cannot read, and `ProxyConfiguration.generated(anvil, path, type)` reads a file as the running proxy left it.
 
 A journey about a lockout or a validity window configures a short duration and lets it pass with `.waits(duration)`; it never waits to give the proxy time to act, because every other step already waits for that:
 
@@ -148,4 +148,13 @@ Use `Accounts` for players who already have an account.
 
 The `auth` and `lobby` servers remember earlier tests: a player's position and inventory there belong to no test. Keep expectations on what the proxy and the player's client report, and do not rely on the state of a backend world.
 
-A message expectation names the message through Identica's own configuration models: `m.identica()` is `Messages`, `m.credential()` is `CredentialMessages`, `m.premium()` is `PremiumMessages` and `m.sentinel()` is `SentinelMessages`. The models are read from the files the running proxy generated, so the expectation follows the configured text, and a renamed or removed message stops the tests from compiling. Formatting tags are ignored and placeholders match any text. Chain `.with(...)` and `.without(...)` after `.sees(...)` to check what else the same message contains. Do not copy message text into a test.
+A message expectation names the message through Identica's own configuration models: `m.identica()` is `Messages`, `m.credential()` is `CredentialMessages`, `m.premium()` is `PremiumMessages`, `m.sentinel()` is `SentinelMessages`, `m.verification()` is `VerificationMessages` and `m.joinRestriction()` is `JoinRestrictionMessages`. The models are read from the files the running proxy generated, so the expectation follows the configured text, and a renamed or removed message stops the tests from compiling. Formatting tags are ignored and placeholders match any text. Chain `.with(...)` and `.without(...)` after `.sees(...)` to check what else the same message contains. Do not copy message text into a test.
+
+A player reads what a message hands out, such as a secret or a list of codes, with `.reads(placeholder)` after the `.sees(...)` that matched it. `Authenticator` stands in for an authenticator app, computing the codes for a secret the player read:
+
+```java
+Authenticator app = Authenticator.of(alice.command("2fa enroll totp")
+		.sees(m -> m.verification().getMethods().getTotp().getPending())
+		.reads("secret"));
+alice.command("2fa enroll confirm " + app.code());
+```

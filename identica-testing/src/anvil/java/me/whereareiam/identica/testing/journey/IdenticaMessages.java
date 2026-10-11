@@ -5,7 +5,9 @@ import me.whereareiam.configura.Config;
 import me.whereareiam.configura.Configura;
 import me.whereareiam.configura.type.Format;
 import me.whereareiam.identica.common.config.IdenticaModule;
+import me.whereareiam.identica.feature.restriction.join.config.JoinRestrictionMessages;
 import me.whereareiam.identica.feature.sentinel.model.config.SentinelMessages;
+import me.whereareiam.identica.feature.verification.config.VerificationMessages;
 import me.whereareiam.identica.model.config.Messages;
 import me.whereareiam.identica.provider.credential.config.CredentialMessages;
 import me.whereareiam.identica.provider.premium.config.PremiumMessages;
@@ -54,6 +56,20 @@ public final class IdenticaMessages {
 	 */
 	public SentinelMessages sentinel() {
 		return read("features/sentinel/messages.yml", SentinelMessages.class);
+	}
+
+	/**
+	 * Returns the verification feature's messages, which its {@code /2fa} commands answer with.
+	 */
+	public VerificationMessages verification() {
+		return read("features/verification/messages.yml", VerificationMessages.class);
+	}
+
+	/**
+	 * Returns the join restriction feature's messages.
+	 */
+	public JoinRestrictionMessages joinRestriction() {
+		return read("features/restriction/join/messages.yml", JoinRestrictionMessages.class);
 	}
 
 	private <T> T read(String file, Class<T> type) {

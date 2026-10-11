@@ -2,8 +2,10 @@ package me.whereareiam.identica.testing.journey;
 
 import me.whereareiam.anvil.api.process.ProcessConsole;
 import me.whereareiam.anvil.api.scenario.ScenarioContext;
+import me.whereareiam.identica.feature.restriction.join.config.JoinRestrictionMessages;
 import me.whereareiam.identica.model.config.Messages;
 import me.whereareiam.identica.testing.environment.IdenticaNetwork;
+import me.whereareiam.identica.testing.environment.Provider;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -98,6 +100,35 @@ public final class Administrator {
 		run("identica admin clear " + username, clear.getConfirm());
 		run("identica admin clear confirm", clear.getSuccess());
 		return this;
+	}
+
+	/**
+	 * Sets a new password for a player's Credential account.
+	 */
+	public Administrator setsPassword(String username, String password) {
+		run("identica credential setpassword " + username + " " + password, configured.credential().getCommands().getAdmin().getPasswordSet());
+		return this;
+	}
+
+	/**
+	 * Restricts new joins through a provider to the players its configured signals allow.
+	 */
+	public Administrator restrictsJoins(Provider provider) {
+		run("identica admin provider restriction join enable " + provider.getId(), joinRestriction().getEnabled());
+		return this;
+	}
+
+	/**
+	 * Tries to restrict joins through a provider whose join restriction is not configured, and expects Identica to
+	 * refuse.
+	 */
+	public Administrator cannotRestrictJoins(Provider provider) {
+		run("identica admin provider restriction join enable " + provider.getId(), joinRestriction().getEnableFailed());
+		return this;
+	}
+
+	private JoinRestrictionMessages.Commands joinRestriction() {
+		return configured.joinRestriction().getCommands();
 	}
 
 	/**

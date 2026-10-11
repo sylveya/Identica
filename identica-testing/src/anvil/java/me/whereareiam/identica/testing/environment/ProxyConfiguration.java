@@ -18,8 +18,12 @@ import me.whereareiam.identica.model.config.Settings;
 import me.whereareiam.identica.model.config.provider.Providers;
 import me.whereareiam.identica.feature.recognition.config.RecognitionSettings;
 import me.whereareiam.identica.feature.recognition.config.defaults.RecognitionSettingsDefaults;
+import me.whereareiam.identica.feature.restriction.join.config.JoinRestrictionSettings;
+import me.whereareiam.identica.feature.restriction.join.config.defaults.JoinRestrictionSettingsDefaults;
 import me.whereareiam.identica.feature.sentinel.config.defaults.SentinelSettingsDefaults;
 import me.whereareiam.identica.feature.sentinel.model.config.SentinelSettings;
+import me.whereareiam.identica.feature.verification.config.defaults.VerificationDefaults;
+import me.whereareiam.identica.feature.verification.model.config.VerificationSettings;
 import me.whereareiam.identica.model.routing.attempt.RoutingAttemptPolicy;
 import me.whereareiam.identica.provider.credential.config.CredentialSettings;
 import me.whereareiam.identica.provider.credential.config.defaults.CredentialSettingsDefaults;
@@ -57,6 +61,8 @@ public final class ProxyConfiguration {
 	private static final String CREDENTIAL = "providers/Credential/settings.yml";
 	private static final String SENTINEL = "features/sentinel/settings.yml";
 	private static final String RECOGNITION = "features/recognition/settings.yml";
+	private static final String VERIFICATION = "features/verification/settings.yml";
+	private static final String JOIN_RESTRICTION = "features/restriction/join/settings.yml";
 
 	private final String name;
 	private final Map<String, Object> documents = new LinkedHashMap<>();
@@ -139,6 +145,22 @@ public final class ProxyConfiguration {
 	 */
 	public RecognitionSettings recognition() {
 		return (RecognitionSettings) documents.computeIfAbsent(RECOGNITION, ignored -> new RecognitionSettingsDefaults().supply(new RecognitionSettings()));
+	}
+
+	/**
+	 * Returns the verification feature's shared settings, starting from their defaults. The proxy only gets this
+	 * file from the test once a test asks for it.
+	 */
+	public VerificationSettings verification() {
+		return (VerificationSettings) documents.computeIfAbsent(VERIFICATION, ignored -> new VerificationDefaults().supply(new VerificationSettings()));
+	}
+
+	/**
+	 * Returns the join restriction feature's shared settings, starting from their defaults. The proxy only gets
+	 * this file from the test once a test asks for it.
+	 */
+	public JoinRestrictionSettings joinRestriction() {
+		return (JoinRestrictionSettings) documents.computeIfAbsent(JOIN_RESTRICTION, ignored -> new JoinRestrictionSettingsDefaults().supply(new JoinRestrictionSettings()));
 	}
 
 	/**
