@@ -10,7 +10,6 @@ import me.whereareiam.identica.model.pipeline.GroupOutcome;
 import me.whereareiam.identica.model.pipeline.PipelineResult;
 import me.whereareiam.identica.model.pipeline.prepare.PrepareRequest;
 import me.whereareiam.identica.model.pipeline.prepare.decision.PrepareDecision;
-import me.whereareiam.identica.model.pipeline.prepare.decision.PrepareDecisionItem;
 import me.whereareiam.identica.pipeline.PipelineGroup;
 import me.whereareiam.identica.pipeline.state.PipelineState;
 import me.whereareiam.identica.pipeline.state.prepare.PrepareGroupState;
@@ -62,11 +61,7 @@ public class PreparePipeline {
 						) {
 						}
 					})
-					.thenApply(ignored -> {
-						PrepareDecisionItem decisionItem = pipelineState.item(PrepareDecisionItem.class).orElse(null);
-						return decisionItem != null ? decisionItem.toDecision() : null;
-					})
-					.thenApply(decision -> decision != null ? decision : PrepareDecision.allow())
+					.thenApply(ignored -> pipelineState.get(PrepareDecision.KEY).orElseGet(PrepareDecision::allow))
 					.toCompletableFuture();
 		} catch (Exception e) {
 			Logger.severe("Prepare failed stage=%s username=%s error=%s",

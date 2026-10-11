@@ -8,7 +8,7 @@ import me.whereareiam.identica.Serializer;
 import me.whereareiam.identica.model.pipeline.phase.PhaseResult;
 import me.whereareiam.identica.model.pipeline.prepare.PrepareAccountCandidateItem;
 import me.whereareiam.identica.model.pipeline.prepare.PrepareContextItem;
-import me.whereareiam.identica.model.pipeline.prepare.decision.PrepareDecisionItem;
+import me.whereareiam.identica.model.pipeline.prepare.decision.PrepareDecision;
 import me.whereareiam.identica.model.provider.ProviderContext;
 import me.whereareiam.identica.pipeline.PipelinePhase;
 import me.whereareiam.identica.pipeline.state.PipelineState;
@@ -52,7 +52,7 @@ public class ApplyJoinRestrictionPhase implements PipelinePhase<PrepareGroupStat
 
 	@Override
 	public boolean supports(@NotNull PipelineState pipelineState, @NotNull PrepareGroupState state) {
-		return pipelineState.item(PrepareDecisionItem.class).isEmpty();
+		return pipelineState.get(PrepareDecision.KEY).isEmpty();
 	}
 
 	@Override
@@ -62,7 +62,7 @@ public class ApplyJoinRestrictionPhase implements PipelinePhase<PrepareGroupStat
 	) {
 		if (state.getRequest() == null) return CompletableFuture.completedFuture(PhaseResult.pass(state));
 
-		PrepareContextItem context = pipelineState.item(PrepareContextItem.class).orElse(new PrepareContextItem());
+		PrepareContextItem context = pipelineState.get(PrepareContextItem.KEY).orElse(new PrepareContextItem());
 		ProviderContext provider = context.getProvider();
 		if (provider == null || provider.getProviderId() == null || provider.getProviderId().isBlank())
 			return CompletableFuture.completedFuture(PhaseResult.pass(state));
@@ -79,9 +79,9 @@ public class ApplyJoinRestrictionPhase implements PipelinePhase<PrepareGroupStat
 		if (decision.isAllowed())
 			return CompletableFuture.completedFuture(PhaseResult.pass(state));
 
-		PrepareAccountCandidateItem candidate = pipelineState.item(PrepareAccountCandidateItem.class).orElse(null);
+		PrepareAccountCandidateItem candidate = pipelineState.get(PrepareAccountCandidateItem.KEY).orElse(null);
 		String providerName = providerOperations.displayProviderName(provider.getProviderId());
-		pipelineState.putItem(PrepareDecisionItem.deny(
+		pipelineState.put(PrepareDecision.KEY, PrepareDecision.deny(
 				Serializer.render(String.join("\n", messagesProvider.get().getDenied()), Map.of(
 						"providerId", provider.getProviderId(),
 						"providerName", providerName != null ? providerName : provider.getProviderId(),
@@ -90,7 +90,7 @@ public class ApplyJoinRestrictionPhase implements PipelinePhase<PrepareGroupStat
 				context,
 				candidate != null ? candidate.getUniqueId() : null,
 				state.getRequest().getIdentity().getUsername()
-		), 0L);
+		));
 		return CompletableFuture.completedFuture(PhaseResult.pass(state));
 	}
 

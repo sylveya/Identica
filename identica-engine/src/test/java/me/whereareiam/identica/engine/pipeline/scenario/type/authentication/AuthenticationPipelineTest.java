@@ -20,10 +20,11 @@ import me.whereareiam.identica.model.pipeline.journey.JourneyStateItem;
 import me.whereareiam.identica.pipeline.PipelineGroup;
 import me.whereareiam.identica.pipeline.PipelineRegistry;
 import me.whereareiam.identica.pipeline.ScenarioContext;
-import me.whereareiam.identica.pipeline.state.PipelineInputItem;
 import me.whereareiam.identica.pipeline.state.PipelineState;
 import me.whereareiam.identica.pipeline.state.PipelineStateReference;
 import me.whereareiam.identica.pipeline.state.PipelineStateStore;
+import me.whereareiam.identica.pipeline.state.StateKey;
+import me.whereareiam.identica.pipeline.state.StoredPipelineState;
 import me.whereareiam.identica.type.pipeline.PipelineStatus;
 import me.whereareiam.identica.type.pipeline.PipelineType;
 import me.whereareiam.identica.util.EventUtil;
@@ -45,6 +46,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -74,7 +76,7 @@ class AuthenticationPipelineTest {
 				.accountUniqueId(UUID.randomUUID())
 				.identity(new ConnectionIdentity(connectionId, "PlayerOne", "127.0.0.1"))
 				.build());
-		stored.putItem(new JourneyStateItem(null, null, 0), 60_000L);
+		stored.put(JourneyStateItem.KEY, new JourneyStateItem(null, null, 0), 60_000L);
 
 		PipelineStateStore store = mock(PipelineStateStore.class);
 		when(store.find(any(PipelineStateReference.class))).thenReturn(Optional.of(stored));
@@ -85,16 +87,16 @@ class AuthenticationPipelineTest {
 
 		pipeline.executeAdvance(ResumeRequest.builder()
 				.connectionUniqueId(connectionId)
-				.input(state -> state.putItem(new JourneyOverrideItem(null, "chosen", 0, false, null, List.of()), 60_000L))
+				.input(state -> state.put(JourneyOverrideItem.KEY, chosenStage(), 60_000L))
 				.build()).toCompletableFuture().join();
 
 		assertSame(stored, run.getValue(), "the run works on the state the pipeline loaded");
-		assertEquals("chosen", run.getValue().item(JourneyOverrideItem.class).orElseThrow().getStageId());
+		assertEquals("chosen", run.getValue().get(JourneyOverrideItem.KEY).orElseThrow().getStageId());
 	}
 
-	@DisplayName("A run waiting for the player never saves the input items it was given")
+	@DisplayName("A run waiting for the player never saves the values of run keys it was given")
 	@Test
-	void waitingRunDoesNotSaveInputItems() {
+	void waitingRunDoesNotSaveRunValues() {
 		EventUtil.initialize(mock(EventManager.class));
 		UUID connectionId = UUID.randomUUID();
 		PipelineState stored = PipelineState.initial();
@@ -104,7 +106,7 @@ class AuthenticationPipelineTest {
 				.accountUniqueId(UUID.randomUUID())
 				.identity(new ConnectionIdentity(connectionId, "PlayerOne", "127.0.0.1"))
 				.build());
-		stored.putItem(new JourneyStateItem(null, null, 0), 60_000L);
+		stored.put(JourneyStateItem.KEY, new JourneyStateItem(null, null, 0), 60_000L);
 
 		PipelineStateStore store = mock(PipelineStateStore.class);
 		when(store.find(any(PipelineStateReference.class))).thenReturn(Optional.of(stored));
@@ -121,25 +123,66 @@ class AuthenticationPipelineTest {
 		PipelineResult result = pipeline.executeAdvance(ResumeRequest.builder()
 				.connectionUniqueId(connectionId)
 				.input(state -> {
-					state.putItem(new TypedPassword("Secret-123"), 60_000L);
-					state.putItem(new JourneyOverrideItem(null, "chosen", 0, false, null, List.of()), 60_000L);
+					state.put(TypedPassword.KEY, new TypedPassword("Secret-123"), 60_000L);
+					state.put(JourneyOverrideItem.KEY, chosenStage(), 60_000L);
 				})
 				.build()).toCompletableFuture().join();
 
 		ArgumentCaptor<PipelineState> saved = ArgumentCaptor.forClass(PipelineState.class);
 		verify(store).save(any(PipelineStateReference.class), saved.capture(), anyLong());
 		assertEquals(PipelineStatus.WAITING, result.getStatus());
-		assertTrue(saved.getValue().item(TypedPassword.class).isEmpty(), "the typed password is saved");
-		assertTrue(saved.getValue().getItems().stream().noneMatch(item -> item.getPayload().contains("Secret-123")));
-		assertEquals("chosen", saved.getValue().item(JourneyOverrideItem.class).orElseThrow().getStageId(),
+		assertTrue(saved.getValue().get(TypedPassword.KEY).isEmpty(), "the typed password is saved");
+		assertTrue(saved.getValue().store().getValues().values().stream()
+				.noneMatch(value -> value.getPayload().contains("Secret-123")));
+		assertEquals("chosen", saved.getValue().get(JourneyOverrideItem.KEY).orElseThrow().getStageId(),
 				"other input is saved with the state");
-		assertTrue(stored.item(TypedPassword.class).isEmpty(), "the run's state keeps the typed password");
+		assertTrue(stored.get(TypedPassword.KEY).isEmpty(), "the run's state keeps the typed password");
+	}
+
+	@DisplayName("A run discards a saved state when a step cannot read a value back")
+	@Test
+	void runDiscardsAnUnreadableState() {
+		EventUtil.initialize(mock(EventManager.class));
+		UUID connectionId = UUID.randomUUID();
+		PipelineState saved = PipelineState.initial();
+		saved.setPipelineType(PipelineType.AUTHENTICATION);
+		saved.setScenario(AuthContext.builder()
+				.connectionUniqueId(connectionId)
+				.accountUniqueId(UUID.randomUUID())
+				.identity(new ConnectionIdentity(connectionId, "PlayerOne", "127.0.0.1"))
+				.build());
+		StoredPipelineState stored = saved.store();
+		stored.getValues().put(JourneyStateItem.KEY.id(), new StoredPipelineState.StoredValue("{\"stepIndex\": \"first\"}", 0L));
+
+		PipelineStateStore store = mock(PipelineStateStore.class);
+		when(store.find(any(PipelineStateReference.class))).thenReturn(Optional.of(PipelineState.restore(stored)));
+		PipelineExecutor executor = mock(PipelineExecutor.class);
+		when(executor.execute(any(), any(), any())).thenAnswer(invocation -> {
+			PipelineState state = invocation.getArgument(1);
+			state.get(JourneyStateItem.KEY);
+			return CompletableFuture.completedFuture(null);
+		});
+		TestAuthenticationPipeline pipeline = new TestAuthenticationPipeline(store, executor);
+
+		PipelineResult result = pipeline.executeAdvance(ResumeRequest.builder()
+				.connectionUniqueId(connectionId)
+				.build()).toCompletableFuture().join();
+
+		assertEquals(PipelineStatus.FAILED, result.getStatus());
+		verify(store).clear(any(PipelineStateReference.class));
+		verify(store, never()).save(any(), any(), anyLong());
+	}
+
+	private static JourneyOverrideItem chosenStage() {
+		return new JourneyOverrideItem(null, "chosen", 0, false, null, List.of());
 	}
 
 	@Getter
 	@NoArgsConstructor
 	@AllArgsConstructor
-	public static final class TypedPassword implements PipelineInputItem {
+	public static final class TypedPassword {
+		private static final StateKey<TypedPassword> KEY = StateKey.run("test:typed-password", TypedPassword.class);
+
 		private String password;
 	}
 
@@ -162,6 +205,7 @@ class AuthenticationPipelineTest {
 		private static Messages messages() {
 			Messages.Scenarios.Authentication authentication = new Messages.Scenarios.Authentication();
 			authentication.setNoCompletionPipeline(List.of("no completion"));
+			authentication.setAuthenticationFailed(List.of("failed"));
 			Messages.Scenarios scenarios = new Messages.Scenarios();
 			scenarios.setAuthentication(authentication);
 

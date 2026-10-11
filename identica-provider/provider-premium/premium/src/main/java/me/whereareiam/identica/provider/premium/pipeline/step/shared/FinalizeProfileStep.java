@@ -50,7 +50,7 @@ public class FinalizeProfileStep extends AbstractProfileVerificationStep impleme
 			return CompletableFuture.completedFuture(failed());
 		}
 
-		state.removeItem(PremiumVerifyAttemptItem.class);
+		state.remove(PremiumVerifyAttemptItem.KEY);
 		ProviderContext existing = context.getProvider();
 		ProviderContext provider = ProviderContext.builder()
 				.providerId(PremiumConstants.PROVIDER_ID)

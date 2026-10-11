@@ -64,7 +64,7 @@ public abstract class AbstractOpenSessionPhase<C extends ScenarioContext, S exte
 
 					context.setAccountUniqueId(openedSession.getUniqueId());
 					pipelineState.setScenario(context);
-					pipelineState.removeItem(IdentityMetaItem.class);
+					pipelineState.remove(IdentityMetaItem.KEY);
 					publishSessionOpened(context.getConnectionUniqueId(), openedSession);
 					state.setResult(result);
 					return PhaseResult.pass(state);

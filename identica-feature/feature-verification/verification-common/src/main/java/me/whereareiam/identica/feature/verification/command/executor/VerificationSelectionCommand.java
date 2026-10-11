@@ -105,7 +105,8 @@ public class VerificationSelectionCommand extends ProtectedActionCommand<Void> {
 		long ttlMs = verificationProvider.get().challengeTtlMillis();
 		PipelineStateReference reference = reference(identity);
 		PipelineState state = pipelineStateStore.find(reference).orElse(PipelineState.initial());
-		state.putItem(new VerificationDisablePendingState(methodId, System.currentTimeMillis()), ttlMs);
+		VerificationDisablePendingState pending = new VerificationDisablePendingState(methodId, System.currentTimeMillis());
+		state.put(VerificationDisablePendingState.KEY, pending, ttlMs);
 		pipelineStateStore.save(reference, state, ttlMs);
 		verificationService.resolveVerification(VerificationResolutionRequest.builder()
 				.uniqueId(accountUniqueId)

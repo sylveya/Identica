@@ -16,10 +16,10 @@ import java.util.concurrent.CompletableFuture;
  *
  * <pre>{@code
  * public CompletableFuture<StepResult> execute(ScenarioContext context, PipelineState state) {
- *     Attempt attempt = state.item(Attempt.class).orElse(null);
+ *     Attempt attempt = state.get(Attempt.KEY).orElse(null);
  *     if (attempt == null) return CompletableFuture.completedFuture(StepResult.waiting(prompt));
  *
- *     state.removeItem(Attempt.class);
+ *     state.remove(Attempt.KEY);
  *     return CompletableFuture.completedFuture(StepResult.complete(context));
  * }
  * }</pre>

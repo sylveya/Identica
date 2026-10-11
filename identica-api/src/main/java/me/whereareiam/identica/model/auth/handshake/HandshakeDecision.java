@@ -1,8 +1,6 @@
 package me.whereareiam.identica.model.auth.handshake;
 
-import lombok.AccessLevel;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import lombok.ToString;
 import me.whereareiam.identica.model.HandshakeAttributeKey;
@@ -27,7 +25,6 @@ import java.util.Optional;
 @Getter
 @ToString
 @RequiredArgsConstructor
-@NoArgsConstructor(access = AccessLevel.PRIVATE, force = true)
 public class HandshakeDecision {
 	private final Status status;
 	private final String message;

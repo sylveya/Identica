@@ -56,13 +56,13 @@ public abstract class AbstractSynchronizeUsernamePhase<S extends AbstractGroupSt
 		String previousUsername = account.getUsername();
 		synchronize(account, link, profile);
 		context.getIdentity().setUsername(account.getUsername());
-		pipelineState.putItem(UsernameStateItem.builder()
+		pipelineState.put(UsernameStateItem.KEY, UsernameStateItem.builder()
 				.uniqueId(account.getUniqueId())
 				.previousUsername(previousUsername)
 				.providerId(link.getProviderId())
 				.providerSubject(link.getProviderSubject())
 				.source(source)
-				.build(), 0L);
+				.build());
 
 		return CompletableFuture.completedFuture(PhaseResult.pass(state));
 	}

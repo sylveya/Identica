@@ -59,7 +59,7 @@ class CredentialAuthenticationCredentialStepTest {
 				.provider(me.whereareiam.identica.model.provider.ProviderContext.of("credential", "subject", "whereareiam", null))
 				.build();
 		PipelineState state = PipelineState.initial();
-		state.putItem(new CredentialAuthenticationAttempt("credential"), settings().getScenarios().getAuthentication().pipelineTtlMillis());
+		state.put(CredentialAuthenticationAttempt.KEY, new CredentialAuthenticationAttempt("credential"));
 		CredentialAccount account = CredentialAccount.builder()
 				.providerId("credential")
 				.providerSubject("subject")
@@ -73,7 +73,7 @@ class CredentialAuthenticationCredentialStepTest {
 		StepResult result = step.execute(context, state).join();
 
 		assertEquals(StepResult.StepStatus.CONTINUE, result.getStatus());
-		assertTrue(state.item(CredentialAuthenticationAttempt.class).isEmpty(), "the step takes the attempt out of the run's state");
+		assertTrue(state.get(CredentialAuthenticationAttempt.KEY).isEmpty(), "the step takes the attempt out of the run's state");
 	}
 
 	private CredentialMessages messages() {

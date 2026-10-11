@@ -21,6 +21,7 @@ import me.whereareiam.identica.pipeline.state.PipelineInput;
 import me.whereareiam.identica.pipeline.state.PipelineState;
 import me.whereareiam.identica.pipeline.state.PipelineStateReference;
 import me.whereareiam.identica.pipeline.state.PipelineStateStore;
+import me.whereareiam.identica.pipeline.state.exception.UnreadablePipelineStateException;
 import me.whereareiam.identica.type.ScenarioResolution;
 import me.whereareiam.identica.type.pipeline.PipelineStatus;
 import me.whereareiam.identica.type.pipeline.PipelineType;
@@ -32,6 +33,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 import java.util.concurrent.CompletionStage;
 
 @RequiredArgsConstructor
@@ -59,6 +61,19 @@ public abstract class AbstractScenarioPipeline {
 	}
 
 	private @NotNull CompletionStage<PipelineResult> execute(
+			@Nullable ConnectionRequest request,
+			@Nullable ResumeRequest pendingRequest,
+			@NotNull PendingMode pendingMode
+	) {
+		try {
+			return start(request, pendingRequest, pendingMode);
+		} catch (UnreadablePipelineStateException e) {
+			discardUnreadable(null, pendingRequest, e);
+			return CompletableFuture.completedFuture(failedAuth());
+		}
+	}
+
+	private @NotNull CompletionStage<PipelineResult> start(
 			@Nullable ConnectionRequest request,
 			@Nullable ResumeRequest pendingRequest,
 			@NotNull PendingMode pendingMode
@@ -186,9 +201,20 @@ public abstract class AbstractScenarioPipeline {
 						executionState.result = outcome.getResult();
 					}
 				})
-				.thenApply(ignored -> {
-					// Input such as a password belongs to this run, whether or not a step took it.
-					pipelineState.removeInputItems();
+				.handle((ignored, error) -> {
+					if (error != null) {
+						Throwable cause = error instanceof CompletionException ? error.getCause() : error;
+						if (!(cause instanceof UnreadablePipelineStateException unreadable))
+							throw error instanceof CompletionException completion
+									? completion
+									: new CompletionException(error);
+
+						discardUnreadable(pipelineState, pendingRequest, unreadable);
+						return failedAuth();
+					}
+
+					// Values of run keys, such as a password, belong to this run, whether or not a step took them.
+					pipelineState.removeRunValues();
 					PipelineResult result = executionState.result;
 					if (result == null) result = failedNoCompletion();
 					result = result.withState(pipelineState);
@@ -224,7 +250,7 @@ public abstract class AbstractScenarioPipeline {
 			pipelineStateStore.save(reference, pipelineState, ttlMs);
 			if (resumeRequest == null) {
 				ScenarioContext context = resolveScenarioContext(pipelineState);
-				JourneyMode journeyMode = pipelineState.item(JourneyStateItem.class)
+				JourneyMode journeyMode = pipelineState.get(JourneyStateItem.KEY)
 						.map(JourneyStateItem::getJourneyMode)
 						.orElse(null);
 
@@ -269,6 +295,23 @@ public abstract class AbstractScenarioPipeline {
 		if (stateType == null) return null;
 
 		return pipelineState.getScenario(stateType);
+	}
+
+	/**
+	 * Discards a saved state that holds a value this version cannot read back, so the player starts over instead of
+	 * resuming a journey whose state is incomplete.
+	 */
+	private void discardUnreadable(
+			@Nullable PipelineState pipelineState,
+			@Nullable ResumeRequest pendingRequest,
+			@NotNull UnreadablePipelineStateException exception
+	) {
+		Logger.warn("%s discarded a saved pipeline state: %s", pipelineType, exception.getMessage());
+
+		// A running state read its scenario before the run started, so the scenario itself is readable.
+		ScenarioContext context = pipelineState != null ? pipelineState.getScenario() : null;
+		if (context != null) pipelineStateStore.clear(PipelineStateReference.from(context));
+		if (pendingRequest != null) pipelineStateStore.clear(PipelineStateReference.from(pendingRequest));
 	}
 
 	private @NotNull PipelineResult failedAuth() {

@@ -77,7 +77,7 @@ public class OpenSessionPhase implements PipelinePhase<SessionState> {
 
 					authContext.setAccountUniqueId(openedSession.getUniqueId());
 					pipelineState.setScenario(authContext);
-					pipelineState.removeItem(IdentityMetaItem.class);
+					pipelineState.remove(IdentityMetaItem.KEY);
 					publishSessionOpened(
 							pipelineType,
 							authContext.getConnectionUniqueId(),

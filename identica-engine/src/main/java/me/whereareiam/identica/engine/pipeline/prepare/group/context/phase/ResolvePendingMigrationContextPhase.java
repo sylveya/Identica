@@ -58,7 +58,7 @@ public class ResolvePendingMigrationContextPhase implements PipelinePhase<Prepar
 				.build()).orElse(null);
 		if (pendingState == null || pendingState.getPipelineType() != PipelineType.MIGRATION)
 			return CompletableFuture.completedFuture(PhaseResult.pass(state));
-		if (pendingState.item(MigrationPendingState.class).isEmpty())
+		if (pendingState.get(MigrationPendingState.KEY).isEmpty())
 			return CompletableFuture.completedFuture(PhaseResult.pass(state));
 
 		MigrationContext migration = (MigrationContext) pendingState.getScenario(PipelineType.MIGRATION);
@@ -69,9 +69,9 @@ public class ResolvePendingMigrationContextPhase implements PipelinePhase<Prepar
 		if (resolved == null)
 			return CompletableFuture.completedFuture(PhaseResult.pass(state));
 
-		PrepareContextItem context = pipelineState.item(PrepareContextItem.class).orElse(new PrepareContextItem());
+		PrepareContextItem context = pipelineState.get(PrepareContextItem.KEY).orElse(new PrepareContextItem());
 		context.setProvider(resolved);
-		pipelineState.putItem(context, 0L);
+		pipelineState.put(PrepareContextItem.KEY, context);
 		Logger.debug(
 				"Prepare resolved pending migration context username=%s provider=%s key=%s",
 				state.getRequest().getIdentity().getUsername(),

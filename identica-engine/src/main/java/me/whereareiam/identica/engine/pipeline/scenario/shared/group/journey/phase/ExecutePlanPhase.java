@@ -334,7 +334,7 @@ public class ExecutePlanPhase implements PipelinePhase<JourneyState> {
 	}
 
 	private @NotNull Set<String> loadExcludedProviders(@NotNull PipelineState pipelineState) {
-		JourneyOverrideItem override = pipelineState.item(JourneyOverrideItem.class).orElse(null);
+		JourneyOverrideItem override = pipelineState.get(JourneyOverrideItem.KEY).orElse(null);
 		if (override == null || override.getExcludedProviders() == null || override.getExcludedProviders().isEmpty())
 			return Set.of();
 
@@ -357,7 +357,7 @@ public class ExecutePlanPhase implements PipelinePhase<JourneyState> {
 		if (ttlMs <= 0)
 			return;
 
-		JourneyOverrideItem current = pipelineState.item(JourneyOverrideItem.class).orElse(null);
+		JourneyOverrideItem current = pipelineState.get(JourneyOverrideItem.KEY).orElse(null);
 		List<String> existing = current != null && current.getExcludedProviders() != null
 				? current.getExcludedProviders()
 				: List.of();
@@ -379,7 +379,7 @@ public class ExecutePlanPhase implements PipelinePhase<JourneyState> {
 				List.copyOf(merged)
 		);
 
-		pipelineState.putItem(updated, ttlMs);
+		pipelineState.put(JourneyOverrideItem.KEY, updated, ttlMs);
 	}
 
 	private @NotNull JourneyExecutionPlan removeExcludedProviders(
@@ -644,7 +644,7 @@ public class ExecutePlanPhase implements PipelinePhase<JourneyState> {
 		boolean clearProvider = false;
 		String overrideProviderId = null;
 
-		JourneyOverrideItem override = pipelineState.item(JourneyOverrideItem.class).orElse(null);
+		JourneyOverrideItem override = pipelineState.get(JourneyOverrideItem.KEY).orElse(null);
 		if (override != null) {
 			if (override.getJourneyMode() != null)
 				resolvedJourneyMode = override.getJourneyMode();
@@ -665,7 +665,8 @@ public class ExecutePlanPhase implements PipelinePhase<JourneyState> {
 
 		pipelineState.setScenario(context);
 		long ttlMs = scenarioSettings(pipelineState.getPipelineType()).pipelineTtlMillis();
-		pipelineState.putItem(new JourneyStateItem(resolvedJourneyMode, resolvedStageId, resolvedStepIndex), ttlMs);
+		JourneyStateItem position = new JourneyStateItem(resolvedJourneyMode, resolvedStageId, resolvedStepIndex);
+		pipelineState.put(JourneyStateItem.KEY, position, ttlMs);
 	}
 
 	/**

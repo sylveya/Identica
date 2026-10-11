@@ -58,7 +58,7 @@ public class ReviewRegistrationUsernamePhase implements PipelinePhase<PolicyStat
 		RegistrationContext context = pipelineState.getScenario(pipelineState.getPipelineType()) instanceof RegistrationContext registrationContext
 				? registrationContext
 				: null;
-		UsernameStateItem snapshot = pipelineState.item(UsernameStateItem.class).orElse(null);
+		UsernameStateItem snapshot = pipelineState.get(UsernameStateItem.KEY).orElse(null);
 		if (snapshot == null || context == null || snapshot.getUniqueId() == null
 				|| snapshot.getProviderId() == null || snapshot.getProviderSubject() == null)
 			return CompletableFuture.completedFuture(PhaseResult.pass(state));

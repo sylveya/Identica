@@ -5,7 +5,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
-import me.whereareiam.identica.pipeline.state.PipelineStateItem;
+import me.whereareiam.identica.pipeline.state.StateKey;
 import me.whereareiam.identica.type.pipeline.PipelineType;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -15,7 +15,13 @@ import org.jetbrains.annotations.Nullable;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder(toBuilder = true)
-public final class ScenarioTransitionItem implements PipelineStateItem {
+public final class ScenarioTransitionItem {
+	/**
+	 * Key of the pending transition to another scenario in a pipeline state. Saved with a pending pipeline.
+	 */
+	public static final StateKey<ScenarioTransitionItem> KEY =
+			StateKey.persisted("scenario:transition", ScenarioTransitionItem.class);
+
 	private @NotNull PipelineType targetPipeline;
 	private @Nullable String reason;
 	private @NotNull TransitionMode mode;

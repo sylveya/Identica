@@ -120,7 +120,7 @@ public class VerificationConfirmCommand extends ProtectedActionCommand<Void> {
 	private boolean submitChallenge(@NotNull Identity identity, @NotNull String input) {
 		PipelineStateReference reference = reference(identity);
 		PipelineState state = pipelineStateStore.find(reference).orElse(null);
-		if (state == null || state.item(JourneyStateItem.class).isEmpty()) return false;
+		if (state == null || state.get(JourneyStateItem.KEY).isEmpty()) return false;
 		var accountUniqueId = requireAccountUniqueId(identity);
 		if (accountUniqueId == null) return false;
 
@@ -219,18 +219,18 @@ public class VerificationConfirmCommand extends ProtectedActionCommand<Void> {
 
 	private @Nullable VerificationDisablePendingState findPendingDisable(@NotNull Identity identity) {
 		return pipelineStateStore.find(reference(identity))
-				.flatMap(state -> state.item(VerificationDisablePendingState.class))
+				.flatMap(state -> state.get(VerificationDisablePendingState.KEY))
 				.orElse(null);
 	}
 
 	private void clearPendingDisable(@NotNull Identity identity) {
 		PipelineStateReference reference = reference(identity);
 		PipelineState state = pipelineStateStore.find(reference).orElse(null);
-		if (state == null || state.item(VerificationDisablePendingState.class).isEmpty())
+		if (state == null || state.get(VerificationDisablePendingState.KEY).isEmpty())
 			return;
 
-		state.removeItem(VerificationDisablePendingState.class);
-		if (state.getItems().isEmpty()) {
+		state.remove(VerificationDisablePendingState.KEY);
+		if (state.isEmpty()) {
 			pipelineStateStore.clear(reference);
 			return;
 		}

@@ -84,7 +84,7 @@ public abstract class AbstractEnforceJoinRestrictionPhase<C extends ScenarioCont
 	protected abstract boolean allowResumeBypass(@NotNull JoinRestrictionSettings settings, @NotNull PipelineState pipelineState);
 
 	protected final @Nullable IdentityMetaItem identityMeta(@NotNull PipelineState pipelineState) {
-		return pipelineState.item(IdentityMetaItem.class).orElse(null);
+		return pipelineState.get(IdentityMetaItem.KEY).orElse(null);
 	}
 
 	private @NotNull String describeAllow(@NotNull Set<RestrictionSignal> allow) {

@@ -157,7 +157,7 @@ public class DefaultDeliveryService implements DeliveryService {
 		PipelineState state = pipelineStateStore.find(reference).orElse(null);
 		if (state == null) return false;
 
-		JourneyStateItem journey = state.item(JourneyStateItem.class).orElse(null);
+		JourneyStateItem journey = state.get(JourneyStateItem.KEY).orElse(null);
 		String stageId = journey != null ? journey.getStageId() : null;
 		int stepIndex = journey != null ? journey.getStepIndex() : -1;
 

@@ -9,9 +9,10 @@ import me.whereareiam.identica.identity.actor.ConnectionIdentity;
 import me.whereareiam.identica.model.config.Replication;
 import me.whereareiam.identica.model.pipeline.journey.JourneyStateItem;
 import me.whereareiam.identica.model.registration.RegistrationContext;
-import me.whereareiam.identica.pipeline.state.PipelineInputItem;
 import me.whereareiam.identica.pipeline.state.PipelineState;
 import me.whereareiam.identica.pipeline.state.PipelineStateReference;
+import me.whereareiam.identica.pipeline.state.StateKey;
+import me.whereareiam.identica.pipeline.state.StoredPipelineState;
 import me.whereareiam.identica.replication.ReplicationAdapter;
 import me.whereareiam.identica.type.pipeline.PipelineType;
 import me.whereareiam.identica.util.EventUtil;
@@ -57,7 +58,7 @@ class DefaultPipelineStateStoreTest {
 
 		store.save(reference, state, 1_000L);
 
-		assertEquals(Optional.of(state), store.find(reference));
+		assertTrue(store.find(reference).isPresent());
 	}
 
 	@DisplayName("Stores and loads pipeline state by connection key")
@@ -76,7 +77,7 @@ class DefaultPipelineStateStoreTest {
 
 		store.save(reference, state, 1_000L);
 
-		assertEquals(Optional.of(state), store.find(reference));
+		assertTrue(store.find(reference).isPresent());
 	}
 
 	@DisplayName("Origin-aware resumes can find snapshots that were saved without origin information")
@@ -98,7 +99,7 @@ class DefaultPipelineStateStoreTest {
 
 		store.save(storedReference, state, 1_000L);
 
-		assertEquals(Optional.of(state), store.find(resumeReference));
+		assertTrue(store.find(resumeReference).isPresent());
 	}
 
 	@DisplayName("Origin-agnostic resumes can find snapshots that were saved with origin information")
@@ -120,7 +121,7 @@ class DefaultPipelineStateStoreTest {
 
 		store.save(storedReference, state, 1_000L);
 
-		assertEquals(Optional.of(state), store.find(resumeReference));
+		assertTrue(store.find(resumeReference).isPresent());
 	}
 
 	@DisplayName("Replacing a snapshot clears stale aliases for older connection keys")
@@ -165,7 +166,7 @@ class DefaultPipelineStateStoreTest {
 	private PipelineState pendingState() {
 		PipelineState state = PipelineState.initial();
 		state.setPipelineType(PipelineType.REGISTRATION);
-		state.putItem(new JourneyStateItem(null, null, 0), 1_000L);
+		state.put(JourneyStateItem.KEY, new JourneyStateItem(null, null, 0), 1_000L);
 		return state;
 	}
 
@@ -194,16 +195,16 @@ class DefaultPipelineStateStoreTest {
 		assertEquals("Alice", found.get().getScenario().getIdentity().getUsername());
 	}
 
-	@DisplayName("Never writes input items to the replication adapter")
+	@DisplayName("Never writes values of run keys to the replication adapter")
 	@Test
-	void saveLeavesInputItemsOut() {
+	void saveLeavesRunValuesOut() {
 		EventUtil.initialize(mock(EventManager.class));
 		InMemoryAdapter shared = new InMemoryAdapter();
 		PipelineStateReference reference = PipelineStateReference.builder()
 				.connectionUniqueId(UUID.randomUUID())
 				.build();
 		PipelineState state = pendingState();
-		state.putItem(new TypedPassword("Secret-123"), 60_000L);
+		state.put(TypedPassword.KEY, new TypedPassword("Secret-123"), 60_000L);
 
 		new DefaultPipelineStateStore(new DefaultReplicationSystem(shared), this::replication).save(reference, state, 60_000L);
 		Optional<PipelineState> found = new DefaultPipelineStateStore(new DefaultReplicationSystem(shared), this::replication)
@@ -212,15 +213,35 @@ class DefaultPipelineStateStoreTest {
 		assertTrue(shared.values.values().stream()
 				.noneMatch(value -> new String(value, StandardCharsets.UTF_8).contains("Secret-123")));
 		assertTrue(found.isPresent());
-		assertTrue(found.get().item(JourneyStateItem.class).isPresent());
-		assertTrue(found.get().item(TypedPassword.class).isEmpty());
-		assertTrue(state.item(TypedPassword.class).isPresent(), "saving changes the state it was given");
+		assertTrue(found.get().has(JourneyStateItem.KEY));
+		assertTrue(found.get().get(TypedPassword.KEY).isEmpty());
+		assertTrue(state.has(TypedPassword.KEY), "saving changes the state it was given");
+	}
+
+	@DisplayName("Discards a saved state whose scenario cannot be read back")
+	@Test
+	void discardsAnUnreadableState() {
+		EventUtil.initialize(mock(EventManager.class));
+		InMemoryAdapter shared = new InMemoryAdapter();
+		PipelineStateReference reference = PipelineStateReference.builder()
+				.connectionUniqueId(UUID.randomUUID())
+				.build();
+		StoredPipelineState stored = pendingState().store();
+		stored.getValues().put(RegistrationContext.KEY.id(), new StoredPipelineState.StoredValue("{\"identity\": 1}", 0L));
+		DefaultPipelineStateStore store = new DefaultPipelineStateStore(new DefaultReplicationSystem(shared), this::replication);
+
+		store.save(reference, PipelineState.restore(stored), 60_000L);
+
+		assertTrue(store.find(reference).isEmpty());
+		assertTrue(shared.values.isEmpty(), "the unreadable state and its aliases are removed");
 	}
 
 	@Getter
 	@NoArgsConstructor
 	@AllArgsConstructor
-	public static final class TypedPassword implements PipelineInputItem {
+	public static final class TypedPassword {
+		private static final StateKey<TypedPassword> KEY = StateKey.run("test:typed-password", TypedPassword.class);
+
 		private String password;
 	}
 

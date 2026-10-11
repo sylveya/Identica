@@ -58,14 +58,14 @@ public class ResolveEntrypointPhase implements PipelinePhase<PrepareGroupState> 
 		Logger.debug("Prepare matched entrypoint username=%s provider=%s",
 				identity.getUsername(),
 				resolved.getProviderId());
-		PrepareContextItem context = pipelineState.item(PrepareContextItem.class).orElse(new PrepareContextItem());
+		PrepareContextItem context = pipelineState.get(PrepareContextItem.KEY).orElse(new PrepareContextItem());
 		context.setProvider(ProviderContext.of(
 				resolved.getProviderId(),
 				null,
 				identity.getUsername(),
 				providerContextResolver.resolveSource(identity, resolved.getProviderId())
 		));
-		pipelineState.putItem(context, 0L);
+		pipelineState.put(PrepareContextItem.KEY, context);
 
 		return CompletableFuture.completedFuture(PhaseResult.pass(state));
 	}

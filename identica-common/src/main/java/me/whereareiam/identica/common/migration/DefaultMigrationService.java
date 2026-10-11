@@ -251,7 +251,7 @@ public class DefaultMigrationService implements MigrationService {
 					.connectionUniqueId(connectionUniqueId)
 					.build();
 			PipelineState stored = pipelineStateStore.find(reference).orElse(null);
-			if (stored != null && stored.item(MigrationPendingState.class).isPresent()) {
+			if (stored != null && stored.has(MigrationPendingState.KEY)) {
 				queueCancelledNotice(resolvePendingAccountUniqueId(stored), stored);
 				MigrationContext context = (MigrationContext) stored.getScenario(PipelineType.MIGRATION);
 				UUID resolvedConnectionUniqueId = context != null ? context.getConnectionUniqueId() : null;
@@ -286,13 +286,13 @@ public class DefaultMigrationService implements MigrationService {
 		PipelineState pipelineState = PipelineState.initial();
 		pipelineState.setPipelineType(PipelineType.MIGRATION);
 		pipelineState.setScenario(context);
-		pipelineState.putItem(new MigrationPendingState(
+		pipelineState.put(MigrationPendingState.KEY, new MigrationPendingState(
 				pendingMigration.targetProviderId(),
 				pendingMigration.requestedAt(),
 				pendingMigration.initiator(),
 				pendingMigration.initiatorUniqueId()
 		), ttlMs);
-		pipelineState.putItem(new JourneyStateItem(journeyMode, null, 0), ttlMs);
+		pipelineState.put(JourneyStateItem.KEY, new JourneyStateItem(journeyMode, null, 0), ttlMs);
 
 		PipelineStateReference reference = PipelineStateReference.from(context);
 		pipelineStateStore.save(reference, pipelineState, ttlMs);
@@ -534,7 +534,7 @@ public class DefaultMigrationService implements MigrationService {
 			return null;
 		}
 
-		MigrationPendingState pendingState = state.item(MigrationPendingState.class).orElse(null);
+		MigrationPendingState pendingState = state.get(MigrationPendingState.KEY).orElse(null);
 		if (pendingState == null) {
 			Logger.debug(
 					"Migration pending lookup found state without pending marker connection=%s pipeline=%s",
@@ -576,7 +576,7 @@ public class DefaultMigrationService implements MigrationService {
 	private void queueCancelledNotice(@Nullable UUID accountUniqueId, @Nullable PipelineState state) {
 		if (accountUniqueId == null || state == null) return;
 		if (state.getPipelineType() != PipelineType.MIGRATION) return;
-		if (state.item(MigrationPendingState.class).isEmpty()) return;
+		if (state.get(MigrationPendingState.KEY).isEmpty()) return;
 
         deliveryService.queue(DeliveryRequest.builder()
 				.id(UUID.randomUUID())

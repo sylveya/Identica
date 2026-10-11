@@ -28,7 +28,7 @@ class JoinRestrictionResumeBypassTest {
 				restrictions, providers, JoinRestrictionMessages::new, () -> settings
 		);
 		PipelineState resumed = PipelineState.initial();
-		resumed.putItem(new IdentityMetaItem(true), 0L);
+		resumed.put(IdentityMetaItem.KEY, new IdentityMetaItem(true));
 
 		assertFalse(authentication.allowResumeBypass(settings, resumed));
 		assertFalse(registration.allowResumeBypass(settings, resumed));
@@ -40,7 +40,7 @@ class JoinRestrictionResumeBypassTest {
 		assertFalse(authentication.allowResumeBypass(settings, resumed));
 		assertTrue(registration.allowResumeBypass(settings, resumed));
 		assertFalse(registration.allowResumeBypass(settings, PipelineState.initial()));
-		resumed.putItem(new IdentityMetaItem(false), 0L);
+		resumed.put(IdentityMetaItem.KEY, new IdentityMetaItem(false));
 		assertFalse(registration.allowResumeBypass(settings, resumed));
 	}
 }

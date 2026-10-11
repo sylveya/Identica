@@ -59,7 +59,7 @@ public class ReviewAuthenticationUsernamePhase implements PipelinePhase<PolicySt
 		AuthContext context = pipelineState.getScenario(PipelineType.AUTHENTICATION) instanceof AuthContext authContext
 				? authContext
 				: null;
-		UsernameStateItem snapshot = pipelineState.item(UsernameStateItem.class).orElse(null);
+		UsernameStateItem snapshot = pipelineState.get(UsernameStateItem.KEY).orElse(null);
 		if (context == null || snapshot == null || snapshot.getUniqueId() == null
 				|| snapshot.getProviderId() == null || snapshot.getProviderSubject() == null)
 			return CompletableFuture.completedFuture(PhaseResult.pass(state));

@@ -15,7 +15,7 @@ import me.whereareiam.identica.model.pipeline.migration.MigrationPendingState;
 import me.whereareiam.identica.model.pipeline.phase.PhaseResult;
 import me.whereareiam.identica.model.pipeline.prepare.PrepareAccountCandidateItem;
 import me.whereareiam.identica.model.pipeline.prepare.PrepareContextItem;
-import me.whereareiam.identica.model.pipeline.prepare.decision.PrepareDecisionItem;
+import me.whereareiam.identica.model.pipeline.prepare.decision.PrepareDecision;
 import me.whereareiam.identica.model.provider.ProviderContext;
 import me.whereareiam.identica.pipeline.PipelinePhase;
 import me.whereareiam.identica.pipeline.state.PipelineState;
@@ -59,10 +59,10 @@ public class ResolvePendingMigrationAccountPhase implements PipelinePhase<Prepar
 
 	@Override
 	public boolean supports(@NotNull PipelineState pipelineState, @NotNull PrepareGroupState state) {
-		if (pipelineState.item(PrepareDecisionItem.class).isPresent()) return false;
-		if (pipelineState.item(PrepareAccountCandidateItem.class).isPresent()) return false;
+		if (pipelineState.has(PrepareDecision.KEY)) return false;
+		if (pipelineState.has(PrepareAccountCandidateItem.KEY)) return false;
 
-		PrepareContextItem context = pipelineState.item(PrepareContextItem.class).orElse(null);
+		PrepareContextItem context = pipelineState.get(PrepareContextItem.KEY).orElse(null);
 		return context != null
 				&& context.getProvider() != null
 				&& context.getProvider().getProviderId() != null
@@ -74,7 +74,7 @@ public class ResolvePendingMigrationAccountPhase implements PipelinePhase<Prepar
 			@NotNull PipelineState pipelineState,
 			@NotNull PrepareGroupState state
 	) {
-		PrepareContextItem context = pipelineState.item(PrepareContextItem.class).orElse(new PrepareContextItem());
+		PrepareContextItem context = pipelineState.get(PrepareContextItem.KEY).orElse(new PrepareContextItem());
 		var request = state.getRequest();
 		ProviderContext provider = context.getProvider();
 		if (request == null || provider == null) {
@@ -93,7 +93,7 @@ public class ResolvePendingMigrationAccountPhase implements PipelinePhase<Prepar
 				.build()).orElse(null);
 		if (pendingState == null || pendingState.getPipelineType() != PipelineType.MIGRATION)
 			return CompletableFuture.completedFuture(PhaseResult.pass(state));
-		if (pendingState.item(MigrationPendingState.class).isEmpty())
+		if (pendingState.get(MigrationPendingState.KEY).isEmpty())
 			return CompletableFuture.completedFuture(PhaseResult.pass(state));
 
 		MigrationContext migration = (MigrationContext) pendingState.getScenario(PipelineType.MIGRATION);
@@ -150,13 +150,13 @@ public class ResolvePendingMigrationAccountPhase implements PipelinePhase<Prepar
 						.username(requestedUsername)
 						.build();
 
-		pipelineState.putItem(new PrepareAccountCandidateItem(
+		pipelineState.put(PrepareAccountCandidateItem.KEY, new PrepareAccountCandidateItem(
 				accountUniqueId,
 				null,
 				account,
 				null,
 				null
-		), 0L);
+		));
 		Logger.debug(
 				"Prepare reusing pending migration account provider=%s identica=%s key=%s",
 				providerId,

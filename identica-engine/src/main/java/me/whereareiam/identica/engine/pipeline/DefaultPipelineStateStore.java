@@ -9,11 +9,14 @@ import me.whereareiam.identica.event.pipeline.state.PipelineStateClearedEvent;
 import me.whereareiam.identica.event.pipeline.state.PipelineStateSavedEvent;
 import me.whereareiam.identica.logging.Logger;
 import me.whereareiam.identica.model.config.Replication;
+import me.whereareiam.identica.model.pipeline.journey.JourneyStateItem;
 import me.whereareiam.identica.model.replication.ReplicationType;
 import me.whereareiam.identica.pipeline.ScenarioContext;
 import me.whereareiam.identica.pipeline.state.PipelineState;
 import me.whereareiam.identica.pipeline.state.PipelineStateReference;
 import me.whereareiam.identica.pipeline.state.PipelineStateStore;
+import me.whereareiam.identica.pipeline.state.StoredPipelineState;
+import me.whereareiam.identica.pipeline.state.exception.UnreadablePipelineStateException;
 import me.whereareiam.identica.replication.ReplicationSystem;
 import me.whereareiam.identica.replication.cache.ReplicatedCache;
 import me.whereareiam.identica.replication.codec.SnapshotCodec;
@@ -71,16 +74,16 @@ public class DefaultPipelineStateStore implements PipelineStateStore {
 		long now = System.currentTimeMillis();
 		PipelineStateRecord existing = resolvePrimaryRecord(aliases, now);
 		long expiresAt = now + ttlMs;
-		PipelineState saved = state.withoutInputItems();
+		StoredPipelineState stored = state.store();
 		PipelineStateRecord record = new PipelineStateRecord(
 				existing != null && !existing.id.isBlank() ? existing.id : UUID.randomUUID().toString(),
-				saved,
+				stored,
 				aliases,
 				expiresAt
 		);
 
 		replaceAliases(record, existing, ttlMs);
-		EventUtil.callEvent(new PipelineStateSavedEvent(reference, saved, expiresAt));
+		EventUtil.callEvent(new PipelineStateSavedEvent(reference, PipelineState.restore(stored), expiresAt));
 	}
 
 	@Override
@@ -110,9 +113,7 @@ public class DefaultPipelineStateStore implements PipelineStateStore {
 			PipelineStateRecord record = findRecord(alias, now).orElse(null);
 			if (record == null) continue;
 
-			PipelineState resolved = record.state != null
-					? record.state.pruneExpired(now)
-					: null;
+			PipelineState resolved = restore(record);
 			if (consume) invalidateRecord(record);
 
 			Logger.debug(
@@ -168,9 +169,10 @@ public class DefaultPipelineStateStore implements PipelineStateStore {
 				continue;
 			}
 
+			PipelineState restored = restore(found);
 			invalidateRecord(found);
-			PipelineStateReference reference = referenceFrom(found);
-			EventUtil.callEvent(new PipelineStateClearedEvent(reference, found.state));
+			if (restored != null)
+				EventUtil.callEvent(new PipelineStateClearedEvent(referenceFrom(found, restored), restored));
 		}
 
 		return primary;
@@ -213,8 +215,11 @@ public class DefaultPipelineStateStore implements PipelineStateStore {
 			aliasCache.invalidate(alias).join();
 	}
 
-	private @NotNull PipelineStateReference referenceFrom(@NotNull PipelineStateRecord record) {
-		ScenarioContext context = record.state != null ? record.state.getScenario() : null;
+	private @NotNull PipelineStateReference referenceFrom(
+			@NotNull PipelineStateRecord record,
+			@NotNull PipelineState state
+	) {
+		ScenarioContext context = state.getScenario();
 		if (context != null) return PipelineStateReference.from(context);
 
 		if (record.aliases == null || record.aliases.isEmpty())
@@ -241,6 +246,27 @@ public class DefaultPipelineStateStore implements PipelineStateStore {
 		}
 
 		return builder.build();
+	}
+
+	/**
+	 * Restores the state of a record, reading its scenario and journey position right away: most readers start
+	 * there, so a state that cannot be read back is discarded here instead of failing each of them until it expires.
+	 */
+	private @Nullable PipelineState restore(@NotNull PipelineStateRecord record) {
+		if (record.stored == null) return null;
+
+		PipelineState state = PipelineState.restore(record.stored);
+		try {
+			state.getScenario();
+			state.get(JourneyStateItem.KEY);
+
+			return state;
+		} catch (UnreadablePipelineStateException e) {
+			Logger.warn("Discarded a saved pipeline state that cannot be read back: %s", e.getMessage());
+			invalidateRecord(record);
+
+			return null;
+		}
 	}
 
 	private @NotNull List<String> resolveAliases(@NotNull PipelineStateReference reference) {
@@ -288,7 +314,7 @@ public class DefaultPipelineStateStore implements PipelineStateStore {
 	@AllArgsConstructor
 	public static final class PipelineStateRecord {
 		public @NotNull String id = "";
-		public @Nullable PipelineState state;
+		public @Nullable StoredPipelineState stored;
 		public @Nullable List<String> aliases;
 		public long expiresAt;
 	}

@@ -57,13 +57,13 @@ class ResolvePendingMigrationAccountPhaseTest {
 				.identity(new me.whereareiam.identica.identity.actor.ConnectionIdentity(accountUniqueId, "PlayerOne", "127.0.0.1"))
 				.targetProviderId("credential")
 				.build());
-		pendingState.putItem(new MigrationPendingState(
+		pendingState.put(MigrationPendingState.KEY, new MigrationPendingState(
 				"credential",
 				1234L,
 				MigrationInitiator.USER,
 				connectionUniqueId
 		), Duration.ofMinutes(5).toMillis());
-		pendingState.putItem(new JourneyStateItem(null, null, 0), Duration.ofMinutes(5).toMillis());
+		pendingState.put(JourneyStateItem.KEY, new JourneyStateItem(null, null, 0), Duration.ofMinutes(5).toMillis());
 
 		doReturn(Optional.of(pendingState)).when(pipelineStateStore).find(any(PipelineStateReference.class));
 		when(accountPersistenceService.findByUniqueId(accountUniqueId)).thenReturn(Optional.of(Account.builder()
@@ -78,12 +78,12 @@ class ResolvePendingMigrationAccountPhaseTest {
 		);
 
 		PipelineState state = PipelineState.initial();
-		state.putItem(new PrepareContextItem(null, ProviderContext.of(
+		state.put(PrepareContextItem.KEY, new PrepareContextItem(null, ProviderContext.of(
 				"credential",
 				null,
 				"PlayerOne",
 				ProviderOrigin.MANUAL
-		), null, null, null), 0L);
+		), null, null, null));
 
 		PrepareGroupState groupState = new PrepareGroupState();
 		groupState.setRequest(PrepareRequest.builder()
@@ -94,7 +94,7 @@ class ResolvePendingMigrationAccountPhaseTest {
 
 		phase.execute(state, groupState).toCompletableFuture().join();
 
-		PrepareAccountCandidateItem candidate = state.item(PrepareAccountCandidateItem.class).orElse(null);
+		PrepareAccountCandidateItem candidate = state.get(PrepareAccountCandidateItem.KEY).orElse(null);
 		assertNotNull(candidate);
 		assertEquals(accountUniqueId, candidate.getUniqueId());
 		assertNotNull(candidate.getAccount());

@@ -13,7 +13,6 @@ import me.whereareiam.identica.model.pipeline.phase.PhaseResult;
 import me.whereareiam.identica.model.pipeline.prepare.PrepareAccountCandidateItem;
 import me.whereareiam.identica.model.pipeline.prepare.PrepareContextItem;
 import me.whereareiam.identica.model.pipeline.prepare.decision.PrepareDecision;
-import me.whereareiam.identica.model.pipeline.prepare.decision.PrepareDecisionItem;
 import me.whereareiam.identica.model.provider.ProviderContext;
 import me.whereareiam.identica.pipeline.PipelinePhase;
 import me.whereareiam.identica.pipeline.prepare.PrepareStateStore;
@@ -51,10 +50,10 @@ public class ResolvePreparedAccountPhase implements PipelinePhase<PrepareGroupSt
 
 	@Override
 	public boolean supports(@NotNull PipelineState pipelineState, @NotNull PrepareGroupState state) {
-		if (pipelineState.item(PrepareDecisionItem.class).isPresent()) return false;
-		if (pipelineState.item(PrepareAccountCandidateItem.class).isPresent()) return false;
+		if (pipelineState.has(PrepareDecision.KEY)) return false;
+		if (pipelineState.has(PrepareAccountCandidateItem.KEY)) return false;
 
-		PrepareContextItem context = pipelineState.item(PrepareContextItem.class).orElse(null);
+		PrepareContextItem context = pipelineState.get(PrepareContextItem.KEY).orElse(null);
 		if (context == null) return false;
 
 		ProviderContext provider = context.getProvider();
@@ -75,7 +74,7 @@ public class ResolvePreparedAccountPhase implements PipelinePhase<PrepareGroupSt
 			@NotNull PipelineState pipelineState,
 			@NotNull PrepareGroupState state
 	) {
-		PrepareContextItem context = pipelineState.item(PrepareContextItem.class).orElse(new PrepareContextItem());
+		PrepareContextItem context = pipelineState.get(PrepareContextItem.KEY).orElse(new PrepareContextItem());
 		var request = state.getRequest();
 		ProviderContext provider = context.getProvider();
 		if (request == null || provider == null) {
@@ -119,13 +118,13 @@ public class ResolvePreparedAccountPhase implements PipelinePhase<PrepareGroupSt
 				.providerUsername(requestedUsername)
 				.build());
 
-		pipelineState.putItem(new PrepareAccountCandidateItem(
+		pipelineState.put(PrepareAccountCandidateItem.KEY, new PrepareAccountCandidateItem(
 				accountUniqueId,
 				null,
 				account,
 				link,
 				profile
-		), 0L);
+		));
 
 		return CompletableFuture.completedFuture(PhaseResult.pass(state));
 	}

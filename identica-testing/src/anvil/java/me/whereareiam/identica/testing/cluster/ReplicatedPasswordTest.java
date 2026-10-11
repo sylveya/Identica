@@ -2,6 +2,7 @@ package me.whereareiam.identica.testing.cluster;
 
 import com.redis.testcontainers.RedisContainer;
 import me.whereareiam.anvil.api.scenario.ScenarioContext;
+import me.whereareiam.identica.model.pipeline.journey.JourneyStateItem;
 import me.whereareiam.identica.testing.environment.IdenticaCluster;
 import me.whereareiam.identica.testing.fixture.Accounts;
 import me.whereareiam.identica.testing.journey.Journey;
@@ -56,7 +57,7 @@ class ReplicatedPasswordTest {
 		assertEquals(0, dump.getExitCode(), dump.getStderr());
 
 		String values = dump.getStdout();
-		assertTrue(values.contains("JourneyStateItem"), "the pending journey is replicated:\n" + values);
+		assertTrue(values.contains(JourneyStateItem.KEY.id()), "the pending journey is replicated:\n" + values);
 		assertFalse(values.contains(password), "a typed password is replicated:\n" + values);
 	}
 }
