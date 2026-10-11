@@ -151,6 +151,10 @@ Important rules:
 - `usage` does not define aliases by itself; aliases still come from the `aliases` field
 - If a usage token refers to an argument name that does not exist in the parsed command, registration fails
 - Because `usage` affects structure as well as display, changing it carelessly can make the command definition inconsistent with the actual executor arguments
+- An optional argument that the executor implements can be left out of `usage`; the registered command then no longer accepts it, and help and the invalid-syntax message no longer show it
+- Settings never rewrite `usage`: when a setting makes an optional argument unnecessary, such as Credential's `changePassword.requireRepeat`, the argument stays in the syntax until you remove it from `usage`
+
+Providers and features keep their command definitions in their own `commands.yml`, such as `providers/Credential/commands.yml` or `features/verification/commands.yml`, with the same definition structure as this file.
 
 Example:
 
