@@ -19,6 +19,13 @@ public interface VerificationPersistenceService {
 
 	void deleteEnrollment(@NotNull UUID uniqueId, @NotNull String methodId);
 
+	/**
+	 * Counts the accounts with at least one verification method enabled.
+	 *
+	 * @return the number of accounts
+	 */
+	long countEnrolledAccounts();
+
 	@NotNull Optional<VerificationSelection> findSelection(@NotNull UUID uniqueId, @NotNull String providerId);
 
 	@NotNull List<VerificationSelection> findSelections(@NotNull UUID uniqueId);

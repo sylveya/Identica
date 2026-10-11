@@ -8,8 +8,10 @@ import me.whereareiam.identica.database.provider.ProviderLinkPersistenceService;
 import me.whereareiam.identica.feature.FeatureRegistry;
 import me.whereareiam.identica.feature.verification.VerificationMethod;
 import me.whereareiam.identica.feature.verification.VerificationRegistry;
+import me.whereareiam.identica.feature.verification.database.VerificationPersistenceService;
 import me.whereareiam.identica.feature.verification.model.VerificationMethodDescriptor;
 import me.whereareiam.identica.integration.statistics.OfficialProviders;
+import me.whereareiam.identica.integration.statistics.StatisticsPlatform;
 import me.whereareiam.identica.model.config.Replication;
 import me.whereareiam.identica.model.config.Settings;
 import me.whereareiam.identica.model.config.persistence.Persistence;
@@ -31,8 +33,9 @@ import java.util.TreeMap;
 import java.util.concurrent.Callable;
 
 /**
- * Declares what Identica sends: how a network is set up, how many accounts it stores, and what its
- * players did since the last submission.
+ * Declares what Identica sends: how a network is set up, how many accounts it stores and how many
+ * use verification, what its players did since the last submission, and which Minecraft versions the
+ * players online use.
  * <p>
  * Only values Identica itself defines are sent: its provider, feature and verification method ids,
  * with third-party ones counted as {@code custom}, and its configuration's enum constants. No
@@ -54,6 +57,8 @@ public final class StatisticsMetrics {
 	private final @NotNull ActivityCounters activity;
 	private final @NotNull Cached<Long> accounts;
 	private final @NotNull Cached<Map<String, Long>> providerAccounts;
+	private final @NotNull Cached<Long> verifiedAccounts;
+	private final @NotNull StatisticsPlatform platform;
 
 	@Inject
 	public StatisticsMetrics(
@@ -66,7 +71,9 @@ public final class StatisticsMetrics {
 			@NotNull Provider<Settings> settings,
 			@NotNull ActivityCounters activity,
 			@NotNull AccountPersistenceService accountPersistence,
-			@NotNull ProviderLinkPersistenceService providerLinkPersistence
+			@NotNull ProviderLinkPersistenceService providerLinkPersistence,
+			@NotNull VerificationPersistenceService verificationPersistence,
+			@NotNull StatisticsPlatform platform
 	) {
 		this.providerManager = providerManager;
 		this.officialProviders = officialProviders;
@@ -78,6 +85,8 @@ public final class StatisticsMetrics {
 		this.activity = activity;
 		this.accounts = new Cached<>(accountPersistence::count);
 		this.providerAccounts = new Cached<>(() -> byStatisticsId(providerLinkPersistence.countByProvider()));
+		this.verifiedAccounts = new Cached<>(verificationPersistence::countEnrolledAccounts);
+		this.platform = platform;
 	}
 
 	/**
@@ -95,11 +104,14 @@ public final class StatisticsMetrics {
 				.string("unique_id_mode", () -> settings.get().getIdentity().getUniqueIdMode().name())
 				.string("session_concurrency", () -> settings.get().getSessions().getConcurrencyPolicy().name())
 				.numberMap("authentications", activity.getAuthentications())
+				.numberMap("logins_by_provider", activity.getLoginsByProvider())
 				.numberMap("registrations", activity.getRegistrations())
 				.numberMap("migrations", activity.getMigrations())
 				.number("sessions_opened", activity.getSessions())
+				.numberMap("client_versions", platform::clientVersions)
 				.total("account_count", accounts)
 				.totalMap("provider_usage", providerAccounts)
+				.total("verified_accounts", verifiedAccounts)
 				.build();
 	}
 

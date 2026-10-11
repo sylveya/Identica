@@ -53,6 +53,11 @@ public class DefaultVerificationPersistenceService implements VerificationPersis
 	}
 
 	@Override
+	public long countEnrolledAccounts() {
+		return enrollmentRepository.countAccounts();
+	}
+
+	@Override
 	public @NotNull VerificationEnrollment upsertEnrollment(@NotNull VerificationEnrollment enrollment) {
 		Optional<VerificationEnrollment> existing = enrollmentRepository.find(
 						enrollment.getUniqueId(),
