@@ -31,3 +31,4 @@ jobs:
         with:
           release-id: ${{ steps.drafter.outputs.id }}
           release-body: ${{ steps.drafter.outputs.body }}
+          developer-prefixes: API
