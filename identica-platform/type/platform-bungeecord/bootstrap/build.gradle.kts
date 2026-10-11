@@ -13,7 +13,12 @@ dependencies {
     testImplementation(libs.cloud.bungee)
 
     implementation(projects.platformBungeecordApi)
-    implementation(libs.bundles.bStats.bungeecord)
+    implementation(libs.statistica.platform.bungeecord) {
+        capabilities { requireCapability("me.whereareiam:statistica-platform-bungeecord-bstats") }
+    }
+    implementation(libs.statistica.platform.bungeecord) {
+        capabilities { requireCapability("me.whereareiam:statistica-platform-bungeecord-faststats") }
+    }
     implementation(libs.attache.bungeecord)
 
     compileOnly(libs.bungeecord)

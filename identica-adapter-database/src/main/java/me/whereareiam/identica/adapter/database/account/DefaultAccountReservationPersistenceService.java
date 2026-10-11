@@ -37,7 +37,7 @@ public class DefaultAccountReservationPersistenceService implements AccountReser
 					.filter(reservation -> !isExpired(reservation.getExpiresAt(), now))
 					.map(AccountReservationEntity::getUniqueId);
 		} catch (Exception e) {
-			Logger.warn("Failed to load account reservation %s: %s", reservationKey, e.getMessage());
+			Logger.warn(e, "Failed to load account reservation %s", reservationKey);
 			return Optional.empty();
 		}
 	}
@@ -54,7 +54,7 @@ public class DefaultAccountReservationPersistenceService implements AccountReser
 				case MYSQL -> repository.upsertMysql(reservationKey, uniqueId, createdAt, expiresAt);
 			}
 		} catch (Exception e) {
-			Logger.warn("Failed to reserve account UUID %s for %s: %s", uniqueId, reservationKey, e.getMessage());
+			Logger.warn(e, "Failed to reserve account UUID %s for %s", uniqueId, reservationKey);
 		}
 	}
 
@@ -65,7 +65,7 @@ public class DefaultAccountReservationPersistenceService implements AccountReser
 		try {
 			repository.delete(reservationKey);
 		} catch (Exception e) {
-			Logger.warn("Failed to delete account reservation %s: %s", reservationKey, e.getMessage());
+			Logger.warn(e, "Failed to delete account reservation %s", reservationKey);
 		}
 	}
 
@@ -74,7 +74,7 @@ public class DefaultAccountReservationPersistenceService implements AccountReser
 		try {
 			repository.deleteByUniqueId(uniqueId);
 		} catch (Exception e) {
-			Logger.warn("Failed to delete account reservations for %s: %s", uniqueId, e.getMessage());
+			Logger.warn(e, "Failed to delete account reservations for %s", uniqueId);
 		}
 	}
 
@@ -83,7 +83,7 @@ public class DefaultAccountReservationPersistenceService implements AccountReser
 		try {
 			repository.deleteExpired(now);
 		} catch (Exception e) {
-			Logger.warn("Failed to delete expired account reservations: %s", e.getMessage());
+			Logger.warn(e, "Failed to delete expired account reservations");
 		}
 	}
 

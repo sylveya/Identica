@@ -48,7 +48,9 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 import java.util.concurrent.CompletionStage;
 
 @Singleton
@@ -558,6 +560,8 @@ public class ExecutePlanPhase implements PipelinePhase<JourneyState> {
 			if (result == null)
 				result = StepResult.failed(journeyStepNoStatusMessage());
 		} catch (Exception exception) {
+			if (!(unwrap(exception) instanceof CancellationException))
+				Logger.severe(exception, "Step %s failed in %s", journeyStep.getStep().getName(), pipelineType);
 			result = StepResult.failed(failureMessage(pipelineType));
 		}
 
@@ -877,5 +881,9 @@ public class ExecutePlanPhase implements PipelinePhase<JourneyState> {
 	}
 
 	private record BlockRegion(@NotNull List<JourneyExecutionBlock> blocks, int endIndex) {
+	}
+
+	private static @NotNull Throwable unwrap(@NotNull Throwable failure) {
+		return failure instanceof CompletionException && failure.getCause() != null ? failure.getCause() : failure;
 	}
 }

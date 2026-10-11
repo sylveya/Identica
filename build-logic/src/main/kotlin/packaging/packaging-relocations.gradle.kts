@@ -13,6 +13,8 @@ tasks.withType<ShadowJar>().configureEach {
     relocate("com.google.inject", "me.whereareiam.identica.library.guice")
     relocate("com.google.common", "me.whereareiam.identica.library.guava")
     relocate("org.bstats", "me.whereareiam.identica.library.bstats")
+    relocate("dev.faststats", "me.whereareiam.identica.library.faststats")
+    relocate("me.whereareiam.statistica", "me.whereareiam.identica.library.statistica")
     relocate("org.jdbi", "me.whereareiam.identica.library.jdbi")
     relocate("me.whereareiam.strata", "me.whereareiam.identica.library.strata")
     relocate("me.whereareiam.dialectica", "me.whereareiam.identica.library.dialectica")

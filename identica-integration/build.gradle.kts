@@ -6,5 +6,5 @@ tasks.register("integrationModules") {
     group = "build"
     description = "Builds all Identica integration modules."
 
-    dependsOn(":integration-bstats:build")
+    dependsOn(":integration-statistics:build")
 }

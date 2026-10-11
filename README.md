@@ -17,4 +17,6 @@ Read the documentation for installation, configuration, providers, and developer
 
 # Statistics
 
+Identica sends anonymous usage statistics to bStats and FastStats; see [what is sent and how to turn it off](docs/content/configuration/statistics/index.mdx).
+
 ![bStats](https://bstats.org/signatures/velocity/identica.svg)

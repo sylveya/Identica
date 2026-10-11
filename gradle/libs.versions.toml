@@ -21,7 +21,7 @@ strata = "2.0.0"
 guice = "7.0.0"
 annotations = "26.0.1"
 jedis = "7.0.0"
-bStats = "3.2.1"
+statistica = "1.0.0"
 
 # adventure
 adventure = "4.25.0"
@@ -80,9 +80,10 @@ strata = { group = "me.whereareiam", name = "strata", version.ref = "strata" }
 strata-adapter-configura = { group = "me.whereareiam", name = "strata-adapter-configura", version.ref = "strata" }
 dialectica = { group = "me.whereareiam", name = "dialectica", version.ref = "dialectica" }
 jedis = { group = "redis.clients", name = "jedis", version.ref = "jedis" }
-bStats = { group = "org.bstats", name = "bstats-base", version.ref = "bStats" }
-bStats-bungeecord = { group = "org.bstats", name = "bstats-bungeecord", version.ref = "bStats" }
-bStats-velocity = { group = "org.bstats", name = "bstats-velocity", version.ref = "bStats" }
+statistica-common = { group = "me.whereareiam", name = "statistica-common", version.ref = "statistica" }
+statistica-adapter-jdbc = { group = "me.whereareiam", name = "statistica-adapter-jdbc", version.ref = "statistica" }
+statistica-platform-bungeecord = { group = "me.whereareiam", name = "statistica-platform-bungeecord", version.ref = "statistica" }
+statistica-platform-velocity = { group = "me.whereareiam", name = "statistica-platform-velocity", version.ref = "statistica" }
 
 guice = { group = "com.google.inject", name = "guice", version.ref = "guice" }
 annotations = { group = "org.jetbrains", name = "annotations", version.ref = "annotations" }
@@ -136,8 +137,6 @@ bcrypt = { group = "at.favre.lib", name = "bcrypt", version.ref = "bcrypt" }
 adventure = ["adventure", "adventure-minimessage", "adventure-plain"]
 cloud = ["cloud-core", "cloud-annotations", "cloud-cooldowns", "cloud-minecraft-extras"]
 database = ["jdbi-core", "jdbi-sqlobject", "hikaricp", "postgresql", "mariadb", "sqlite", "h2"]
-bStats-velocity = ["bStats", "bStats-velocity"]
-bStats-bungeecord = ["bStats", "bStats-bungeecord"]
 
 [plugins]
 

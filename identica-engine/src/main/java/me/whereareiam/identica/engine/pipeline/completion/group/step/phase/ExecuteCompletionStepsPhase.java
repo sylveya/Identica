@@ -55,11 +55,11 @@ public class ExecuteCompletionStepsPhase implements PipelinePhase<CompletionPipe
 				step.execute(context);
 			} catch (Exception exception) {
 				Logger.warn(
-						"Completion step %s failed for provider=%s pipeline=%s: %s",
+						exception,
+						"Completion step %s failed for provider=%s pipeline=%s",
 						step.getName(),
 						context.getProviderId(),
-						context.getPipelineType(),
-						exception.getMessage()
+						context.getPipelineType()
 				);
 			}
 		}

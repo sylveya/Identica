@@ -36,7 +36,7 @@ public class DefaultAccountPersistenceService implements AccountPersistenceServi
 		try {
 			return accountRepository.findByUniqueId(uniqueId).map(AccountMapper::toModel);
 		} catch (Exception e) {
-			Logger.warn("Failed to load account %s: %s", uniqueId, e.getMessage());
+			Logger.warn(e, "Failed to load account %s", uniqueId);
 			return Optional.empty();
 		}
 	}
@@ -50,7 +50,7 @@ public class DefaultAccountPersistenceService implements AccountPersistenceServi
 					.map(AccountMapper::toModel)
 					.toList();
 		} catch (Exception e) {
-			Logger.warn("Failed to load accounts by username %s: %s", username, e.getMessage());
+			Logger.warn(e, "Failed to load accounts by username %s", username);
 			return List.of();
 		}
 	}
@@ -60,7 +60,7 @@ public class DefaultAccountPersistenceService implements AccountPersistenceServi
 		try {
 			return accountRepository.count();
 		} catch (Exception e) {
-			Logger.warn("Failed to count accounts: %s", e.getMessage());
+			Logger.warn(e, "Failed to count accounts");
 			return 0L;
 		}
 	}
@@ -79,7 +79,7 @@ public class DefaultAccountPersistenceService implements AccountPersistenceServi
 
 			return AccountMapper.toModel(entity);
 		} catch (Exception e) {
-			Logger.warn("Failed to create account %s: %s", account.getUniqueId(), e.getMessage());
+			Logger.warn(e, "Failed to create account %s", account.getUniqueId());
 			throw e;
 		}
 	}
@@ -89,7 +89,7 @@ public class DefaultAccountPersistenceService implements AccountPersistenceServi
 		try {
 			accountRepository.updateLastSeen(uniqueId, lastSeenAt);
 		} catch (Exception e) {
-			Logger.warn("Failed to update last seen for %s: %s", uniqueId, e.getMessage());
+			Logger.warn(e, "Failed to update last seen for %s", uniqueId);
 		}
 	}
 
@@ -100,7 +100,7 @@ public class DefaultAccountPersistenceService implements AccountPersistenceServi
 		try {
 			accountRepository.updateUsername(uniqueId, username);
 		} catch (Exception e) {
-			Logger.warn("Failed to update username for %s: %s", uniqueId, e.getMessage());
+			Logger.warn(e, "Failed to update username for %s", uniqueId);
 		}
 	}
 
@@ -109,7 +109,7 @@ public class DefaultAccountPersistenceService implements AccountPersistenceServi
 		try {
 			accountRepository.delete(uniqueId);
 		} catch (Exception e) {
-			Logger.warn("Failed to delete account %s: %s", uniqueId, e.getMessage());
+			Logger.warn(e, "Failed to delete account %s", uniqueId);
 		}
 	}
 

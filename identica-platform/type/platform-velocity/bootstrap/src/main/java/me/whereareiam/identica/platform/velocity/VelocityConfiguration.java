@@ -1,23 +1,14 @@
 package me.whereareiam.identica.platform.velocity;
 
 import com.google.inject.TypeLiteral;
-import com.google.inject.multibindings.Multibinder;
 import com.google.inject.multibindings.OptionalBinder;
 import com.velocitypowered.api.event.EventManager;
 import com.velocitypowered.api.plugin.PluginContainer;
 import com.velocitypowered.api.proxy.ProxyServer;
 import lombok.RequiredArgsConstructor;
+import me.whereareiam.identica.integration.statistics.StatisticsConfiguration;
+import me.whereareiam.identica.integration.statistics.StatisticsPlatform;
 import me.whereareiam.identica.platform.common.PlatformConfiguration;
-import me.whereareiam.identica.integration.bstats.BStatsBootstrap;
-import me.whereareiam.identica.integration.bstats.TelemetryRegistrar;
-import me.whereareiam.identica.integration.bstats.chart.provider.ProviderUsageChart;
-import me.whereareiam.identica.integration.bstats.chart.provider.ProvidersChart;
-import me.whereareiam.identica.integration.bstats.chart.system.AccountCountChart;
-import me.whereareiam.identica.integration.bstats.chart.system.PersistenceTypeChart;
-import me.whereareiam.identica.integration.bstats.chart.system.ReplicationTypeChart;
-import me.whereareiam.identica.integration.bstats.chart.system.UniqueIdModeChart;
-import me.whereareiam.identica.integration.bstats.chart.type.Chart;
-import me.whereareiam.identica.integration.bstats.chart.verification.VerificationMethodsChart;
 import me.whereareiam.identica.listener.ListenerRegistrar;
 import me.whereareiam.identica.logging.LoggingHelper;
 import me.whereareiam.identica.platform.velocity.adapter.VelocityPlatformHandshakeApplierRegistry;
@@ -68,7 +59,8 @@ public class VelocityConfiguration extends PlatformConfiguration<VelocityHandsha
 
 		bind(new TypeLiteral<CommandManager<Actor>>() {}).toProvider(VelocityCommandManagerProvider.class);
 
-		configureBStats();
+		bind(StatisticsPlatform.class).to(VelocityStatisticsPlatform.class);
+		install(new StatisticsConfiguration());
 	}
 
 	@Override
@@ -104,19 +96,5 @@ public class VelocityConfiguration extends PlatformConfiguration<VelocityHandsha
 	@Override
 	protected @NotNull Class<VelocityProfileRewriteAdapter> profile() {
 		return VelocityProfileRewriteAdapter.class;
-	}
-
-	private void configureBStats() {
-		bind(TelemetryRegistrar.class).to(VelocityMetrics.class);
-		bind(BStatsBootstrap.class).asEagerSingleton();
-
-		Multibinder<Chart> charts = Multibinder.newSetBinder(binder(), Chart.class);
-		charts.addBinding().to(ProvidersChart.class);
-		charts.addBinding().to(ProviderUsageChart.class);
-		charts.addBinding().to(VerificationMethodsChart.class);
-		charts.addBinding().to(PersistenceTypeChart.class);
-		charts.addBinding().to(ReplicationTypeChart.class);
-		charts.addBinding().to(UniqueIdModeChart.class);
-		charts.addBinding().to(AccountCountChart.class);
 	}
 }

@@ -66,7 +66,7 @@ public class DefaultDatabaseService implements DatabaseService, SchemaBootstrap,
 					.scanPackages("me.whereareiam.identica.adapter.database.entity")
 					.initialize();
 		} catch (Exception e) {
-			Logger.severe("Failed to initialize database: %s", e.getMessage());
+			Logger.severe(e, "Failed to initialize database");
 			throw new RuntimeException("Failed to initialize database", e);
 		}
 	}

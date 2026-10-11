@@ -34,7 +34,7 @@ When changing behavior:
 - `identica-trait/*`
   Shared mandatory behavior driven by provider traits, including authoritative usernames. These modules are compiled into Identica and are not feature toggles.
 - `identica-integration/*`
-  External integrations such as bStats.
+  External integrations, such as usage statistics and error reports sent to bStats and FastStats through Statistica.
 - `identica-testing`
   Live player journeys against the packaged plugin on a real proxy, run through Anvil. Not part of the shipped plugin.
 - `build-logic/`

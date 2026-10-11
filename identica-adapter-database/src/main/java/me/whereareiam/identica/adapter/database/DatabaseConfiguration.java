@@ -20,6 +20,8 @@ import me.whereareiam.identica.database.provider.ProviderProfilePersistenceServi
 import me.whereareiam.identica.database.schema.SchemaBootstrap;
 import org.jdbi.v3.core.Jdbi;
 
+import javax.sql.DataSource;
+
 public class DatabaseConfiguration extends AbstractModule {
 	@Override
 	protected void configure() {
@@ -30,6 +32,11 @@ public class DatabaseConfiguration extends AbstractModule {
 		bind(AccountReservationPersistenceService.class).to(DefaultAccountReservationPersistenceService.class).asEagerSingleton();
 		bind(ProviderLinkPersistenceService.class).to(DefaultProviderLinkPersistenceService.class).asEagerSingleton();
 		bind(ProviderProfilePersistenceService.class).to(DefaultProviderProfilePersistenceService.class).asEagerSingleton();
+	}
+
+	@Provides
+	public DataSource provideDataSource(DefaultDatabaseService databaseService) {
+		return databaseService.getDataSource();
 	}
 
 	@Provides
