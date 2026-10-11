@@ -146,6 +146,7 @@ Do not replace these libraries with unrelated alternatives in the same area unle
 - every test gets fresh proxies, while the `auth` and `lobby` servers start once and serve one test after another, so a journey must not depend on the state of a backend world
 - add or update a journey when a change affects what a joining player experiences
 - declare the network with `@Identica`, describe the player with `Journey`, and name player-facing messages through Identica's message models (`.sees(m -> m.credential()...)`) instead of copying their text
+- a player who announces a hostname or connects from another loopback address joins with `Journey.of(anvil, Client.offline("Alice").through(host).from("127.0.0.2"))`; every other player connects from `127.0.0.1`
 - a failed test keeps its network under `identica-testing/build/anvil/`; read the `anvil-console.log` files there, where Identica's debug logging is enabled
 - change a test proxy's files through `@Identica(configure = ...)` (both proxies of a cluster through `@IdenticaCluster(configure = ...)`), a `Consumer<ProxyConfiguration>` working on Identica's models; `omit` and `corrupt` cover new installations and unreadable files
 - `@IdenticaCluster` starts two proxies on a shared PostgreSQL and, unless turned off, one Redis; a journey names its proxy (`Journey.offline(anvil, "Alice", PROXY_B)`) and `Administrator` runs console commands on one; these tests need Docker and are skipped without it

@@ -4,6 +4,7 @@ import me.whereareiam.anvil.api.scenario.ScenarioContext;
 import me.whereareiam.identica.testing.environment.Identica;
 import me.whereareiam.identica.testing.environment.Provider;
 import me.whereareiam.identica.testing.environment.ProxyConfiguration;
+import me.whereareiam.identica.testing.journey.Client;
 import me.whereareiam.identica.testing.journey.Journey;
 import me.whereareiam.identica.type.pipeline.journey.JourneyMode;
 import org.junit.jupiter.api.Test;
@@ -24,7 +25,7 @@ class ForcedHostJoinTest {
 	@Test
 	@Identica(mode = JourneyMode.SEAMLESS, providers = Provider.CREDENTIAL, complete = "", configure = FollowForcedHosts.class)
 	void reachesTheForcedHostServerOnceDone(ScenarioContext anvil) {
-		Journey.offlineThrough(anvil, "Alice", LOBBY_HOST).join()
+		Journey.of(anvil, Client.offline("Alice").through(LOBBY_HOST)).join()
 				.on(AUTH)
 				.sees(m -> m.credential().getScenario().getRegistration().getPrompt())
 				.register(PASSWORD)
@@ -46,7 +47,7 @@ class ForcedHostJoinTest {
 	@Test
 	@Identica(mode = JourneyMode.SEAMLESS, providers = Provider.CREDENTIAL, complete = "")
 	void staysOnTheStepServerWhenRoutingDoesNotFollowForcedHosts(ScenarioContext anvil) {
-		Journey.offlineThrough(anvil, "Alice", LOBBY_HOST).join()
+		Journey.of(anvil, Client.offline("Alice").through(LOBBY_HOST)).join()
 				.on(AUTH)
 				.sees(m -> m.credential().getScenario().getRegistration().getPrompt())
 				.register(PASSWORD)
