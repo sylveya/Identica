@@ -56,6 +56,8 @@ public final class ConfigMigrations {
 				.migration(1, "initial-layout", files -> {})
 				.migration(SessionRecordsMigration.VERSION, SessionRecordsMigration.NAME,
 						new SessionRecordsMigration(configura.extension()))
+				.migration(ReservationUsernameMigration.VERSION, ReservationUsernameMigration.NAME,
+						new ReservationUsernameMigration(configura.extension()))
 				.build();
 	}
 }
