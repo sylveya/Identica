@@ -15,7 +15,6 @@ dependencies {
     add("implementation", project(":identica-common"))
     add("implementation", project(":identica-feature"))
     add("implementation", project(":identica-platform:common"))
-    add("implementation", project(":trait-authoritative-username"))
     add("implementation", project(":identica-engine"))
     add("implementation", project(":identica-adapter-command"))
     add("implementation", project(":identica-adapter-database"))

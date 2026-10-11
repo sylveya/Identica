@@ -1,9 +1,6 @@
 package me.whereareiam.identica.adapter.database.integration;
 
-import me.whereareiam.dialectica.Dialectica;
-import me.whereareiam.dialectica.SchemaManager;
 import me.whereareiam.identica.adapter.database.testing.DatabaseFixture;
-import me.whereareiam.identica.trait.authoritative.username.database.AuthoritativeUsernameSchemaContributor;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -23,13 +20,10 @@ class UsernameSchemaIntegrationTest extends DatabaseIntegrationTestBase {
 	private static final String HISTORY_TABLE = "identica_account_username_history";
 	private static final String HISTORY_INDEX = "identica_account_username_history_unique_id_changed_at_idx";
 
-	@DisplayName("Creates the username tables and applies again without failing")
+	@DisplayName("Creates the username tables with the core schema")
 	@ParameterizedTest(name = "{0}")
 	@MethodSource("fixtures")
 	void createsTables(DatabaseFixture fixture) {
-		apply(fixture);
-		apply(fixture);
-
 		fixture.useHandle(handle -> {
 			handle.createQuery("SELECT COUNT(*) FROM identica_account_username_state").mapTo(Long.class).one();
 			handle.createQuery("SELECT COUNT(*) FROM " + HISTORY_TABLE).mapTo(Long.class).one();
@@ -40,20 +34,12 @@ class UsernameSchemaIntegrationTest extends DatabaseIntegrationTestBase {
 	@ParameterizedTest(name = "{0}")
 	@MethodSource("mysqlFixtures")
 	void createsHistoryIndexOnMysql(DatabaseFixture fixture) throws SQLException {
-		apply(fixture);
-
 		Set<String> indexes = fixture.jdbi().withHandle(handle -> indexNames(handle.getConnection().getMetaData()));
 		assertTrue(indexes.contains(HISTORY_INDEX), "Missing " + HISTORY_INDEX + ": " + indexes);
 	}
 
 	private Stream<DatabaseFixture> mysqlFixtures() {
 		return fixtures().filter(fixture -> fixture.name().equals("mariadb"));
-	}
-
-	private static void apply(DatabaseFixture fixture) {
-		SchemaManager schemaManager = Dialectica.schema(fixture.jdbi()).setFailOnError(true);
-		new AuthoritativeUsernameSchemaContributor().contribute(schemaManager);
-		schemaManager.initialize();
 	}
 
 	private static Set<String> indexNames(DatabaseMetaData metaData) throws SQLException {

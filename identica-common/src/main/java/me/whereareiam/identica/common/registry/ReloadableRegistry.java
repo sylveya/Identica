@@ -14,8 +14,8 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Every component of the running proxy that {@code /identica admin reload} refreshes: the core's, the features'
- * and traits', and those of each loaded provider, whose injectors are children of the core's. There is one
+ * Every component of the running proxy that {@code /identica admin reload} refreshes: the core's, the features',
+ * and those of each loaded provider, whose injectors are children of the core's. There is one
  * registry; a provider's components leave it when the provider is unloaded.
  */
 @Singleton

@@ -16,7 +16,6 @@ import me.whereareiam.identica.event.lifecycle.IdenticaReadyEvent;
 import me.whereareiam.identica.event.lifecycle.IdenticaShutdownEvent;
 import me.whereareiam.identica.common.feature.FeatureRuntime;
 import me.whereareiam.identica.feature.BuiltinFeatures;
-import me.whereareiam.identica.trait.authoritative.username.UsernameConfiguration;
 import com.google.inject.Module;
 import java.util.ArrayList;
 import java.util.List;
@@ -55,7 +54,6 @@ public class BungeeCordIdentica extends Plugin {
 		featureRuntime = BuiltinFeatures.runtime(getDataFolder().toPath());
 		List<Module> modules = new ArrayList<>(List.of(
 				new CommonConfiguration(getDataFolder().toPath()),
-				new UsernameConfiguration(getDataFolder().toPath().resolve("identity/username")),
 				new EngineConfiguration(),
 				new BungeeCordConfiguration(getProxy(), this, getDataFolder().toPath(), audiences),
 				new CommandConfiguration(),

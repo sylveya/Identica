@@ -12,12 +12,18 @@ import me.whereareiam.identica.adapter.database.repository.account.AccountReposi
 import me.whereareiam.identica.adapter.database.repository.account.AccountReservationRepository;
 import me.whereareiam.identica.adapter.database.repository.provider.ProviderLinkRepository;
 import me.whereareiam.identica.adapter.database.repository.provider.ProviderProfileRepository;
+import me.whereareiam.identica.adapter.database.repository.username.UsernameHistoryRepository;
+import me.whereareiam.identica.adapter.database.repository.username.UsernameStateRepository;
+import me.whereareiam.identica.adapter.database.username.DefaultAccountUsernameHistoryPersistenceService;
+import me.whereareiam.identica.adapter.database.username.DefaultAccountUsernameStatePersistenceService;
 import me.whereareiam.identica.database.AccountPersistenceService;
 import me.whereareiam.identica.database.AccountReservationPersistenceService;
 import me.whereareiam.identica.database.DatabaseService;
 import me.whereareiam.identica.database.provider.ProviderLinkPersistenceService;
 import me.whereareiam.identica.database.provider.ProviderProfilePersistenceService;
 import me.whereareiam.identica.database.schema.SchemaBootstrap;
+import me.whereareiam.identica.database.username.AccountUsernameHistoryPersistenceService;
+import me.whereareiam.identica.database.username.AccountUsernameStatePersistenceService;
 import org.jdbi.v3.core.Jdbi;
 
 public class DatabaseConfiguration extends AbstractModule {
@@ -30,6 +36,8 @@ public class DatabaseConfiguration extends AbstractModule {
 		bind(AccountReservationPersistenceService.class).to(DefaultAccountReservationPersistenceService.class).asEagerSingleton();
 		bind(ProviderLinkPersistenceService.class).to(DefaultProviderLinkPersistenceService.class).asEagerSingleton();
 		bind(ProviderProfilePersistenceService.class).to(DefaultProviderProfilePersistenceService.class).asEagerSingleton();
+		bind(AccountUsernameStatePersistenceService.class).to(DefaultAccountUsernameStatePersistenceService.class).asEagerSingleton();
+		bind(AccountUsernameHistoryPersistenceService.class).to(DefaultAccountUsernameHistoryPersistenceService.class).asEagerSingleton();
 	}
 
 	@Provides
@@ -54,6 +62,18 @@ public class DatabaseConfiguration extends AbstractModule {
 	@Singleton
 	public ProviderProfileRepository provideProviderProfileRepository(Jdbi jdbi) {
 		return jdbi.onDemand(ProviderProfileRepository.class);
+	}
+
+	@Provides
+	@Singleton
+	public UsernameStateRepository provideUsernameStateRepository(Jdbi jdbi) {
+		return jdbi.onDemand(UsernameStateRepository.class);
+	}
+
+	@Provides
+	@Singleton
+	public UsernameHistoryRepository provideUsernameHistoryRepository(Jdbi jdbi) {
+		return jdbi.onDemand(UsernameHistoryRepository.class);
 	}
 
 }

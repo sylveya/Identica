@@ -15,8 +15,8 @@ import java.nio.file.Path;
  * older installation into the layout this build reads. This is where the next one is added.
  * <p>
  * They apply to the whole data directory: the core documents, {@code providers/providers} and
- * {@code providers/conflicts}, and the documents of the compiled features and traits under
- * {@code features/} and {@code identity/}. On startup the ones an installation has not seen yet run
+ * {@code providers/conflicts}, the username documents under {@code identity/}, and those of the compiled
+ * features under {@code features/}. On startup the ones an installation has not seen yet run
  * in order, before any document is loaded. The number of the last one that ran is kept as
  * {@code _version} at the top of the settings document.
  * <p>

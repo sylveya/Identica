@@ -20,7 +20,7 @@ When changing behavior:
 - `identica-api`
   Public API, contracts, events, shared models, and extension points.
 - `identica-common`
-  Shared runtime behavior, configuration defaults, provider coordination, routing, migration, replication integration, compiled feature lifecycle coordination, and general domain logic.
+  Shared runtime behavior, configuration defaults, provider coordination, routing, migration, replication integration, username conflict handling, compiled feature lifecycle coordination, and general domain logic.
 - `identica-engine`
   Pipeline, step, prepare, and completion orchestration.
 - `identica-adapter-*`
@@ -31,8 +31,6 @@ When changing behavior:
   Provider-specific behavior, including the official credential and premium providers.
 - `identica-feature/*`
   Compiled features: verification, recognition, sentinel, restriction, and restriction-join. Feature API, implementation, persistence, commands, and pipeline contributions stay in their owning feature modules; join restriction is nested under `feature-restriction/restriction-join`.
-- `identica-trait/*`
-  Shared mandatory behavior driven by provider traits, including authoritative usernames. These modules are compiled into Identica and are not feature toggles.
 - `identica-integration/*`
   External integrations such as bStats.
 - `identica-testing`
@@ -52,7 +50,7 @@ When changing behavior:
 - For persistence, replication, or command infrastructure, start in the relevant `identica-adapter-*` module.
 - For proxy-specific behavior, bootstrap flow, or listeners, start in `identica-platform/type/*`. For what a platform has to provide, start in `identica-platform/common`.
 - For credential-specific or premium-specific behavior, start in `identica-provider/*`.
-- For shared behavior driven by provider identity guarantees, start in `identica-trait/*`. Trait declarations remain in `identica-api`.
+- For username behavior (synchronization, uniqueness, conflict rules), start in `identica-api` (`identity/username`, `model/identity/username`) and `identica-common` (`identity/username`). Its phases are in `identica-engine`, and its tables are in `identica-adapter-database`. Providers declare identity guarantees as `ProviderTrait`s in `identica-api`.
 - For optional behavior, feature-specific APIs, settings, persistence, or pipeline contributions, start in `identica-feature/*`. Core owns the `IdenticaFeature` contract and startup lifecycle; providers declare identity traits and supported feature integrations.
 - For build behavior or packaging conventions, check `build-logic/`.
 - For user-visible behavior changes, check the matching pages under `docs/content/`.
