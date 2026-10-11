@@ -132,7 +132,15 @@ void registersOnTheLobbyWithoutAnyRouting(ScenarioContext anvil) {
 }
 ```
 
-Every test proxy forces the hostname `IdenticaNetwork.LOBBY_HOST` to `lobby`. A player joins through it with `Journey.offlineThrough(anvil, "Alice", LOBBY_HOST)`; every other journey joins through a hostname without a forced host.
+Every test proxy forces the hostname `IdenticaNetwork.LOBBY_HOST` to `lobby`; every journey that names no hostname joins through one without a forced host.
+
+`Journey.of(anvil, client)` creates a player from a `Client` description: `Client.offline(username)` or `Client.premium(account)`, then `.through(host)` for the hostname the client announces, such as `LOBBY_HOST` or a provider's entrypoint, `.from(address)` for the loopback address it connects from, such as `127.0.0.2`, and `.at(proxy)` for a proxy of a cluster. Without `.from(...)` every player connects from `127.0.0.1`, so two clients that should look like different machines name different addresses. Clients of one username need different addresses or proxies:
+
+```java
+Journey home = Journey.of(anvil, Client.offline("Alice"));
+Journey elsewhere = Journey.of(anvil, Client.offline("Alice").from("127.0.0.2"));
+Journey routed = Journey.of(anvil, Client.offline("Bob").through(Provider.CREDENTIAL.getEntrypoint()));
+```
 
 Each `Journey` step checks both sides: what the player's client receives, and what the proxy reports on its own console for connections, server changes, and disconnect reasons. A message expectation only considers messages received since the previous one, so a prompt repeated after a reconnect is not satisfied by its earlier occurrence.
 

@@ -6,6 +6,7 @@ import me.whereareiam.anvil.api.process.ProcessConsole;
 import me.whereareiam.anvil.api.scenario.ScenarioContext;
 import me.whereareiam.identica.testing.environment.IdenticaNetwork;
 import me.whereareiam.identica.testing.environment.Provider;
+import me.whereareiam.identica.testing.journey.Client;
 import me.whereareiam.identica.testing.journey.Journey;
 
 import java.time.Duration;
@@ -39,6 +40,14 @@ public final class Accounts {
 	 */
 	public static Journey credential(ScenarioContext anvil, String username, String password, String proxy) {
 		return register(Journey.offline(anvil, username, proxy), password);
+	}
+
+	/**
+	 * Registers a Credential account with a described client, such as one connecting from another address, and
+	 * leaves the network.
+	 */
+	public static Journey credential(ScenarioContext anvil, Client client, String password) {
+		return register(Journey.of(anvil, client), password);
 	}
 
 	private static Journey register(Journey client, String password) {

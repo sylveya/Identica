@@ -1,14 +1,11 @@
 package me.whereareiam.identica.testing.journey;
 
-import me.whereareiam.anvil.api.model.player.PlayerConnection;
 import me.whereareiam.anvil.api.model.player.PlayerIdentity;
-import me.whereareiam.anvil.api.model.player.PlayerLogin;
 import me.whereareiam.anvil.api.model.player.PlayerOptions;
 import me.whereareiam.anvil.api.model.player.SessionIdentity;
 import me.whereareiam.anvil.api.player.SimulatedPlayer;
 import me.whereareiam.anvil.api.process.ProcessConsole;
 import me.whereareiam.anvil.api.scenario.ScenarioContext;
-import me.whereareiam.anvil.api.type.AuthenticationMode;
 import me.whereareiam.anvil.api.type.DisconnectCause;
 import me.whereareiam.anvil.capability.messages.Messages;
 import me.whereareiam.anvil.capability.messages.model.ReceivedMessage;
@@ -68,11 +65,27 @@ public final class Journey {
 	}
 
 	/**
+	 * Creates a player that has not connected yet and joins with the described client.
+	 *
+	 * <pre>{@code
+	 * Journey.of(anvil, Client.offline("Alice").through(LOBBY_HOST)).join().on(AUTH);
+	 * }</pre>
+	 */
+	public static Journey of(ScenarioContext anvil, Client client) {
+		SimulatedPlayer player = anvil.players().create(PlayerOptions.builder()
+				.name(client.playerName())
+				.login(client.login())
+				.connection(client.connection())
+				.build());
+		String proxy = client.getProxy() != null ? client.getProxy() : anvil.definition().getEntrypoint();
+		return new Journey(anvil, player, client.getUsername(), proxy);
+	}
+
+	/**
 	 * Creates an offline player that has not connected yet.
 	 */
 	public static Journey offline(ScenarioContext anvil, String name) {
-		String proxy = anvil.definition().getEntrypoint();
-		return new Journey(anvil, anvil.players().create(name), name, proxy);
+		return of(anvil, Client.offline(name));
 	}
 
 	/**
@@ -80,25 +93,7 @@ public final class Journey {
 	 * clients may use one username, each through its own proxy.
 	 */
 	public static Journey offline(ScenarioContext anvil, String name, String proxy) {
-		SimulatedPlayer player = anvil.players().create(PlayerOptions.builder()
-				.name(name + "@" + proxy)
-				.login(PlayerLogin.offline(name))
-				.connection(PlayerConnection.to(proxy))
-				.build());
-		return new Journey(anvil, player, name, proxy);
-	}
-
-	/**
-	 * Creates an offline player that has not connected yet and joins through a hostname, as a player who typed
-	 * that address does.
-	 */
-	public static Journey offlineThrough(ScenarioContext anvil, String name, String host) {
-		SimulatedPlayer player = anvil.players().create(PlayerOptions.builder()
-				.name(name)
-				.login(PlayerLogin.offline(name))
-				.connection(PlayerConnection.entrypoint().toBuilder().virtualHost(host).build())
-				.build());
-		return new Journey(anvil, player, name, anvil.definition().getEntrypoint());
+		return of(anvil, Client.offline(name).at(proxy));
 	}
 
 	/**
@@ -106,11 +101,7 @@ public final class Journey {
 	 * yet. It authenticates when the proxy asks for it, as a premium client does.
 	 */
 	public static Journey premium(ScenarioContext anvil, SessionIdentity account) {
-		SimulatedPlayer player = anvil.players().create(PlayerOptions.builder()
-				.name(account.getUsername())
-				.login(PlayerLogin.session(AuthenticationMode.ON_REQUEST, account))
-				.build());
-		return new Journey(anvil, player, account.getUsername(), anvil.definition().getEntrypoint());
+		return of(anvil, Client.premium(account));
 	}
 
 	/**
