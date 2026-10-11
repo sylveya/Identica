@@ -29,6 +29,12 @@ On every start and reload Identica completes each document with the settings it 
 
 A list is taken as you wrote it, including an empty one: `[]` means "nothing", not "use the default". Remove the key to get the default list back.
 
+## Reloading
+
+`/identica admin reload` reads every document of the running proxy again: the core documents, those of features and identity guarantees, and those of every loaded provider. Documents a provider owns are read before the sections other parts add to them, as on startup. Messages and settings that are read when they are used, such as the prompts players see or a provider's attempt limits, apply to the next players without a restart. The database connection is opened at startup, so a change to the persistence document takes effect on the next start.
+
+A document that cannot be read keeps the values it had, and the other documents are still reloaded. The command then answers with `commands.reload.error` from the messages document, whose `{error}` names each file that failed; it answers with `commands.reload.success` only when every document was reloaded. Identica does not rewrite a file it could not read, so you can fix it and reload again.
+
 ## Configuration version
 
 The settings document starts with `_version`. Identica uses it to upgrade the data directory when a new release changes the layout of a document, and it refuses to start on a directory written by a newer release. Do not edit or remove it, and keep it when you copy your configuration to another server.

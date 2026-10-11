@@ -1,6 +1,6 @@
 package me.whereareiam.identica.common.registry;
 
-import com.google.inject.Provider;
+import com.google.inject.Singleton;
 import me.whereareiam.identica.Reloadable;
 import me.whereareiam.identica.Registry;
 import me.whereareiam.identica.common.config.ConfigLoadOrder;
@@ -8,13 +8,19 @@ import me.whereareiam.identica.common.config.ConfigLoadOrder;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
-public class ReloadableRegistry implements Provider<Set<Reloadable>>, Registry<Reloadable> {
-	private final Set<Reloadable> reloadables = new HashSet<>();
+/**
+ * Every component of the running proxy that {@code /identica admin reload} refreshes: the core's, the features'
+ * and traits', and those of each loaded provider, whose injectors are children of the core's. There is one
+ * registry; a provider's components leave it when the provider is unloaded.
+ */
+@Singleton
+public class ReloadableRegistry implements Registry<Reloadable> {
+	private final Set<Reloadable> reloadables = ConcurrentHashMap.newKeySet();
 
 	@Override
 	public void register(Reloadable value) {
@@ -27,8 +33,8 @@ public class ReloadableRegistry implements Provider<Set<Reloadable>>, Registry<R
 	}
 
 	/**
-	 * Returns the registered components in the order they are reloaded, which is the order documents are
-	 * loaded in at startup: a document before the extensions of it.
+	 * Returns the registered components in the order they are reloaded: documents in the order they are loaded in
+	 * at startup, a document before the extensions of it, then the components built from documents.
 	 */
 	@Override
 	public Set<Reloadable> values() {
@@ -36,10 +42,5 @@ public class ReloadableRegistry implements Provider<Set<Reloadable>>, Registry<R
 		ordered.sort(Comparator.comparing(reloadable -> (Class<?>) reloadable.getClass(), ConfigLoadOrder.BY_TYPE));
 
 		return Collections.unmodifiableSet(new LinkedHashSet<>(ordered));
-	}
-
-	@Override
-	public Set<Reloadable> get() {
-		return values();
 	}
 }
