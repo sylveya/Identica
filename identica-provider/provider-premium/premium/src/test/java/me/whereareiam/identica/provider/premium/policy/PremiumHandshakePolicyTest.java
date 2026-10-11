@@ -85,6 +85,16 @@ class PremiumHandshakePolicyTest {
 		verify(profileLookup, never()).findProfileId(any());
 	}
 
+	@DisplayName("Keeps asking a premium account for a premium login while its pending migration selected another provider")
+	@Test
+	void pendingMigrationAwayFromPremiumStillForcesOnline() {
+		ProviderContext credential = ProviderContext.of("credential", null, USERNAME, ProviderOrigin.MANUAL);
+
+		HandshakeDecision decision = evaluate(request(null, credential, link("premium", UUID.randomUUID()), JourneyMode.SEAMLESS));
+
+		assertEquals(Optional.of(true), forcesOnline(decision));
+	}
+
 	@DisplayName("Does not force premium again when a verify attempt already exists")
 	@Test
 	void existingVerifyAttemptSkipsManualPremiumRequeue() {
