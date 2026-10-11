@@ -162,7 +162,7 @@ See `docs/content/developer/testing/index.mdx`.
 
 - Build each feature, fix, or isolated piece of work in its own `feature/...` branch.
 - Merge feature work into `dev` through a pull request.
-- Release work is merged from `dev` into a `release` branch through a pull request.
+- Releases are cut from `dev`: publishing the release draft tags the current `dev`.
 
 ### Pull Request Checks
 
@@ -211,10 +211,33 @@ Use `skip-changelog` for:
 
 Add `major` next to the category when admins or developers must act on upgrade: configuration moved or reset without a migration, stored data that is not carried over, or an incompatible public API change. One `major` pull request makes the draft a major version.
 
+#### Release notes file
+
+The drafter rebuilds the draft on every push to `dev`, so text typed into the draft is lost. Everything written by hand, such as the subtitle, the summary, upgrade notes, and security callouts, lives in `.github/release-notes.md` and is changed through pull requests like any other file.
+
+```markdown
+---
+version: 3.0.0
+---
+
+# Update 3.0.0 - Shared Proxies
+
+One or two sentences about the release.
+
+## Upgrading
+
+* Update from 2.2.1; older versions are not supported.
+```
+
+- the content replaces the subtitle and summary placeholders of the draft only while `version` matches the version the draft resolves to; notes of a published release therefore never reach the next draft
+- when a change needs a note, add it to this file in the same pull request; if the file names an already published version, start the notes of the next release by replacing the whole file and setting `version` to the version the draft shows
+- keep the heading as `# Update <version> - <subtitle>`; the stores take the subtitle as the version name
+- bullets in this file are not sorted into the changelog
+
 #### Publishing a release
 
-- the drafter rebuilds the draft on every push to `dev`; edit titles and labels of merged pull requests to fix the draft, then rerun the `Release drafter` workflow
-- before publishing, replace the subtitle and the summary of the draft; the stores use the subtitle as the version name, and the release workflow stops while a placeholder is left
+- fix the changelog part of the draft by editing titles and labels of merged pull requests, then rerun the `Release drafter` workflow
+- the subtitle and summary come from `.github/release-notes.md`; the release workflow stops while a placeholder is left
 - the summary names what admins must do on upgrade (everything labelled `major`) and calls out security fixes
 - the release workflow attaches `release-notes-bbcode.txt` for stores without automatic upload, such as spigotmc.ru
 

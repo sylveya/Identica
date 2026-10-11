@@ -11,6 +11,7 @@
 - [ ] Exactly one label: `feature`, `change`, `bug`, `dependencies`, or `skip-changelog`
 - [ ] `bug` only for a bug that shipped in a release; a fix for a bug that only existed on `dev` is `skip-changelog`
 - [ ] `major` added when admins or developers must act on upgrade
+- [ ] Upgrade steps or warnings added to `.github/release-notes.md`, if admins need them
 
 ## Checks
 
