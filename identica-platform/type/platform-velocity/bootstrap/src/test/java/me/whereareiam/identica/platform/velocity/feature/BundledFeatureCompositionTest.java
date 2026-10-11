@@ -31,8 +31,6 @@ import me.whereareiam.identica.event.EventManager;
 import me.whereareiam.identica.feature.FeatureRegistry;
 import me.whereareiam.identica.feature.IdenticaFeature;
 import me.whereareiam.identica.feature.BuiltinFeatures;
-import me.whereareiam.identica.trait.authoritative.username.UsernameConfiguration;
-import me.whereareiam.identica.lifecycle.RuntimeLifecycle;
 import me.whereareiam.identica.model.provider.ProviderDescriptor;
 import me.whereareiam.identica.identity.IdentityService;
 import me.whereareiam.identica.identity.session.SessionService;
@@ -178,13 +176,10 @@ class BundledFeatureCompositionTest {
 		Files.writeString(dataPath.resolve("providers/providers.yml"), yaml);
 		try (FeatureRuntime runtime = BuiltinFeatures.runtime(dataPath)) {
 			List<Module> modules = new ArrayList<>(runtime.modules());
-			modules.add(new UsernameConfiguration(dataPath.resolve("identity/username")));
 			modules.add(new CoreBoundaries());
 			modules.add(new ConfigBindings());
 			Injector root = Guice.createInjector(Stage.PRODUCTION, modules);
 			ConfigInitializer.initialize(root);
-			var lifecycles = root.getInstance(Key.get(new TypeLiteral<Set<RuntimeLifecycle>>() {}));
-			lifecycles.forEach(RuntimeLifecycle::initialize);
 			runtime.initialize(root);
 			assertEquals(SERVICES.keySet(), runtime.ids());
 			assertFalse(runtime.isAvailable("username"));
@@ -208,12 +203,10 @@ class BundledFeatureCompositionTest {
 				assertFalse(mockingDetails(binding.getProvider().get()).isMock());
 				assertTrue(Files.exists(dataPath.resolve("features").resolve(CONFIG_FILES.get(service.getKey()))));
 			}
-			assertTrue(Files.exists(dataPath.resolve("identity/username/messages.yml")));
-			verify(schema, times(2)).apply(any());
+			verify(schema).apply(any());
 			var providerNodes = Config.configured().readNode(dataPath.resolve("providers/providers.yml")).get("providers");
 			assertEquals("custom-value", providerNodes.get(0).path("features").path("custom-extension").path("retained").asText());
 			runtime.shutdown();
-			lifecycles.forEach(RuntimeLifecycle::shutdown);
 			assertAll(
 					() -> assertTrue(listeners.isEmpty()),
 					() -> assertTrue(pipelineExtensions.isEmpty()),
@@ -249,7 +242,6 @@ class BundledFeatureCompositionTest {
 	private List<String> loadDocuments() throws Exception {
 		try (FeatureRuntime runtime = BuiltinFeatures.runtime(dataPath)) {
 			List<Module> modules = new ArrayList<>(runtime.modules());
-			modules.add(new UsernameConfiguration(dataPath.resolve("identity/username")));
 			modules.add(new CoreBoundaries());
 			modules.add(new ConfigBindings());
 			List<String> loaded = ConfigInitializer.initialize(Guice.createInjector(Stage.PRODUCTION, modules));

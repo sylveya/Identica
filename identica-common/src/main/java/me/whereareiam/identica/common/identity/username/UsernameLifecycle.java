@@ -1,0 +1,49 @@
+package me.whereareiam.identica.common.identity.username;
+
+import com.google.inject.Inject;
+import lombok.RequiredArgsConstructor;
+import me.whereareiam.identica.Registry;
+import me.whereareiam.identica.Reloadable;
+import me.whereareiam.identica.common.config.provider.UsernameConflictsProvider;
+import me.whereareiam.identica.common.config.provider.UsernameMessagesProvider;
+import me.whereareiam.identica.conflict.ConflictService;
+import me.whereareiam.identica.lifecycle.RuntimeLifecycle;
+
+import java.util.ArrayDeque;
+import java.util.Deque;
+
+/**
+ * Loads the username documents and registers the username conflict type, undoing both on shutdown.
+ */
+@RequiredArgsConstructor(onConstructor_ = @Inject)
+public final class UsernameLifecycle implements RuntimeLifecycle {
+	private final Registry<Reloadable> reloadables;
+	private final UsernameConflictsProvider conflictsProvider;
+	private final UsernameMessagesProvider messagesProvider;
+	private final ConflictService conflicts;
+	private final UsernameConflictType conflictType;
+	private final Deque<Runnable> cleanup = new ArrayDeque<>();
+
+	@Override
+	public void initialize() {
+		cleanup.addFirst(() -> reloadables.unregister(conflictsProvider));
+		cleanup.addFirst(() -> reloadables.unregister(messagesProvider));
+		conflictsProvider.get();
+		cleanup.addFirst(() -> conflicts.unregister(conflictType));
+		conflicts.register(conflictType);
+	}
+
+	@Override
+	public void shutdown() {
+		RuntimeException failure = null;
+		while (!cleanup.isEmpty()) {
+			try {
+				cleanup.removeFirst().run();
+			} catch (RuntimeException exception) {
+				if (failure == null) failure = exception;
+				else failure.addSuppressed(exception);
+			}
+		}
+		if (failure != null) throw failure;
+	}
+}

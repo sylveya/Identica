@@ -1,6 +1,7 @@
 package me.whereareiam.identica.engine;
 
 import com.google.inject.AbstractModule;
+import com.google.inject.multibindings.Multibinder;
 import com.google.inject.name.Names;
 import me.whereareiam.identica.ConnectionCoordinator;
 import me.whereareiam.identica.engine.pipeline.DefaultPipelineExtensionRegistry;
@@ -9,6 +10,7 @@ import me.whereareiam.identica.engine.pipeline.completion.extension.DefaultCompl
 import me.whereareiam.identica.engine.pipeline.completion.lifecycle.CompletionPendingLifecycle;
 import me.whereareiam.identica.engine.pipeline.completion.registry.CompletionPipelineRegistry;
 import me.whereareiam.identica.engine.pipeline.completion.runtime.CompletionPipeline;
+import me.whereareiam.identica.engine.pipeline.prepare.group.policy.phase.ApplyAuthoritativeUsernamePhase;
 import me.whereareiam.identica.engine.pipeline.prepare.registry.PreparePipelineRegistry;
 import me.whereareiam.identica.engine.pipeline.scenario.PendingPipelineKickCoordinator;
 import me.whereareiam.identica.engine.pipeline.scenario.PendingScenarioAccountLifecycle;
@@ -16,10 +18,20 @@ import me.whereareiam.identica.engine.pipeline.scenario.ScenarioRegistry;
 import me.whereareiam.identica.engine.pipeline.scenario.shared.group.journey.rule.DefaultJourneyRuleRegistry;
 import me.whereareiam.identica.engine.pipeline.scenario.type.authentication.AuthenticationPipelineRegistry;
 import me.whereareiam.identica.engine.pipeline.scenario.type.authentication.DefaultAuthenticationStageRegistry;
+import me.whereareiam.identica.engine.pipeline.scenario.type.authentication.group.identity.phase.SynchronizeAuthenticationUsernamePhase;
+import me.whereareiam.identica.engine.pipeline.scenario.type.authentication.group.policy.phase.PersistAuthenticationUsernamePhase;
+import me.whereareiam.identica.engine.pipeline.scenario.type.authentication.group.policy.phase.ReviewAuthenticationUsernamePhase;
 import me.whereareiam.identica.engine.pipeline.scenario.type.migration.DefaultMigrationStageRegistry;
 import me.whereareiam.identica.engine.pipeline.scenario.type.migration.MigrationPipelineRegistry;
+import me.whereareiam.identica.engine.pipeline.scenario.type.migration.group.identity.phase.SynchronizeMigrationUsernamePhase;
 import me.whereareiam.identica.engine.pipeline.scenario.type.registration.DefaultRegistrationStageRegistry;
 import me.whereareiam.identica.engine.pipeline.scenario.type.registration.RegistrationPipelineRegistry;
+import me.whereareiam.identica.engine.pipeline.scenario.type.registration.group.identity.phase.SynchronizeRegistrationUsernamePhase;
+import me.whereareiam.identica.engine.pipeline.scenario.type.registration.group.policy.phase.PersistRegistrationUsernamePhase;
+import me.whereareiam.identica.engine.pipeline.scenario.type.registration.group.policy.phase.ReviewRegistrationUsernamePhase;
+import me.whereareiam.identica.engine.pipeline.username.UsernamePipelineExtension;
+import me.whereareiam.identica.engine.pipeline.username.UsernamePipelineLifecycle;
+import me.whereareiam.identica.lifecycle.RuntimeLifecycle;
 import me.whereareiam.identica.pipeline.PipelineRegistry;
 import me.whereareiam.identica.pipeline.completion.extension.CompletionExtensionRegistry;
 import me.whereareiam.identica.pipeline.extension.PipelineExtensionRegistry;
@@ -62,5 +74,16 @@ public class EngineConfiguration extends AbstractModule {
 		bind(RegistrationJourneyRegistry.class).to(DefaultRegistrationStageRegistry.class).asEagerSingleton();
 		bind(MigrationJourneyRegistry.class).to(DefaultMigrationStageRegistry.class).asEagerSingleton();
 		bind(JourneyRuleRegistry.class).to(DefaultJourneyRuleRegistry.class).asEagerSingleton();
+
+		bind(ApplyAuthoritativeUsernamePhase.class).asEagerSingleton();
+		bind(SynchronizeAuthenticationUsernamePhase.class).asEagerSingleton();
+		bind(SynchronizeRegistrationUsernamePhase.class).asEagerSingleton();
+		bind(SynchronizeMigrationUsernamePhase.class).asEagerSingleton();
+		bind(ReviewAuthenticationUsernamePhase.class).asEagerSingleton();
+		bind(ReviewRegistrationUsernamePhase.class).asEagerSingleton();
+		bind(PersistAuthenticationUsernamePhase.class).asEagerSingleton();
+		bind(PersistRegistrationUsernamePhase.class).asEagerSingleton();
+		bind(UsernamePipelineExtension.class).asEagerSingleton();
+		Multibinder.newSetBinder(binder(), RuntimeLifecycle.class).addBinding().to(UsernamePipelineLifecycle.class);
 	}
 }

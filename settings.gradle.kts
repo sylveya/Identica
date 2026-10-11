@@ -107,25 +107,6 @@ project(":feature-sentinel-api").projectDir = file("identica-feature/feature-sen
 include(":feature-sentinel-common")
 project(":feature-sentinel-common").projectDir = file("identica-feature/feature-sentinel/sentinel-common")
 
-include(":identica-trait")
-project(":identica-trait").projectDir = file("identica-trait")
-
-include(":trait-authoritative-username")
-project(":trait-authoritative-username").projectDir =
-    file("identica-trait/trait-authoritative-username/authoritative-username")
-
-include(":trait-authoritative-username-api")
-project(":trait-authoritative-username-api").projectDir =
-    file("identica-trait/trait-authoritative-username/authoritative-username-api")
-
-include(":trait-authoritative-username-common")
-project(":trait-authoritative-username-common").projectDir =
-    file("identica-trait/trait-authoritative-username/authoritative-username-common")
-
-include(":trait-authoritative-username-database")
-project(":trait-authoritative-username-database").projectDir =
-    file("identica-trait/trait-authoritative-username/authoritative-username-database")
-
 include(":feature-recognition")
 project(":feature-recognition").projectDir = file("identica-feature/feature-recognition/recognition")
 

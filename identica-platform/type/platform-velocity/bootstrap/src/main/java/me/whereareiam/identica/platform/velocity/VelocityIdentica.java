@@ -25,7 +25,6 @@ import me.whereareiam.identica.event.lifecycle.IdenticaReadyEvent;
 import me.whereareiam.identica.event.lifecycle.IdenticaShutdownEvent;
 import me.whereareiam.identica.common.feature.FeatureRuntime;
 import me.whereareiam.identica.feature.BuiltinFeatures;
-import me.whereareiam.identica.trait.authoritative.username.UsernameConfiguration;
 import com.google.inject.Module;
 import java.util.ArrayList;
 import java.util.List;
@@ -87,7 +86,6 @@ public class VelocityIdentica {
 		featureRuntime = BuiltinFeatures.runtime(dataPath);
 		List<Module> modules = new ArrayList<>(List.of(
 				new CommonConfiguration(dataPath),
-				new UsernameConfiguration(dataPath.resolve("identity/username")),
 				new EngineConfiguration(),
 				new VelocityConfiguration(proxyServer, this, pluginContainer, dataPath, logger),
 				new CommandConfiguration(),

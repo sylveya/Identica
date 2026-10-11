@@ -1,0 +1,57 @@
+package me.whereareiam.identica.adapter.database.username;
+
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import lombok.RequiredArgsConstructor;
+import me.whereareiam.identica.event.EventListener;
+import me.whereareiam.identica.event.EventManager;
+import me.whereareiam.identica.event.account.AccountLifecycleEvent;
+import me.whereareiam.identica.event.base.IdenticEvent;
+import me.whereareiam.identica.database.username.AccountUsernameHistoryPersistenceService;
+import me.whereareiam.identica.adapter.database.mapper.username.UsernameHistoryMapper;
+import me.whereareiam.identica.adapter.database.repository.username.UsernameHistoryRepository;
+import me.whereareiam.identica.model.identity.username.AccountUsernameHistoryEntry;
+import me.whereareiam.identica.type.event.EventOrder;
+import org.jetbrains.annotations.NotNull;
+
+import java.util.UUID;
+
+@Singleton
+@RequiredArgsConstructor(onConstructor_ = @Inject)
+public class DefaultAccountUsernameHistoryPersistenceService implements AccountUsernameHistoryPersistenceService, EventListener {
+	private final UsernameHistoryRepository repository;
+	private final EventManager eventManager;
+
+	@Inject
+	void registerListeners() {
+		eventManager.register(this);
+	}
+
+	@Override
+	public void record(@NotNull AccountUsernameHistoryEntry entry) {
+		if (entry.getOldUsername().isBlank() || entry.getNewUsername().isBlank()) return;
+
+		var entity = UsernameHistoryMapper.toEntity(entry);
+		repository.insert(
+				entity.getUniqueId(),
+				entity.getProviderId(),
+				entity.getOldUsername(),
+				entity.getNewUsername(),
+				entity.getSource(),
+				entity.getChangedAt()
+		);
+	}
+
+	@Override
+	public void deleteAll(@NotNull UUID uniqueId) {
+		repository.deleteAll(uniqueId);
+	}
+
+	@IdenticEvent(EventOrder.HIGH)
+	public void onAccountLifecycle(@NotNull AccountLifecycleEvent event) {
+		UUID uniqueId = event.getIdentity().getAccountUniqueId();
+		if (uniqueId == null) return;
+
+		deleteAll(uniqueId);
+	}
+}

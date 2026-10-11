@@ -11,7 +11,7 @@ Identica compiles its feature implementations into the plugin. Source modules se
 
 `ProviderTrait.AUTHORITATIVE_USERNAME` means Identica follows the provider's verified username for its primary account link, subject to manual authority and conflict policy. Premium declares this trait. Credential does not. Provider configuration cannot grant the trait.
 
-The implementation lives under `identica-trait/trait-authoritative-username`, with packages beneath `me.whereareiam.identica.trait.authoritative.username`. It is always composed as an identity subsystem, not listed in `supportedFeatures()`. See [Username authority](../../configuration/identity/username/index.mdx).
+Username handling is core behavior, not a feature, and is never listed in `supportedFeatures()`. Its contracts are in `identica-api`: `UsernameConflictHandler` in `me.whereareiam.identica.identity.username`, the models in `me.whereareiam.identica.model.identity.username`, `UsernameChangedEvent` in `me.whereareiam.identica.event.identity`, and the persistence services in `me.whereareiam.identica.database.username`. Conflict detection and the username documents are in `identica-common`, the username phases are in `identica-engine`, and the username tables are in `identica-adapter-database`. See [Username authority](../../configuration/identity/username/index.mdx).
 
 ## Supported features
 
