@@ -15,8 +15,8 @@ import me.whereareiam.identica.common.provider.resolver.ProviderPlatformExtensio
 import me.whereareiam.identica.common.provider.resolver.ProviderResolverRegistry;
 import me.whereareiam.identica.common.provider.resolver.ProviderWorkingPathResolver;
 import me.whereareiam.identica.conflict.ConflictService;
-import me.whereareiam.identica.database.schema.SchemaBootstrap;
-import me.whereareiam.identica.database.schema.SchemaContributor;
+import me.whereareiam.identica.database.schema.DatabaseSchema;
+import me.whereareiam.identica.database.schema.SchemaInstaller;
 import me.whereareiam.identica.event.EventManager;
 import me.whereareiam.identica.event.provider.state.ProviderDisabledEvent;
 import me.whereareiam.identica.event.provider.state.ProviderEnabledEvent;
@@ -58,7 +58,7 @@ public class ProviderLifecycleController {
 	private static final TypeLiteral<Set<ProviderEligibilityResolver>> ELIGIBILITY_RESOLVERS = new TypeLiteral<>() {};
 	private static final TypeLiteral<Set<SubjectResolver>> SUBJECT_RESOLVERS = new TypeLiteral<>() {};
 	private static final TypeLiteral<Set<ProviderMigrationPrecheck>> MIGRATION_PRECHECKS = new TypeLiteral<>() {};
-	private static final TypeLiteral<Set<SchemaContributor>> SCHEMA_CONTRIBUTORS = new TypeLiteral<>() {};
+	private static final TypeLiteral<Set<DatabaseSchema>> DATABASE_SCHEMAS = new TypeLiteral<>() {};
 	private static final TypeLiteral<Set<ProviderPlatformBinding>> PLATFORM_BINDINGS = new TypeLiteral<>() {};
 
 	private final ProviderWorkingPathResolver workingPathResolver;
@@ -71,7 +71,7 @@ public class ProviderLifecycleController {
 	private final ProviderResolverRegistry resolverRegistry;
 	private final FeatureRegistry features;
 	private final ConflictService conflictService;
-	private final SchemaBootstrap schemaBootstrap;
+	private final SchemaInstaller schemaInstaller;
 	private final EventManager eventManager;
 	private final HandshakeStore handshakeStore;
 	private final Registry<Reloadable> reloadables;
@@ -160,7 +160,7 @@ public class ProviderLifecycleController {
 					featureModules
 			);
 
-			applySchemaContributors(providerInjector);
+			installDatabaseSchemas(providerInjector);
 			IdenticaProvider provider = instanceFactory.createInjectedProvider(
 					providerInjector,
 					providerClass,
@@ -322,9 +322,9 @@ public class ProviderLifecycleController {
 			owned.forEach(reloadables::unregister);
 	}
 
-	private void applySchemaContributors(Injector injector) {
-		for (SchemaContributor contributor : resolveSet(injector, SCHEMA_CONTRIBUTORS))
-			schemaBootstrap.apply(contributor);
+	private void installDatabaseSchemas(Injector injector) {
+		for (DatabaseSchema schema : resolveSet(injector, DATABASE_SCHEMAS))
+			schemaInstaller.install(schema);
 	}
 
 	private void unregisterProviderBindings(InternalProvider internal) {

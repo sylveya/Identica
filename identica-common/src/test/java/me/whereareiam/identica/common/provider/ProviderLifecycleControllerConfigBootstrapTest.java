@@ -27,7 +27,7 @@ import me.whereareiam.identica.config.ConfigProvider;
 import me.whereareiam.identica.conflict.ConflictService;
 import me.whereareiam.identica.conflict.ConflictType;
 import me.whereareiam.identica.conflict.resolver.ConflictResolver;
-import me.whereareiam.identica.database.schema.SchemaBootstrap;
+import me.whereareiam.identica.database.schema.SchemaInstaller;
 import me.whereareiam.identica.event.EventListener;
 import me.whereareiam.identica.event.EventManager;
 import me.whereareiam.identica.event.base.Event;
@@ -234,7 +234,7 @@ class ProviderLifecycleControllerConfigBootstrapTest {
 			bind(ConflictService.class).toInstance(new NoopConflictService());
 			bind(EventManager.class).toInstance(new NoopEventManager());
 			bind(HandshakeStore.class).toInstance(new NoopHandshakeStore());
-			bind(SchemaBootstrap.class).toInstance(contributor -> {});
+			bind(SchemaInstaller.class).toInstance(schema -> {});
 			bind(ProviderResolverRegistry.class).asEagerSingleton();
 		}
 

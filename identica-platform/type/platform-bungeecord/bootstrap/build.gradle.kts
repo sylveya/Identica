@@ -28,6 +28,7 @@ dependencies {
 
     testRuntimeOnly(libs.strata)
     testRuntimeOnly(libs.strata.adapter.configura)
+    testRuntimeOnly(libs.strata.adapter.database)
 }
 
 tasks.processResources {

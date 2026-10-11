@@ -1,8 +1,17 @@
 package me.whereareiam.identica.feature.verification.database.entity;
 
-import lombok.*;
-import me.whereareiam.dialectica.EntitySchemaProvider;
-import me.whereareiam.dialectica.annotation.Entity;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import me.whereareiam.dialectica.entity.annotation.Id;
+import me.whereareiam.dialectica.entity.annotation.Length;
+import me.whereareiam.dialectica.entity.annotation.Nullable;
+import me.whereareiam.dialectica.entity.annotation.References;
+import me.whereareiam.dialectica.entity.annotation.Table;
+import me.whereareiam.dialectica.schema.type.ReferentialAction;
+import me.whereareiam.identica.database.schema.AccountTable;
 
 import java.util.UUID;
 
@@ -11,34 +20,19 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder(toBuilder = true)
-@Entity(tableName = "identica_verification_recovery_codes")
-public class VerificationRecoveryCodeEntity implements EntitySchemaProvider {
+@Table("identica_verification_recovery_codes")
+public class VerificationRecoveryCodeEntity {
+	@Id
+	@References(table = AccountTable.NAME, column = AccountTable.KEY, onDelete = ReferentialAction.CASCADE)
 	private UUID uniqueId;
+	@Id
+	@Length(64)
 	private String methodId;
+	@Id
+	@Length(128)
 	private String codeHash;
-	private long createdAt;
-	private long usedAt;
-
-	@Override
-	public String statement(String databaseType) {
-		String type = databaseType == null ? "" : databaseType.toUpperCase();
-		String uuidType = switch (type) {
-			case "POSTGRES", "H2" -> "UUID";
-			case "SQLITE" -> "TEXT";
-			default -> "CHAR(36)";
-		};
-		String timeType = "SQLITE".equals(type) ? "INTEGER" : "BIGINT";
-
-		return """
-				CREATE TABLE IF NOT EXISTS identica_verification_recovery_codes (
-					unique_id %s NOT NULL,
-					method_id VARCHAR(64) NOT NULL,
-					code_hash VARCHAR(128) NOT NULL,
-					created_at %s,
-					used_at %s,
-					PRIMARY KEY (unique_id, method_id, code_hash),
-					FOREIGN KEY (unique_id) REFERENCES identica_accounts(unique_id) ON DELETE CASCADE
-				)
-				""".formatted(uuidType, timeType, timeType);
-	}
+	@Nullable
+	private Long createdAt;
+	@Nullable
+	private Long usedAt;
 }

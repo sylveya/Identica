@@ -15,8 +15,8 @@ attache = "1.0.0"
 configura = "2.0.1"
 commandant = "dev-642fe14"
 keystone = "dev-790a33e"
-dialectica = "1.0.2"
-strata = "2.0.0"
+dialectica = "3.1.0"
+strata = "3.1.1"
 
 guice = "7.0.0"
 annotations = "26.0.1"
@@ -45,6 +45,7 @@ postgresql = "42.7.8"
 mariadb = "3.5.6"
 sqlite = "3.45.3.0"
 h2 = "2.4.240"
+mysql = "26.7.0"
 
 # testing
 junit = "6.0.1"
@@ -78,7 +79,11 @@ commandant = { group = "me.whereareiam", name = "commandant", version.ref = "com
 keystone = { group = "me.whereareiam", name = "keystone", version.ref = "keystone" }
 strata = { group = "me.whereareiam", name = "strata", version.ref = "strata" }
 strata-adapter-configura = { group = "me.whereareiam", name = "strata-adapter-configura", version.ref = "strata" }
+strata-adapter-database = { group = "me.whereareiam", name = "strata-adapter-database", version.ref = "strata" }
+strata-adapter-database-jdbi = { group = "me.whereareiam", name = "strata-adapter-database-jdbi", version.ref = "strata" }
+strata-adapter-database-dialectica = { group = "me.whereareiam", name = "strata-adapter-database-dialectica", version.ref = "strata" }
 dialectica = { group = "me.whereareiam", name = "dialectica", version.ref = "dialectica" }
+dialectica-bundle = { group = "me.whereareiam", name = "dialectica-bundle", version.ref = "dialectica" }
 jedis = { group = "redis.clients", name = "jedis", version.ref = "jedis" }
 statistica-common = { group = "me.whereareiam", name = "statistica-common", version.ref = "statistica" }
 statistica-adapter-jdbc = { group = "me.whereareiam", name = "statistica-adapter-jdbc", version.ref = "statistica" }
@@ -114,6 +119,7 @@ postgresql = { group = "org.postgresql", name = "postgresql", version.ref = "pos
 mariadb = { group = "org.mariadb.jdbc", name = "mariadb-java-client", version.ref = "mariadb" }
 sqlite = { group = "org.xerial", name = "sqlite-jdbc", version.ref = "sqlite" }
 h2 = { group = "com.h2database", name = "h2", version.ref = "h2" }
+mysql = { group = "com.mysql", name = "mysql-connector-j", version.ref = "mysql" }
 
 # testing
 junit-jupiter = { group = "org.junit.jupiter", name = "junit-jupiter", version.ref = "junit" }
@@ -124,6 +130,7 @@ anvil-protocol-mcprotocol = { group = "me.whereareiam.anvil", name = "protocol-m
 anvil-yggdrasil-mock = { group = "me.whereareiam.anvil", name = "yggdrasil-mock", version.ref = "anvil" }
 testcontainers-junit = { group = "org.testcontainers", name = "testcontainers-junit-jupiter", version.ref = "testcontainers" }
 testcontainers-mariadb = { group = "org.testcontainers", name = "testcontainers-mariadb", version.ref = "testcontainers" }
+testcontainers-mysql = { group = "org.testcontainers", name = "testcontainers-mysql", version.ref = "testcontainers" }
 testcontainers-postgresql = { group = "org.testcontainers", name = "testcontainers-postgresql", version.ref = "testcontainers" }
 testcontainers-redis = { group = "com.redis", name = "testcontainers-redis", version.ref = "testcontainers-redis" }
 

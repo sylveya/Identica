@@ -1,42 +1,34 @@
 package me.whereareiam.identica.provider.credential.database.entity;
 
-import lombok.*;
-import me.whereareiam.dialectica.EntitySchemaProvider;
-import me.whereareiam.dialectica.annotation.Entity;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import me.whereareiam.dialectica.entity.annotation.ForeignKey;
+import me.whereareiam.dialectica.entity.annotation.Id;
+import me.whereareiam.dialectica.entity.annotation.Length;
+import me.whereareiam.dialectica.entity.annotation.Table;
+import me.whereareiam.dialectica.schema.type.ReferentialAction;
 
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder(toBuilder = true)
-@Entity(tableName = "identica_provider_credential_accounts_history")
-public class CredentialAccountHistoryEntity implements EntitySchemaProvider {
+@Table("identica_provider_credential_accounts_history")
+@ForeignKey(fields = {"providerId", "providerSubject"}, entity = CredentialAccountEntity.class, onDelete = ReferentialAction.CASCADE)
+public class CredentialAccountHistoryEntity {
+	@Id
+	@Length(64)
 	private String providerId;
+	@Id
+	@Length(128)
 	private String providerSubject;
+	@Length(64)
 	private String hashingMethod;
+	@Length(32)
 	private String changeReason;
+	@Id
 	private long changedAt;
-
-	@Override
-	public String statement(String databaseType) {
-		String type = databaseType == null ? "" : databaseType.toUpperCase();
-		String timeType = switch (type) {
-			case "SQLITE" -> "INTEGER";
-			default -> "BIGINT";
-		};
-
-		return """
-				CREATE TABLE IF NOT EXISTS identica_provider_credential_accounts_history (
-					provider_id VARCHAR(64) NOT NULL,
-					provider_subject VARCHAR(128) NOT NULL,
-					hashing_method VARCHAR(64) NOT NULL,
-					change_reason VARCHAR(32) NOT NULL,
-					changed_at %s,
-					PRIMARY KEY (provider_id, provider_subject, changed_at),
-					FOREIGN KEY (provider_id, provider_subject)
-						REFERENCES identica_provider_credential_accounts(provider_id, provider_subject)
-						ON DELETE CASCADE
-				)
-				""".formatted(timeType);
-	}
 }

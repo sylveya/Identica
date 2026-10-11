@@ -12,6 +12,7 @@ val platform = platform()
 
 dependencies {
     add("implementation", project(":identica-api"))
+    add("implementation", project(":identica-adapter-database-api"))
     add("implementation", project(":identica-common"))
     add("implementation", project(":identica-feature"))
     add("implementation", project(":identica-platform:common"))

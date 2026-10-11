@@ -7,6 +7,8 @@ The persistence configuration selects which database backend Identica uses and h
 
 Identica uses SQLite when the file does not exist yet or does not set `type`.
 
+Identica creates its tables on the first start and upgrades them on later starts, after an update of Identica, a feature or a provider. It remembers how far each set of tables has come in the `strata_history` table; leave that table as it is. Proxies that share a database upgrade it once: the first proxy to start does it while the others wait.
+
 ## type
 
 - Takes: `"SQLITE"`, `"H2"`, `"MYSQL"`, or `"POSTGRES"`

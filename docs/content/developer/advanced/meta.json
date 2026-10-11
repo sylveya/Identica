@@ -2,6 +2,7 @@
   "title": "Advanced",
   "pages": [
     "pipeline-layout",
-    "events"
+    "events",
+    "database-schema"
   ]
 }

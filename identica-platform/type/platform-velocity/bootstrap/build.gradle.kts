@@ -11,7 +11,8 @@ platform {
 dependencies {
     testImplementation(libs.jdbi.core)
     testImplementation(libs.jdbi.sqlobject)
-    testImplementation(libs.dialectica)
+    testImplementation(libs.dialectica.bundle)
+    testImplementation(projects.identicaAdapterDatabaseApi)
     testImplementation(libs.commandant)
     testImplementation(libs.velocity)
     testImplementation(libs.cloud.velocity)
@@ -32,4 +33,5 @@ dependencies {
 
     testRuntimeOnly(libs.strata)
     testRuntimeOnly(libs.strata.adapter.configura)
+    testRuntimeOnly(libs.strata.adapter.database)
 }

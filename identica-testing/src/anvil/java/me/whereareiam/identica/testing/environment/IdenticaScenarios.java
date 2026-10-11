@@ -27,6 +27,7 @@ public final class IdenticaScenarios implements AnvilScenarioFactory<Identica> {
 		YggdrasilMock yggdrasil = resources.own(YggdrasilMock.start());
 		ProxyConfiguration proxy = new ProxyConfiguration(IdenticaNetwork.PROXY, identica.mode(), identica.policy(), enabled, identica.entrypoints(),
 				identica.autoSelectSingleProvider(), identica.step(), identica.complete(), yggdrasil);
+		proxy.put("persistence.yml", identica.database().persistence(resources));
 		for (Class<? extends Consumer<ProxyConfiguration>> change : identica.configure())
 			instantiate(change).accept(proxy);
 
@@ -49,6 +50,7 @@ public final class IdenticaScenarios implements AnvilScenarioFactory<Identica> {
 				identica.entrypoints() ? "entrypoints" : "direct",
 				identica.autoSelectSingleProvider() ? "autoselect" : "choice",
 				routing(identica.step(), identica.complete()),
+				identica.database().name(),
 				Arrays.stream(identica.configure()).map(Class::getSimpleName).collect(Collectors.joining("+")))
 				.replaceAll("-+$", "").toLowerCase(Locale.ROOT);
 	}

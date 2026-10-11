@@ -18,13 +18,15 @@ When changing behavior:
 ### Core Module Map
 
 - `identica-api`
-  Public API, contracts, events, shared models, and extension points.
+  Public API, contracts, events, shared models, and extension points. It carries no database technology: no Dialectica, Strata or Jdbi.
 - `identica-common`
   Shared runtime behavior, configuration defaults, provider coordination, routing, migration, replication integration, username conflict handling, compiled feature lifecycle coordination, and general domain logic.
 - `identica-engine`
   Pipeline, step, prepare, and completion orchestration.
 - `identica-adapter-*`
   Infrastructure adapters such as command handling, database persistence, and replication transport.
+- `identica-adapter-database/*`
+  The database family. `database-api` is published and holds the database contracts: `DatabaseService`, `DatabaseSchema`, `SchemaInstaller` and `AccountTable`. `database-common` is the implementation: the connection, the schema installer, the core schema with its entities, repositories and persistence services, and the runtime libraries it loads through Attache; its test fixtures run schema tests on every database for the other owners. `database` is the assembly that binds them into Identica's injector. Every owner of tables (core, feature, provider, integration) declares its own `DatabaseSchema` as a Strata migration stream.
 - `identica-platform/*`
   The platform family. `type/platform-*` are the platforms themselves: Velocity and BungeeCord/Waterfall wiring, APIs, listeners, adapters, and bootstraps. `common` holds what every platform shares: `PlatformConfiguration`, which names the adapters a platform has to provide, the event-typed adapter contracts, and the decision processors behind them. `bundle` packages the platforms into one jar.
 - `identica-provider/*`
@@ -47,10 +49,10 @@ When changing behavior:
 - For contracts, public models, events, or extension points, start in `identica-api`.
 - For shared behavior or domain rules, start in `identica-common`.
 - For pipeline or orchestration behavior, start in `identica-engine`.
-- For persistence, replication, or command infrastructure, start in the relevant `identica-adapter-*` module.
+- For persistence, replication, or command infrastructure, start in the relevant `identica-adapter-*` module. For an owner's tables and their migrations, start with its `DatabaseSchema` and the contracts in `identica-adapter-database/database-api`.
 - For proxy-specific behavior, bootstrap flow, or listeners, start in `identica-platform/type/*`. For what a platform has to provide, start in `identica-platform/common`.
 - For credential-specific or premium-specific behavior, start in `identica-provider/*`.
-- For username behavior (synchronization, uniqueness, conflict rules), start in `identica-api` (`identity/username`, `model/identity/username`) and `identica-common` (`identity/username`). Its phases are in `identica-engine`, and its tables are in `identica-adapter-database`. Providers declare identity guarantees as `ProviderTrait`s in `identica-api`.
+- For username behavior (synchronization, uniqueness, conflict rules), start in `identica-api` (`identity/username`, `model/identity/username`) and `identica-common` (`identity/username`). Its phases are in `identica-engine`, and its tables are in `identica-adapter-database/database-common`. Providers declare identity guarantees as `ProviderTrait`s in `identica-api`.
 - For optional behavior, feature-specific APIs, settings, persistence, or pipeline contributions, start in `identica-feature/*`. Core owns the `IdenticaFeature` contract and startup lifecycle; providers declare identity traits and supported feature integrations.
 - For build behavior or packaging conventions, check `build-logic/`.
 - For user-visible behavior changes, check the matching pages under `docs/content/`.

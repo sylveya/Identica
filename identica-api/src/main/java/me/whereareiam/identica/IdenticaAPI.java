@@ -5,7 +5,6 @@ import com.google.inject.Key;
 import lombok.Getter;
 import me.whereareiam.configura.Configura;
 import me.whereareiam.identica.command.CommandService;
-import me.whereareiam.identica.database.DatabaseService;
 import me.whereareiam.identica.event.EventManager;
 import me.whereareiam.identica.event.lifecycle.IdenticaReadyEvent;
 import me.whereareiam.identica.identity.IdentityService;
@@ -160,18 +159,6 @@ public final class IdenticaAPI {
 	public static CommandService getCommandService() {
 		return getService(CommandService.class);
 	}
-
-	/**
-	 * Gets the DatabaseService for persistence operations.
-	 *
-	 * @return the DatabaseService instance
-	 * @throws IllegalStateException if the API is not initialized
-	 */
-	@NotNull
-	public static DatabaseService getDatabaseService() {
-		return getService(DatabaseService.class);
-	}
-
 
 	/**
 	 * Gets the RegistrationAccountService for account reservation operations.

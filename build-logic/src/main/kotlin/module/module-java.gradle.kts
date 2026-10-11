@@ -23,7 +23,6 @@ dependencies {
     add("compileOnly", libs.findLibrary("configura-feature-postprocess").get())
     add("compileOnly", libs.findLibrary("commandant").get())
     add("compileOnly", libs.findLibrary("keystone").get())
-    add("compileOnly", libs.findLibrary("dialectica").get())
     add("compileOnly", libs.findBundle("adventure").get())
     add("implementation", libs.findLibrary("attache-common").get())
 

@@ -3,6 +3,8 @@ package me.whereareiam.identica.provider.credential.database.mapper;
 import me.whereareiam.identica.provider.credential.database.entity.CredentialAccountEntity;
 import me.whereareiam.identica.provider.credential.model.CredentialAccount;
 
+import java.util.Objects;
+
 public final class CredentialAccountMapper {
 	public static CredentialAccount toModel(CredentialAccountEntity entity) {
 		if (entity == null) return null;
@@ -11,8 +13,8 @@ public final class CredentialAccountMapper {
 				.providerSubject(entity.getProviderSubject())
 				.passwordHash(entity.getPasswordHash())
 				.hashingMethod(entity.getHashingMethod())
-				.createdAt(entity.getCreatedAt())
-				.updatedAt(entity.getUpdatedAt())
+				.createdAt(Objects.requireNonNullElse(entity.getCreatedAt(), 0L))
+				.updatedAt(Objects.requireNonNullElse(entity.getUpdatedAt(), 0L))
 				.build();
 	}
 

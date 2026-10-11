@@ -64,6 +64,12 @@ public @interface Identica {
 	String complete() default IdenticaNetwork.LOBBY;
 
 	/**
+	 * Database the proxy stores its accounts in. A database server runs in a container that stops with the network,
+	 * so such a test is skipped without Docker.
+	 */
+	Database database() default Database.SQLITE;
+
+	/**
 	 * Changes to the proxy's configuration files that the other attributes do not cover, applied in order. Each
 	 * class needs a constructor without parameters.
 	 *

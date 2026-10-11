@@ -3,14 +3,16 @@ package me.whereareiam.identica.feature.verification.database.mapper;
 import me.whereareiam.identica.feature.verification.database.entity.VerificationRecoveryCodeEntity;
 import me.whereareiam.identica.feature.verification.model.VerificationRecoveryCode;
 
+import java.util.Objects;
+
 public final class VerificationRecoveryCodeMapper {
 	public static VerificationRecoveryCode toModel(VerificationRecoveryCodeEntity entity) {
 		return VerificationRecoveryCode.builder()
 				.uniqueId(entity.getUniqueId())
 				.methodId(entity.getMethodId())
 				.codeHash(entity.getCodeHash())
-				.createdAt(entity.getCreatedAt())
-				.usedAt(entity.getUsedAt())
+				.createdAt(Objects.requireNonNullElse(entity.getCreatedAt(), 0L))
+				.usedAt(Objects.requireNonNullElse(entity.getUsedAt(), 0L))
 				.build();
 	}
 
