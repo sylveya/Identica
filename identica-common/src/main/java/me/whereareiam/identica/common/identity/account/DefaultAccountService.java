@@ -7,10 +7,12 @@ import lombok.RequiredArgsConstructor;
 import me.whereareiam.identica.common.util.UniqueIdResolutionSupport;
 import me.whereareiam.identica.database.AccountPersistenceService;
 import me.whereareiam.identica.database.AccountReservationPersistenceService;
+import me.whereareiam.identica.database.provider.ProviderLinkPersistenceService;
 import me.whereareiam.identica.event.EventManager;
 import me.whereareiam.identica.event.account.AccountClearEvent;
 import me.whereareiam.identica.event.account.AccountDeleteEvent;
 import me.whereareiam.identica.event.account.AccountLifecycleEvent;
+import me.whereareiam.identica.identity.ReservationCache;
 import me.whereareiam.identica.identity.account.AccountService;
 import me.whereareiam.identica.identity.actor.ConnectionIdentity;
 import me.whereareiam.identica.identity.session.SessionService;
@@ -18,6 +20,7 @@ import me.whereareiam.identica.model.SessionCloseRequest;
 import me.whereareiam.identica.model.config.Settings;
 import me.whereareiam.identica.model.identity.Account;
 import me.whereareiam.identica.model.identity.AccountOperationRequest;
+import me.whereareiam.identica.model.identity.provider.AccountProviderLink;
 import org.jetbrains.annotations.NotNull;
 
 import java.time.Duration;
@@ -30,6 +33,8 @@ import java.util.UUID;
 public class DefaultAccountService implements AccountService {
 	private final AccountPersistenceService accountPersistenceService;
 	private final AccountReservationPersistenceService reservationPersistenceService;
+	private final ProviderLinkPersistenceService providerLinkPersistenceService;
+	private final ReservationCache reservationCache;
 	private final SessionService sessionService;
 	private final EventManager eventManager;
 	private final Provider<Settings> settingsProvider;
@@ -67,7 +72,20 @@ public class DefaultAccountService implements AccountService {
 	) {
 		Account account = request.getAccount();
 		closeSession(account, request.isDisconnect(), request.getDisconnectMessage());
+		forgetPendingReservations(account);
 		eventManager.call(event);
+	}
+
+	/**
+	 * Forgets the UUIDs reserved for the account's provider subjects while they registered. The lifecycle event
+	 * removes the provider links, so a reservation left behind would hand the next registration of a subject the
+	 * UUID of the account that is gone, ahead of the UUID mode and of a reservation of the username.
+	 */
+	private void forgetPendingReservations(@NotNull Account account) {
+		for (AccountProviderLink link : providerLinkPersistenceService.findByUniqueId(account.getUniqueId())) {
+			String subjectKey = UniqueIdResolutionSupport.buildSubjectKey(link.getProviderId(), link.getProviderSubject());
+			if (subjectKey != null) reservationCache.invalidate(subjectKey).join();
+		}
 	}
 
 	private void closeSession(@NotNull Account account, boolean disconnect, @NotNull String disconnectMessage) {

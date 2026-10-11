@@ -87,6 +87,19 @@ Use `2` for normal operation and `3` or `4` when you are actively debugging rout
 `OFFLINE` mainly exists for compatibility scenarios.
 `PREMIUM` is the strictest mode and mostly exists for setups that explicitly need premium/provider UUID continuity.
 
+#### Choosing the UUID of one account
+
+`uniqueIdMode` decides the UUID of an account when it is created, and the account keeps that UUID.
+To give one player a different UUID, such as their offline-mode UUID on a `RANDOM` network, reserve it for their username and let them register again:
+
+1. `/identica admin delete <username>` and `/identica admin delete confirm` remove the current account. Deleting an account does not keep its UUID: without a reservation, the next registration gets a new one from `uniqueIdMode`.
+2. `/identica admin reservation set <username> <uuid>` reserves the UUID. Usernames are compared without regard to case.
+3. The player joins and registers within [`reservationTtl`](#reservationttl). The new account gets the reserved UUID, and the reservation is used up.
+
+`/identica admin reservation info <username>` shows the UUID reserved for a username, and `/identica admin reservation delete <username>` removes the reservation.
+In `RANDOM` and `OFFLINE` modes a reservation takes the place of the UUID the mode would assign; `PREMIUM` always assigns the premium UUID.
+`/identica admin clear <username>` reserves the account's own UUID for its username, so the player keeps their UUID when they register again.
+
 ### reservationTtl
 
 <Badge type="warning">Advanced</Badge>
@@ -95,7 +108,8 @@ Use `2` for normal operation and `3` or `4` when you are actively debugging rout
 - Current default: `"15m"`
 - Affects: how long reserved account identities and username reservations are kept
 
-This matters during registration and account clearing.
+This matters during registration, account clearing, and for reservations set with `/identica admin reservation set`.
+A reservation of a username expires after this duration if nobody registers under the username in time.
 If the value is too short, a pending registration can lose its reserved identity.
 If it is too long, abandoned reservations stay around longer.
 

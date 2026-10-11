@@ -47,8 +47,8 @@ public class DefaultRegistrationAccountService implements RegistrationAccountSer
 		return resolveFirst(List.of(
 				() -> resolveFromSession(providerId, providerSubject),
 				() -> resolveFromProviderLink(providerId, providerSubject),
-				() -> resolveFromReservation(providerId, providerSubject),
 				() -> resolveFromAccountReservation(username),
+				() -> resolveFromReservation(providerId, providerSubject),
 				() -> reserveNewAccountId(
 						requestedUsername,
 						providerId,

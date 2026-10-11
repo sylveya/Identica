@@ -105,6 +105,28 @@ class DefaultRegistrationAccountServiceTest {
 		assertEquals(clearedUniqueId, reserved);
 	}
 
+	@DisplayName("Prefers the reservation of the username over a UUID reserved earlier for the provider subject")
+	@Test
+	void reservePrefersAccountReservationOverPendingSubjectReservation() {
+		TestReservationCache reservationCache = new TestReservationCache();
+		AccountReservationPersistenceService accountReservationPersistenceService = mock(AccountReservationPersistenceService.class);
+		DefaultRegistrationAccountService service = service(
+				reservationCache,
+				accountReservationPersistenceService,
+				mock(ProviderLinkPersistenceService.class),
+				mockSessionService()
+		);
+		UUID pending = service.reserve(request("ReservedPlayer", "1.1.1.1", "subject-a"));
+		UUID reservedByAdministrator = UUID.randomUUID();
+		when(accountReservationPersistenceService.find("username:reservedplayer"))
+				.thenReturn(Optional.of(reservedByAdministrator));
+
+		UUID reserved = service.reserve(request("ReservedPlayer", "1.1.1.1", "subject-a"));
+
+		assertNotEquals(pending, reservedByAdministrator);
+		assertEquals(reservedByAdministrator, reserved);
+	}
+
 	@DisplayName("Generates offline UUIDs for new accounts in offline mode")
 	@Test
 	void reserveUsesOfflineModeForNewAccountId() {

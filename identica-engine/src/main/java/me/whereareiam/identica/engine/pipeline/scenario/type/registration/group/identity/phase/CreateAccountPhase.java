@@ -108,16 +108,10 @@ public class CreateAccountPhase implements PipelinePhase<IdentityState> {
 	}
 
 	private void deleteReservation(@NotNull String username) {
-		String reservationKey = buildUsernameKey(username);
+		String reservationKey = AccountReservationPersistenceService.usernameKey(username);
 		if (reservationKey == null) return;
 
 		accountReservationPersistenceService.delete(reservationKey);
-	}
-
-	private String buildUsernameKey(@NotNull String username) {
-		if (username.isBlank()) return null;
-
-		return "username:" + username.trim().toLowerCase();
 	}
 
 	private @Nullable UUID resolveNewAccountId(

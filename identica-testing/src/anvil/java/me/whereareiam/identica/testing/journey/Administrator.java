@@ -11,7 +11,9 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.fail;
 
@@ -100,6 +102,55 @@ public final class Administrator {
 		run("identica admin clear " + username, clear.getConfirm());
 		run("identica admin clear confirm", clear.getSuccess());
 		return this;
+	}
+
+	/**
+	 * Reserves a UUID for a username, so the account registered under that username gets it.
+	 */
+	public Administrator reserves(String username, UUID uniqueId) {
+		run("identica admin reservation set " + username + " " + uniqueId,
+				filled(reservation().getSet(), Map.of("uniqueId", uniqueId.toString())));
+		return this;
+	}
+
+	/**
+	 * Asks for a username's reservation and expects the proxy to name the reserved UUID.
+	 */
+	public Administrator findsReservation(String username, UUID uniqueId) {
+		run("identica admin reservation info " + username,
+				filled(reservation().getInfo(), Map.of("uniqueId", uniqueId.toString())));
+		return this;
+	}
+
+	/**
+	 * Asks for a username's reservation and expects the proxy to find none.
+	 */
+	public Administrator findsNoReservation(String username) {
+		run("identica admin reservation info " + username, reservation().getNotFound());
+		return this;
+	}
+
+	/**
+	 * Removes a username's reservation.
+	 */
+	public Administrator deletesReservation(String username) {
+		run("identica admin reservation delete " + username, reservation().getDeleted());
+		return this;
+	}
+
+	private Messages.Commands.Admin.Reservation reservation() {
+		return configured.identica().getCommands().getAdmin().getReservation();
+	}
+
+	/**
+	 * Returns a configured message with some of its placeholders replaced, so the answer has to hold those values.
+	 */
+	private static String filled(String message, Map<String, String> values) {
+		String filled = message;
+		for (Map.Entry<String, String> value : values.entrySet())
+			filled = filled.replace("{" + value.getKey() + "}", value.getValue());
+
+		return filled;
 	}
 
 	/**
