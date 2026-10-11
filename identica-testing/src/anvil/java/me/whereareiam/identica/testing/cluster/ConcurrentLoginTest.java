@@ -9,6 +9,7 @@ import me.whereareiam.identica.testing.journey.Journey;
 import me.whereareiam.identica.type.session.SessionConcurrencyPolicy;
 import org.junit.jupiter.api.Test;
 
+import java.time.Duration;
 import java.util.function.Consumer;
 
 import static me.whereareiam.identica.testing.environment.IdenticaNetwork.AUTH;
@@ -21,6 +22,7 @@ import static me.whereareiam.identica.testing.environment.IdenticaNetwork.PROXY_
  * default.
  */
 class ConcurrentLoginTest {
+	private static final Duration HEARTBEAT_TIMEOUT = Duration.ofSeconds(6);
 	private static final String PASSWORD = "Secret-123";
 
 	@Test
@@ -53,6 +55,28 @@ class ConcurrentLoginTest {
 		anvil.processes().stop(PROXY_A);
 
 		loginThroughProxyB(anvil).on(LOBBY).remainsOn(LOBBY);
+	}
+
+	/**
+	 * A proxy that crashes cannot close its sessions. They stay until their heartbeat timeout passes, so the
+	 * account is still refused right after the crash and free once the timeout has passed.
+	 */
+	@Test
+	@IdenticaCluster(configure = {RejectNew.class, ShortHeartbeat.class})
+	void aCrashedProxyReleasesTheAccountOnceItsSessionsExpire(ScenarioContext anvil) {
+		online(anvil);
+
+		anvil.processes().kill(PROXY_A);
+
+		loginThroughProxyB(anvil)
+				.kickedWith(m -> m.identica().getEngine().getConcurrentLoginRefused())
+				.waits(HEARTBEAT_TIMEOUT.plusSeconds(2))
+				.rejoin()
+				.on(AUTH)
+				.sees(m -> m.credential().getScenario().getAuthentication().getPrompt())
+				.login(PASSWORD)
+				.on(LOBBY)
+				.remainsOn(LOBBY);
 	}
 
 	@Test
@@ -102,6 +126,13 @@ class ConcurrentLoginTest {
 				.on(AUTH)
 				.sees(m -> m.credential().getScenario().getAuthentication().getPrompt())
 				.login(PASSWORD);
+	}
+
+	private static final class ShortHeartbeat implements Consumer<ProxyConfiguration> {
+		@Override
+		public void accept(ProxyConfiguration proxy) {
+			proxy.settings().getSessions().setHeartbeatTimeout(HEARTBEAT_TIMEOUT);
+		}
 	}
 
 	private static final class RejectNew implements Consumer<ProxyConfiguration> {
