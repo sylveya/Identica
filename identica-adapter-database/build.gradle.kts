@@ -15,6 +15,7 @@ dependencies {
     attache(libs.sqlite)
     attache(libs.h2)
 
+    testImplementation(projects.traitAuthoritativeUsernameDatabase)
     testImplementation(libs.bundles.database)
     testImplementation(libs.dialectica)
     testImplementation(libs.testcontainers.junit)
