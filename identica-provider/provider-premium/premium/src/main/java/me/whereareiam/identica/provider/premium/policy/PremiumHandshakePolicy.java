@@ -35,11 +35,22 @@ public class PremiumHandshakePolicy implements ProviderScopedHandshakePolicy {
 		return PremiumConstants.PROVIDER_ID;
 	}
 
+	/**
+	 * Decides whether the connection needs a premium login. A username whose account prefers premium always needs one.
+	 * Any other client that was already asked for one and did not give it falls back to the other providers. Otherwise
+	 * a premium provider context asks for one, a known account follows its preferred provider, and an unknown username
+	 * of a seamless journey is asked for one when it is detected as premium.
+	 */
 	@Override
 	public CompletionStage<HandshakeDecision> evaluate(HandshakeRequest request) {
 		String username = request != null ? request.getIdentity().getUsername() : null;
 		String ip = request != null ? request.getIdentity().getIp() : null;
 		if (username == null || username.isBlank()) return allow();
+
+		UUID claimedUniqueId = request.getIdentity().getClaimedUniqueId();
+		AccountProviderLink preferredLink = request.getPreferredLink();
+		if (preferredLink != null && isPremium(preferredLink.getProviderId()))
+			return evaluatePremiumAccount(username, ip, preferredLink, claimedUniqueId);
 
 		if (attemptStore.hasAttempt(PremiumConstants.PROVIDER_ID, PremiumConstants.ATTEMPT_SCOPE_VERIFY, username, ip)) {
 			Logger.debug("Premium handshake allowed existing verify attempt username=%s ip=%s", username, ip);
@@ -52,9 +63,15 @@ public class PremiumHandshakePolicy implements ProviderScopedHandshakePolicy {
 			return CompletableFuture.completedFuture(forceOnline());
 		}
 
-		UUID claimedUniqueId = request.getIdentity().getClaimedUniqueId();
-		AccountProviderLink preferredLink = request.getPreferredLink();
-		if (preferredLink != null) return evaluateKnown(username, ip, preferredLink, claimedUniqueId);
+		if (preferredLink != null) {
+			Logger.debug(
+					"Premium handshake followed the preferred provider username=%s ip=%s provider=%s",
+					username,
+					ip,
+					preferredLink.getProviderId()
+			);
+			return allow();
+		}
 		if (request.getJourneyMode() == JourneyMode.INTERACTIVE) return allow();
 
 		return detector.detect(username, claimedUniqueId).thenApply(detection -> {
@@ -76,11 +93,11 @@ public class PremiumHandshakePolicy implements ProviderScopedHandshakePolicy {
 	}
 
 	/**
-	 * Handles a username whose account is known. Only an account that prefers premium is asked for a premium login,
-	 * and with the client profile compared, a client that claims another profile than the linked one is refused,
-	 * unless the username now belongs to the profile that client claims.
+	 * Handles a username whose account prefers premium, which always needs a premium login. With the client profile
+	 * compared, a client that claims another profile than the linked one is refused, unless the username now belongs
+	 * to the profile that client claims.
 	 */
-	private CompletionStage<HandshakeDecision> evaluateKnown(
+	private CompletionStage<HandshakeDecision> evaluatePremiumAccount(
 			@NotNull String username,
 			@Nullable String ip,
 			@NotNull AccountProviderLink preferredLink,
@@ -93,8 +110,6 @@ public class PremiumHandshakePolicy implements ProviderScopedHandshakePolicy {
 				preferredLink.getProviderId(),
 				claimedUniqueId
 		);
-		if (!isPremium(preferredLink.getProviderId())) return allow();
-
 		String linkedProfileId = preferredLink.getProviderSubject();
 		if (claimedUniqueId == null
 				|| !detector.comparesClientProfile()

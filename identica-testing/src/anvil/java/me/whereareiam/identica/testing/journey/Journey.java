@@ -40,6 +40,8 @@ public final class Journey {
 	private static final Duration SETTLE = Duration.ofSeconds(3);
 
 	private final String name;
+	private final String connectedPlayer;
+	private final String initialConnection;
 	private final Session session;
 	private final Messages messages;
 	private final Server server;
@@ -53,8 +55,11 @@ public final class Journey {
 	private String matched = "";
 	private MessageText matchedMessage;
 
-	private Journey(ScenarioContext anvil, SimulatedPlayer player, String name, String proxy) {
+	private Journey(ScenarioContext anvil, SimulatedPlayer player, String name, String address, String proxy) {
 		this.name = name;
+		String source = address != null ? "/" + address + ":" : "";
+		this.connectedPlayer = "[connected player] " + name + " (" + source;
+		this.initialConnection = "[initial connection] " + source;
 		this.session = player.capability(Session.class);
 		this.messages = player.capability(Messages.class);
 		this.server = player.capability(Server.class);
@@ -79,7 +84,7 @@ public final class Journey {
 				.connection(client.connection())
 				.build());
 		String proxy = client.getProxy() != null ? client.getProxy() : anvil.definition().getEntrypoint();
-		return new Journey(anvil, player, client.getUsername(), proxy);
+		return new Journey(anvil, player, client.getUsername(), client.getAddress(), proxy);
 	}
 
 	/**
@@ -143,7 +148,7 @@ public final class Journey {
 	public Journey leave() {
 		session.disconnect();
 		session.disconnected(TIMEOUT);
-		reported("[connected player] " + name + " (", "has disconnected");
+		reported(connectedPlayer, "has disconnected");
 		return this;
 	}
 
@@ -266,15 +271,15 @@ public final class Journey {
 	 * Expects the proxy to demand online authentication that this offline player cannot give: the client ends
 	 * disconnected for that cause, and the proxy reports the closed initial connection without ever reporting
 	 * this client as connected. Connections of another client with the same username before this journey
-	 * started are not counted.
+	 * started are not counted, and neither are later ones when this client connects from an address of its own.
 	 */
 	public Journey authenticationRequired() {
-		reported("[initial connection] ", "has disconnected");
+		reported(initialConnection, "has disconnected");
 		session.kicked(TIMEOUT);
 		assertEquals(DisconnectCause.AUTHENTICATION_REQUIRED, session.state().disconnectCause());
 		assertFalse(session.state().connected(), name + " must not be connected");
 		List<String> accepted = proxy.read(created, 2000).getLines().stream().map(line -> line.getText())
-				.filter(line -> line.contains("[connected player] " + name + " (") && line.contains("has connected"))
+				.filter(line -> line.contains(connectedPlayer) && line.contains("has connected"))
 				.toList();
 		assertEquals(connections, accepted.size(), "The proxy must not accept " + name + "; console: " + accepted);
 		return this;
@@ -321,7 +326,7 @@ public final class Journey {
 	 */
 	public Journey refusedWith(Function<IdenticaMessages, ?> message) {
 		MessageText reason = text(message);
-		reported("[initial connection] ", "has disconnected");
+		reported(initialConnection, "has disconnected");
 
 		String received = session.kicked(TIMEOUT);
 		assertFalse(session.state().connected(), name + " must not be connected");
@@ -339,7 +344,7 @@ public final class Journey {
 	 */
 	public Journey kickedWith(Function<IdenticaMessages, ?> message) {
 		MessageText reason = text(message);
-		String disconnect = reported("[connected player] " + name + " (", "has disconnected");
+		String disconnect = reported(connectedPlayer, "has disconnected");
 		if (!disconnect.contains(reason.signature()))
 			reported(reason.signature(), "");
 
@@ -369,7 +374,7 @@ public final class Journey {
 	 */
 	public Journey disconnected() {
 		session.disconnected(TIMEOUT);
-		reported("[connected player] " + name + " (", "has disconnected");
+		reported(connectedPlayer, "has disconnected");
 		assertFalse(session.state().connected(), name + " must be disconnected");
 		return this;
 	}
@@ -393,7 +398,7 @@ public final class Journey {
 
 	private Journey accepted() {
 		session.connected(Duration.ofSeconds(30));
-		reported("[connected player] " + name + " (", "has connected");
+		reported(connectedPlayer, "has connected");
 		connections++;
 		return this;
 	}

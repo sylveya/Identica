@@ -106,6 +106,26 @@ class PremiumHandshakePolicyTest {
 		verify(profileLookup, never()).findProfileId(any());
 	}
 
+	@DisplayName("Keeps asking an account that prefers premium for a premium login despite an existing verify attempt")
+	@Test
+	void existingVerifyAttemptDoesNotSkipThePremiumLoginOfAPremiumAccount() {
+		HandshakeDecision decision = evaluate(request(null, null, link("premium", UUID.randomUUID()), JourneyMode.SEAMLESS));
+
+		assertEquals(Optional.of(true), forcesOnline(decision));
+		verify(attemptStore, never()).hasAttempt(anyString(), anyString(), anyString(), anyString());
+	}
+
+	@DisplayName("Lets a client fall back from a pending move to premium once its premium login was asked for")
+	@Test
+	void existingVerifyAttemptFallsBackFromAPendingMoveToPremium() {
+		when(attemptStore.hasAttempt("premium", "verify", USERNAME, IP)).thenReturn(true);
+
+		HandshakeDecision decision = evaluate(request(null, manualPremium(), link("credential", UUID.randomUUID()), JourneyMode.SEAMLESS));
+
+		assertEquals(HandshakeDecision.Status.ALLOW, decision.getStatus());
+		assertEquals(Optional.empty(), forcesOnline(decision));
+	}
+
 	@DisplayName("Asks an unknown premium username for a premium login when lookup is the only method")
 	@Test
 	void lookupForcesOnlineForAPremiumUsername() {
