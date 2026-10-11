@@ -1,20 +1,11 @@
 package me.whereareiam.identica.platform.bungeecord;
 
 import com.google.inject.TypeLiteral;
-import com.google.inject.multibindings.Multibinder;
 import com.google.inject.multibindings.OptionalBinder;
 import lombok.RequiredArgsConstructor;
+import me.whereareiam.identica.integration.statistics.StatisticsConfiguration;
+import me.whereareiam.identica.integration.statistics.StatisticsPlatform;
 import me.whereareiam.identica.platform.common.PlatformConfiguration;
-import me.whereareiam.identica.integration.bstats.BStatsBootstrap;
-import me.whereareiam.identica.integration.bstats.TelemetryRegistrar;
-import me.whereareiam.identica.integration.bstats.chart.provider.ProviderUsageChart;
-import me.whereareiam.identica.integration.bstats.chart.provider.ProvidersChart;
-import me.whereareiam.identica.integration.bstats.chart.system.AccountCountChart;
-import me.whereareiam.identica.integration.bstats.chart.system.PersistenceTypeChart;
-import me.whereareiam.identica.integration.bstats.chart.system.ReplicationTypeChart;
-import me.whereareiam.identica.integration.bstats.chart.system.UniqueIdModeChart;
-import me.whereareiam.identica.integration.bstats.chart.type.Chart;
-import me.whereareiam.identica.integration.bstats.chart.verification.VerificationMethodsChart;
 import me.whereareiam.identica.listener.ListenerRegistrar;
 import me.whereareiam.identica.logging.LoggingHelper;
 import me.whereareiam.identica.platform.bungeecord.adapter.BungeeCordPlatformHandshakeApplierRegistry;
@@ -65,7 +56,8 @@ public class BungeeCordConfiguration extends PlatformConfiguration<BungeeCordHan
 
 		bind(new TypeLiteral<CommandManager<Actor>>() {}).toProvider(BungeeCordCommandManagerProvider.class);
 
-		configureBStats();
+		bind(StatisticsPlatform.class).to(BungeeCordStatisticsPlatform.class);
+		install(new StatisticsConfiguration());
 	}
 
 	@Override
@@ -101,19 +93,5 @@ public class BungeeCordConfiguration extends PlatformConfiguration<BungeeCordHan
 	@Override
 	protected @NotNull Class<BungeeCordProfilePrepareAdapter> profile() {
 		return BungeeCordProfilePrepareAdapter.class;
-	}
-
-	private void configureBStats() {
-		bind(TelemetryRegistrar.class).to(BungeeCordMetrics.class);
-		bind(BStatsBootstrap.class).asEagerSingleton();
-
-		Multibinder<Chart> charts = Multibinder.newSetBinder(binder(), Chart.class);
-		charts.addBinding().to(ProvidersChart.class);
-		charts.addBinding().to(ProviderUsageChart.class);
-		charts.addBinding().to(VerificationMethodsChart.class);
-		charts.addBinding().to(PersistenceTypeChart.class);
-		charts.addBinding().to(ReplicationTypeChart.class);
-		charts.addBinding().to(UniqueIdModeChart.class);
-		charts.addBinding().to(AccountCountChart.class);
 	}
 }

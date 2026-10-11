@@ -32,7 +32,7 @@ When changing behavior:
 - `identica-feature/*`
   Compiled features: verification, recognition, sentinel, restriction, and restriction-join. Feature API, implementation, persistence, commands, and pipeline contributions stay in their owning feature modules; join restriction is nested under `feature-restriction/restriction-join`.
 - `identica-integration/*`
-  External integrations such as bStats.
+  External integrations, such as usage statistics and error reports sent to bStats and FastStats through Statistica.
 - `identica-testing`
   Live player journeys against the packaged plugin on a real proxy, run through Anvil. Not part of the shipped plugin.
 - `build-logic/`
@@ -182,7 +182,7 @@ A merged pull request lands in the release draft as `* <title> ([#<number>](<url
 
 Areas for admins and players:
 
-`Authentication`, `Commands`, `Configuration`, `Credential`, `Database`, `Messages`, `Migration`, `Platform`, `Premium`, `Recognition`, `Replication`, `Restriction`, `Routing`, `Sessions`
+`Authentication`, `Commands`, `Configuration`, `Credential`, `Database`, `Messages`, `Migration`, `Platform`, `Premium`, `Recognition`, `Replication`, `Restriction`, `Routing`, `Sessions`, `Statistics`
 
 - reuse an existing area whenever one fits; a new admin command is `Commands`, a new setting in a feature's file belongs to that feature's area
 - add a new area only for something admins recognise by that name, such as a new feature, provider, or config file, and add it to this list in the same pull request

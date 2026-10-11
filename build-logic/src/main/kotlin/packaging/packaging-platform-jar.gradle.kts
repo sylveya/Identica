@@ -19,7 +19,7 @@ dependencies {
     add("implementation", project(":identica-adapter-command"))
     add("implementation", project(":identica-adapter-database"))
     add("implementation", project(":identica-adapter-replication"))
-    add("implementation", project(":integration-bstats"))
+    add("implementation", project(":integration-statistics"))
 }
 
 afterEvaluate {

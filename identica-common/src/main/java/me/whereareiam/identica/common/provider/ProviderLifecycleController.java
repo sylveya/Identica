@@ -217,7 +217,7 @@ public class ProviderLifecycleController {
 			fireProviderEnabled(internal);
 		} catch (Exception e) {
 			internal.setState(ProviderState.FAILED);
-			Logger.warn("Failed to enable provider %s: %s", safeId(internal), e.getMessage());
+			Logger.warn(e, "Failed to enable provider %s", safeId(internal));
 		}
 	}
 
@@ -233,7 +233,7 @@ public class ProviderLifecycleController {
 			fireProviderDisabled(internal);
 		} catch (Exception e) {
 			internal.setState(ProviderState.FAILED);
-			Logger.warn("Failed to disable provider %s: %s", safeId(internal), e.getMessage());
+			Logger.warn(e, "Failed to disable provider %s", safeId(internal));
 			fireProviderDisabled(internal);
 		} finally {
 			unregisterProviderBindings(internal);
@@ -251,7 +251,7 @@ public class ProviderLifecycleController {
 			fireProviderUnloaded(internal);
 		} catch (Exception e) {
 			internal.setState(ProviderState.FAILED);
-			Logger.warn("Failed to unload provider %s: %s", safeId(internal), e.getMessage());
+			Logger.warn(e, "Failed to unload provider %s", safeId(internal));
 			fireProviderUnloaded(internal);
 		} finally {
 			unregisterReloadables(internal);

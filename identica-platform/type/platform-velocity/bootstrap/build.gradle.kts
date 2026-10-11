@@ -17,7 +17,12 @@ dependencies {
     testImplementation(libs.cloud.velocity)
 
     implementation(projects.platformVelocityApi)
-    implementation(libs.bundles.bStats.velocity)
+    implementation(libs.statistica.platform.velocity) {
+        capabilities { requireCapability("me.whereareiam:statistica-platform-velocity-bstats") }
+    }
+    implementation(libs.statistica.platform.velocity) {
+        capabilities { requireCapability("me.whereareiam:statistica-platform-velocity-faststats") }
+    }
     implementation(libs.attache.velocity)
 
     compileOnly(libs.velocity)

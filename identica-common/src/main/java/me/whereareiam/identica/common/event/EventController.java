@@ -10,8 +10,6 @@ import me.whereareiam.identica.event.base.SynchronousEvent;
 import me.whereareiam.identica.logging.Logger;
 import me.whereareiam.identica.type.event.EventOrder;
 
-import java.io.PrintWriter;
-import java.io.StringWriter;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.*;
@@ -149,11 +147,9 @@ public class EventController implements EventManager {
 
 	private void logExecutionError(Event event, RegisteredListener listener, Exception e) {
 		Throwable rootCause = unwrap(e);
-		Logger.severe("Failed to call event %s for listener %s: %s%n%s",
+		Logger.severe(rootCause, "Failed to call event %s for listener %s",
 				event.getClass().getSimpleName(),
-				listener.getListener().getClass().getSimpleName(),
-				rootCause.toString(),
-				stackTrace(rootCause));
+				listener.getListener().getClass().getSimpleName());
 	}
 
 	private Throwable unwrap(Throwable throwable) {
@@ -162,14 +158,6 @@ public class EventController implements EventManager {
 
 		Throwable cause = invocationTargetException.getCause();
 		return cause != null ? cause : invocationTargetException;
-	}
-
-	private String stackTrace(Throwable throwable) {
-		StringWriter writer = new StringWriter();
-		try (PrintWriter printWriter = new PrintWriter(writer)) {
-			throwable.printStackTrace(printWriter);
-		}
-		return writer.toString();
 	}
 
 	private RegisteredListener[] resolveDispatchPlan(Class<?> eventType) {

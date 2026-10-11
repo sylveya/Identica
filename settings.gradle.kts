@@ -21,6 +21,7 @@ dependencyResolutionManagement {
         maven("https://registry.whereareiam.me/maven/packages")
         maven("https://repo.papermc.io/repository/maven-public/")
         maven("https://oss.sonatype.org/content/repositories/snapshots/")
+        maven("https://repo.faststats.dev/releases")
         maven("https://repo.opencollab.dev/main/")
         maven("https://repo.opencollab.dev/maven-snapshots/")
     }
@@ -50,8 +51,8 @@ project(":identica-adapter-replication").projectDir = file("identica-adapter-rep
 include(":identica-integration")
 project(":identica-integration").projectDir = file("identica-integration")
 
-include(":integration-bstats")
-project(":integration-bstats").projectDir = file("identica-integration/integration-bstats")
+include(":integration-statistics")
+project(":integration-statistics").projectDir = file("identica-integration/integration-statistics")
 
 include(":identica-platform")
 project(":identica-platform").projectDir = file("identica-platform")

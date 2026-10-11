@@ -64,10 +64,9 @@ public class PreparePipeline {
 					.thenApply(ignored -> pipelineState.get(PrepareDecision.KEY).orElseGet(PrepareDecision::allow))
 					.toCompletableFuture();
 		} catch (Exception e) {
-			Logger.severe("Prepare failed stage=%s username=%s error=%s",
+			Logger.severe(e, "Prepare failed stage=%s username=%s",
 					request.getStage(),
-					request.getIdentity().getUsername(),
-					e.getMessage());
+					request.getIdentity().getUsername());
 			return CompletableFuture.completedFuture(PrepareDecision.deny("Connection failed"));
 		}
 	}

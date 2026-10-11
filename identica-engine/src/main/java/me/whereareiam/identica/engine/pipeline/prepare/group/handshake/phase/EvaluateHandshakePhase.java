@@ -102,7 +102,7 @@ public class EvaluateHandshakePhase implements PipelinePhase<PrepareGroupState> 
 
 			return resolved;
 		} catch (Exception e) {
-			Logger.severe("Handshake policy failed %s", e.fillInStackTrace());
+			Logger.severe(e, "Handshake policy %s failed", policy.getClass().getSimpleName());
 			return HandshakeDecision.allow();
 		}
 	}

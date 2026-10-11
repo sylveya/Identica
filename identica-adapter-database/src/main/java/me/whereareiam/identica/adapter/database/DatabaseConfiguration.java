@@ -26,6 +26,8 @@ import me.whereareiam.identica.database.username.AccountUsernameHistoryPersisten
 import me.whereareiam.identica.database.username.AccountUsernameStatePersistenceService;
 import org.jdbi.v3.core.Jdbi;
 
+import javax.sql.DataSource;
+
 public class DatabaseConfiguration extends AbstractModule {
 	@Override
 	protected void configure() {
@@ -38,6 +40,11 @@ public class DatabaseConfiguration extends AbstractModule {
 		bind(ProviderProfilePersistenceService.class).to(DefaultProviderProfilePersistenceService.class).asEagerSingleton();
 		bind(AccountUsernameStatePersistenceService.class).to(DefaultAccountUsernameStatePersistenceService.class).asEagerSingleton();
 		bind(AccountUsernameHistoryPersistenceService.class).to(DefaultAccountUsernameHistoryPersistenceService.class).asEagerSingleton();
+	}
+
+	@Provides
+	public DataSource provideDataSource(DefaultDatabaseService databaseService) {
+		return databaseService.getDataSource();
 	}
 
 	@Provides
