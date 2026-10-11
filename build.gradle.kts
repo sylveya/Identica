@@ -40,7 +40,8 @@ tasks.register("pluginJars") {
 toolkitDistribution {
     file("API", ":identica-api", "jar")
     file("BUNDLE", ":identica-platform:bundle", "shadowJar")
-    // Modrinth takes the Velocity jar on its own; the GitHub release ships both proxies in one archive.
+    // Modrinth takes each proxy jar on its own; the GitHub release ships both proxies in one archive.
+    file("BUNGEECORD", ":platform-bungeecord-bootstrap", "shadowJar")
     file("VELOCITY", ":platform-velocity-bootstrap", "shadowJar")
     archive("PLATFORMS") {
         file("BUNGEECORD", ":platform-bungeecord-bootstrap", "shadowJar")

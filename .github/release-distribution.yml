@@ -76,10 +76,13 @@ supported_game_versions: &supported_game_versions
   - "1.21.7"
   - "1.21.8"
   - "1.21.9"
+  - "1.21.10"
   - "1.21.11"
   - "26.1"
   - "26.1.1"
   - "26.1.2"
+  - "26.2"
+  - "26.3"
 
 supported_velocity_versions: &supported_velocity_versions
   - "3.5"
@@ -99,7 +102,7 @@ release:
     default_phase: release
 
 artifacts:
-  identica:
+  identica-velocity:
     file: Identica-VELOCITY-{version}.jar
     platforms:
       velocity:
@@ -108,78 +111,84 @@ artifacts:
         game_versions: *supported_game_versions
         platform_versions: *supported_velocity_versions
 
+  identica-bungeecord:
+    file: Identica-BUNGEECORD-{version}.jar
+    platforms:
+      bungeecord:
+        loaders:
+          - bungeecord
+          - waterfall
+        game_versions: *supported_game_versions
+
+  # A provider jar runs on every proxy Identica supports.
   credential-provider:
     file: Identica-Credential-{version}.jar
     platforms:
-      velocity:
-        loaders:
+      proxy:
+        loaders: &proxy_loaders
+          - bungeecord
           - velocity
+          - waterfall
         game_versions: *supported_game_versions
-        platform_versions: *supported_velocity_versions
 
   premium-provider:
     file: Identica-Premium-{version}.jar
     platforms:
-      velocity:
-        loaders:
-          - velocity
+      proxy:
+        loaders: *proxy_loaders
         game_versions: *supported_game_versions
-        platform_versions: *supported_velocity_versions
 
 publications:
-  identica-modrinth:
+  # Identica gets one Modrinth version per proxy, each with its own jar.
+  identica-velocity-modrinth:
     provider:
       id: modrinth
-      project_id: D26hHMI2
-      release_type_map:
+      project_id: DDxUcAy9
+      release_type_map: &modrinth_release_types
         release: release
         beta: beta
         alpha: alpha
-    artifact: identica
-    platforms:
-      - velocity
+    artifact: identica-velocity
 
+  identica-bungeecord-modrinth:
+    provider:
+      id: modrinth
+      project_id: DDxUcAy9
+      release_type_map: *modrinth_release_types
+    artifact: identica-bungeecord
+
+  # A provider jar has no proxy plugin descriptor, so Modrinth only accepts it as a java-agent upload;
+  # the version is moved to the proxy loaders right after.
   credential-provider-modrinth:
     provider:
       id: modrinth
-      project_id: cFnEyCND
-      release_type_map:
-        release: release
-        beta: beta
-        alpha: alpha
+      project_id: 7mTkb4OS
+      release_type_map: *modrinth_release_types
       upload_loaders:
         - java-agent
       reclassify:
-        loaders:
-          - velocity
+        loaders: *proxy_loaders
       dependencies:
-        - project_id: D26hHMI2
+        - project_id: DDxUcAy9
           dependency_type: required
     artifact: credential-provider
-    platforms:
-      - velocity
 
   premium-provider-modrinth:
     provider:
       id: modrinth
       project_id: OOO3uDTT
-      release_type_map:
-        release: release
-        beta: beta
-        alpha: alpha
+      release_type_map: *modrinth_release_types
       upload_loaders:
         - java-agent
       reclassify:
-        loaders:
-          - velocity
+        loaders: *proxy_loaders
       dependencies:
-        - project_id: D26hHMI2
+        - project_id: DDxUcAy9
           dependency_type: required
     artifact: premium-provider
-    platforms:
-      - velocity
 
-  # Hangar publications are disabled, because the plugin is blocked there
+  # Hangar publications are disabled, because the plugin is blocked there.
+  # Hangar needs real proxy platforms, so the provider artifacts would need velocity and bungeecord platforms again.
   # identica-hangar:
   #   provider:
   #     id: hangar
@@ -188,7 +197,7 @@ publications:
   #       release: Release
   #       beta: Beta
   #       alpha: Beta
-  #   artifact: identica
+  #   artifact: identica-velocity
   #   platforms:
   #     - velocity
 

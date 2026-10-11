@@ -42,6 +42,11 @@ jobs:
         run: |
           set -euo pipefail
           release="$(gh api "repos/$GITHUB_REPOSITORY/releases/tags/$TAG")"
+          # The stores take the version name from the subtitle and the changelog from the body.
+          if jq -e '(.body // "") | contains("[Short subtitle]") or contains("[1-2 sentence summary")' <<<"$release" >/dev/null; then
+            echo "::error::Release $TAG still has the subtitle or summary placeholder of the draft; edit the release and run this workflow again."
+            exit 1
+          fi
           delimiter="release-$(openssl rand -hex 16)"
           {
             echo "tag=$(jq -r '.tag_name' <<<"$release")"
@@ -98,7 +103,7 @@ jobs:
           release-body: ${{ needs.resolve.outputs.body }}
           output-file: distribution/release-notes-bbcode.txt
 
-      # The Velocity jar on its own is for Modrinth; the release ships both proxies in the platforms archive.
+      # The proxy jars on their own are for Modrinth; the release ships both proxies in the platforms archive.
       - name: Upload files
         env:
           GH_TOKEN: ${{ github.token }}
@@ -106,7 +111,7 @@ jobs:
           VERSION: ${{ needs.verify.outputs.version }}
         run: |
           set -euo pipefail
-          rm "distribution/Identica-VELOCITY-$VERSION.jar"
+          rm "distribution/Identica-BUNGEECORD-$VERSION.jar" "distribution/Identica-VELOCITY-$VERSION.jar"
           gh release upload "$TAG" distribution/* --clobber --repo "$GITHUB_REPOSITORY"
 
   plan:
