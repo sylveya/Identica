@@ -25,7 +25,9 @@ import me.whereareiam.identica.feature.sentinel.model.config.SentinelSettings;
 import me.whereareiam.identica.feature.verification.config.defaults.VerificationDefaults;
 import me.whereareiam.identica.feature.verification.model.config.VerificationSettings;
 import me.whereareiam.identica.model.routing.attempt.RoutingAttemptPolicy;
+import me.whereareiam.identica.provider.credential.config.CredentialCommands;
 import me.whereareiam.identica.provider.credential.config.CredentialSettings;
+import me.whereareiam.identica.provider.credential.config.defaults.CredentialCommandsDefaults;
 import me.whereareiam.identica.provider.credential.config.defaults.CredentialSettingsDefaults;
 import me.whereareiam.identica.provider.premium.config.PremiumSettings;
 import me.whereareiam.identica.type.pipeline.journey.JourneyMode;
@@ -59,6 +61,7 @@ public final class ProxyConfiguration {
 	private static final String PROVIDERS = "providers/providers.yml";
 	private static final String PREMIUM = "providers/Premium/settings.yml";
 	private static final String CREDENTIAL = "providers/Credential/settings.yml";
+	private static final String CREDENTIAL_COMMANDS = "providers/Credential/commands.yml";
 	private static final String SENTINEL = "features/sentinel/settings.yml";
 	private static final String RECOGNITION = "features/recognition/settings.yml";
 	private static final String VERIFICATION = "features/verification/settings.yml";
@@ -129,6 +132,14 @@ public final class ProxyConfiguration {
 	 */
 	public CredentialSettings credential() {
 		return (CredentialSettings) documents.computeIfAbsent(CREDENTIAL, ignored -> new CredentialSettingsDefaults().supply(new CredentialSettings()));
+	}
+
+	/**
+	 * Returns the Credential provider's commands, starting from their defaults. The proxy only gets this file from
+	 * the test once a test asks for it.
+	 */
+	public CredentialCommands credentialCommands() {
+		return (CredentialCommands) documents.computeIfAbsent(CREDENTIAL_COMMANDS, ignored -> new CredentialCommandsDefaults().supply(new CredentialCommands()));
 	}
 
 	/**
