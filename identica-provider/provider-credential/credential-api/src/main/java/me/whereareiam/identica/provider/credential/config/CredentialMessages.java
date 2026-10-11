@@ -145,7 +145,6 @@ public class CredentialMessages {
 			@ToString
 			public static class Verification {
 				private List<String> prompt;
-				private String invalid;
 				private String required;
 				private String unavailable;
 			}
