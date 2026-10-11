@@ -41,7 +41,13 @@ body:
       options:
         - label: Credential
         - label: Premium
-        - label: Another provider (name it in the description)
+
+  - type: input
+    id: other-providers
+    attributes:
+      label: Other providers
+      description: Names and versions of any other providers you have installed.
+      placeholder: Example Provider 1.0.0
 
   - type: dropdown
     id: database
