@@ -4,7 +4,7 @@ contact_links:
     url: https://discord.arcadeya.com
     about: Ask on Discord for setup, configuration, and upgrade questions.
   - name: Documentation
-    url: https://github.com/whereareiam/Identica/tree/dev/docs/content
+    url: https://identica.whereareiam.me
     about: Installation, configuration, and provider guides.
   - name: Security vulnerability
     url: https://github.com/whereareiam/Identica/security/policy
