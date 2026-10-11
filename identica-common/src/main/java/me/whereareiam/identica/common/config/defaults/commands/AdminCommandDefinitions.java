@@ -98,9 +98,9 @@ public class AdminCommandDefinitions implements CommandDefinitions {
 				.enabled(true)
 				.aliases(List.of("admin reservation set"))
 				.permission("identica.admin.reservation")
-				.description("Create or update an account reservation")
-				.usage("{command} {alias} <key> <uniqueId>")
-				.arguments(Map.of("key", "Reservation key", "uniqueId", "UUID"))
+				.description("Reserve a UUID for a username")
+				.usage("{command} {alias} <username> <uniqueId>")
+				.arguments(Map.of("username", "Username", "uniqueId", "UUID"))
 				.cooldown(globalCooldown())
 				.build());
 
@@ -108,9 +108,9 @@ public class AdminCommandDefinitions implements CommandDefinitions {
 				.enabled(true)
 				.aliases(List.of("admin reservation info"))
 				.permission("identica.admin.reservation")
-				.description("Show an account reservation")
-				.usage("{command} {alias} <key>")
-				.arguments(Map.of("key", "Reservation key"))
+				.description("Show the UUID reserved for a username")
+				.usage("{command} {alias} <username>")
+				.arguments(Map.of("username", "Username"))
 				.cooldown(globalCooldown())
 				.build());
 
@@ -118,9 +118,9 @@ public class AdminCommandDefinitions implements CommandDefinitions {
 				.enabled(true)
 				.aliases(List.of("admin reservation delete"))
 				.permission("identica.admin.reservation")
-				.description("Delete an account reservation")
-				.usage("{command} {alias} <key>")
-				.arguments(Map.of("key", "Reservation key"))
+				.description("Delete the reservation of a username")
+				.usage("{command} {alias} <username>")
+				.arguments(Map.of("username", "Username"))
 				.cooldown(globalCooldown())
 				.build());
 	}

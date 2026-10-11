@@ -17,6 +17,10 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
+/**
+ * Administers the UUID reservations of usernames: the account registered next under a reserved username receives
+ * the reserved UUID.
+ */
 public class ReservationCommand {
 	private final AccountReservationPersistenceService reservationPersistenceService;
 	private final Provider<Messages> messagesProvider;
@@ -34,15 +38,15 @@ public class ReservationCommand {
 	}
 
 	@Definition("admin-reservation-set")
-	@Command("identica admin reservation set <key> <uniqueId>")
+	@Command("identica admin reservation set <username> <uniqueId>")
 	public void set(
 			@NotNull Actor sender,
-			@Argument("key") String key,
+			@Argument("username") String username,
 			@Argument("uniqueId") UUID uniqueId
 	) {
-		String reservationKey = normalizeKey(key);
+		String reservationKey = AccountReservationPersistenceService.usernameKey(username);
 		if (reservationKey == null) {
-			sendMessage(sender, messages().getInvalidKey(), Map.of("key", key));
+			sendMessage(sender, messages().getInvalidKey(), Map.of("key", String.valueOf(username)));
 			return;
 		}
 
@@ -50,58 +54,53 @@ public class ReservationCommand {
 		long expiresAt = now + settingsProvider.get().getIdentity().reservationTtlMillis();
 		reservationPersistenceService.reserve(reservationKey, uniqueId, now, expiresAt);
 		sendMessage(sender, messages().getSet(), Map.of(
-				"key", reservationKey,
+				"key", username.trim(),
 				"uniqueId", uniqueId.toString()
 		));
 	}
 
 	@Definition("admin-reservation-info")
-	@Command("identica admin reservation info <key>")
+	@Command("identica admin reservation info <username>")
 	public void info(
 			@NotNull Actor sender,
-			@Argument("key") String key
+			@Argument("username") String username
 	) {
-		String reservationKey = normalizeKey(key);
+		String reservationKey = AccountReservationPersistenceService.usernameKey(username);
 		if (reservationKey == null) {
-			sendMessage(sender, messages().getInvalidKey(), Map.of("key", key));
+			sendMessage(sender, messages().getInvalidKey(), Map.of("key", String.valueOf(username)));
 			return;
 		}
 
 		Optional<UUID> reservation = reservationPersistenceService.find(reservationKey);
 		if (reservation.isEmpty()) {
-			sendMessage(sender, messages().getNotFound(), Map.of("key", reservationKey));
+			sendMessage(sender, messages().getNotFound(), Map.of("key", username.trim()));
 			return;
 		}
 
 		sendMessage(sender, messages().getInfo(), Map.of(
-				"key", reservationKey,
+				"key", username.trim(),
 				"uniqueId", reservation.get().toString()
 		));
 	}
 
 	@Definition("admin-reservation-delete")
-	@Command("identica admin reservation delete <key>")
+	@Command("identica admin reservation delete <username>")
 	public void delete(
 			@NotNull Actor sender,
-			@Argument("key") String key
+			@Argument("username") String username
 	) {
-		String reservationKey = normalizeKey(key);
+		String reservationKey = AccountReservationPersistenceService.usernameKey(username);
 		if (reservationKey == null) {
-			sendMessage(sender, messages().getInvalidKey(), Map.of("key", key));
+			sendMessage(sender, messages().getInvalidKey(), Map.of("key", String.valueOf(username)));
 			return;
 		}
 
 		reservationPersistenceService.delete(reservationKey);
-		sendMessage(sender, messages().getDeleted(), Map.of("key", reservationKey));
+		sendMessage(sender, messages().getDeleted(), Map.of("key", username.trim()));
 	}
 
 	private Messages.Commands.Admin.Reservation messages() {
 		return messagesProvider.get().getCommands().getAdmin().getReservation();
-	}
-
-	private String normalizeKey(String key) {
-		if (key == null || key.isBlank()) return null;
-		return key.trim().toLowerCase();
 	}
 
 	private void sendMessage(@NotNull Actor sender, String message, Map<String, String> placeholders) {

@@ -2,15 +2,18 @@ package me.whereareiam.identica.common.identity.account;
 
 import me.whereareiam.identica.database.AccountPersistenceService;
 import me.whereareiam.identica.database.AccountReservationPersistenceService;
+import me.whereareiam.identica.database.provider.ProviderLinkPersistenceService;
 import me.whereareiam.identica.event.EventManager;
 import me.whereareiam.identica.event.account.AccountClearEvent;
 import me.whereareiam.identica.event.account.AccountDeleteEvent;
 import me.whereareiam.identica.event.account.AccountLifecycleEvent;
+import me.whereareiam.identica.identity.ReservationCache;
 import me.whereareiam.identica.identity.session.SessionService;
 import me.whereareiam.identica.model.SessionCloseRequest;
 import me.whereareiam.identica.model.config.Settings;
 import me.whereareiam.identica.model.identity.Account;
 import me.whereareiam.identica.model.identity.AccountOperationRequest;
+import me.whereareiam.identica.model.identity.provider.AccountProviderLink;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -20,6 +23,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.Duration;
+import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
@@ -38,6 +42,10 @@ class DefaultAccountServiceTest {
 	@Mock
 	private AccountReservationPersistenceService reservationPersistenceService;
 	@Mock
+	private ProviderLinkPersistenceService providerLinkPersistenceService;
+	@Mock
+	private ReservationCache reservationCache;
+	@Mock
 	private SessionService sessionService;
 	@Mock
 	private EventManager eventManager;
@@ -49,6 +57,8 @@ class DefaultAccountServiceTest {
 		service = new DefaultAccountService(
 				accountPersistenceService,
 				reservationPersistenceService,
+				providerLinkPersistenceService,
+				reservationCache,
 				sessionService,
 				eventManager,
 				this::settings
@@ -119,6 +129,29 @@ class DefaultAccountServiceTest {
 		verify(eventManager).call(eventCaptor.capture());
 		assertInstanceOf(AccountDeleteEvent.class, eventCaptor.getValue());
 		assertEquals(account.getUniqueId(), eventCaptor.getValue().getIdentity().getAccountUniqueId());
+	}
+
+	@DisplayName("Deleting an account forgets the UUIDs reserved for its provider subjects")
+	@Test
+	void deleteForgetsPendingReservationsOfItsProviderSubjects() {
+		Account account = account();
+		when(sessionService.close(org.mockito.ArgumentMatchers.any(SessionCloseRequest.class)))
+				.thenReturn(CompletableFuture.completedFuture(null));
+		when(providerLinkPersistenceService.findByUniqueId(account.getUniqueId())).thenReturn(List.of(
+				AccountProviderLink.builder()
+						.uniqueId(account.getUniqueId())
+						.providerId("Credential")
+						.providerSubject("Player")
+						.primaryLink(true)
+						.build()));
+		when(reservationCache.invalidate("subject:credential:player"))
+				.thenReturn(CompletableFuture.completedFuture(null));
+
+		service.delete(AccountOperationRequest.builder().account(account).build());
+
+		org.mockito.InOrder order = org.mockito.Mockito.inOrder(reservationCache, eventManager);
+		order.verify(reservationCache).invalidate("subject:credential:player");
+		order.verify(eventManager).call(org.mockito.ArgumentMatchers.any(AccountDeleteEvent.class));
 	}
 
 	private Account account() {

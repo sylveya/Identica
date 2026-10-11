@@ -1,15 +1,29 @@
 package me.whereareiam.identica.database;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Optional;
 import java.util.UUID;
 
 /**
- * Service for durable account UUID reservations.
+ * Service for durable account UUID reservations. The account registered next under a reserved username receives the
+ * reserved UUID; reservations of usernames are stored under the key {@link #usernameKey(String)} builds.
  */
 @SuppressWarnings("unused")
 public interface AccountReservationPersistenceService {
+	/**
+	 * Builds the reservation key of a username. Usernames are compared without regard to case.
+	 *
+	 * @param username username to reserve an account UUID for
+	 * @return reservation key, or {@code null} when the username is blank
+	 */
+	static @Nullable String usernameKey(@Nullable String username) {
+		if (username == null || username.isBlank()) return null;
+
+		return "username:" + username.trim().toLowerCase();
+	}
+
 	/**
 	 * Find a reserved account UUID by reservation key.
 	 *

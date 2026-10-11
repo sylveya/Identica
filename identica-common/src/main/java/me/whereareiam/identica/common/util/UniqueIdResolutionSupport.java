@@ -1,5 +1,6 @@
 package me.whereareiam.identica.common.util;
 
+import me.whereareiam.identica.database.AccountReservationPersistenceService;
 import org.jetbrains.annotations.Nullable;
 
 /**
@@ -20,9 +21,6 @@ public final class UniqueIdResolutionSupport {
 	}
 
 	public static @Nullable String buildUsernameKey(@Nullable String username) {
-		String normalized = normalize(username);
-		if (normalized == null) return null;
-
-		return "username:" + normalized;
+		return AccountReservationPersistenceService.usernameKey(username);
 	}
 }
