@@ -1,0 +1,99 @@
+name: Bug report
+description: Something in Identica does not work as documented.
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Ask on [Discord](https://discord.arcadeya.com) for setup help. Report vulnerabilities privately through the [security policy](https://github.com/whereareiam/Identica/security/policy).
+
+  - type: input
+    id: version
+    attributes:
+      label: Identica version
+      description: The version in the jar name, for example `3.0.0` or `dev-1a2b3c4`.
+    validations:
+      required: true
+
+  - type: dropdown
+    id: build
+    attributes:
+      label: Build
+      options:
+        - Release (GitHub, Modrinth, or another store)
+        - Development build
+    validations:
+      required: true
+
+  - type: input
+    id: proxy
+    attributes:
+      label: Proxy and version
+      placeholder: Velocity 3.5.0
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: providers
+    attributes:
+      label: Providers
+      options:
+        - label: Credential
+        - label: Premium
+        - label: Another provider (name it in the description)
+
+  - type: dropdown
+    id: database
+    attributes:
+      label: Database
+      options:
+        - SQLite
+        - H2
+        - MySQL
+        - PostgreSQL
+        - Other
+    validations:
+      required: true
+
+  - type: dropdown
+    id: proxies
+    attributes:
+      label: Proxies
+      options:
+        - One proxy
+        - Several proxies on a shared database
+        - Several proxies with Redis replication
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Join as an offline player named Alice
+        2. Run /register ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected and actual behavior
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs
+      description: Proxy log of the problem with `level` set to `3` in the settings file. Remove IP addresses you do not want to share.
+      render: text
+
+  - type: textarea
+    id: configuration
+    attributes:
+      label: Configuration
+      description: Relevant parts of the configuration. Remove passwords and tokens.
+      render: yaml
