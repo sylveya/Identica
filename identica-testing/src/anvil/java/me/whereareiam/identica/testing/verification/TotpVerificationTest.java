@@ -1,0 +1,197 @@
+package me.whereareiam.identica.testing.verification;
+
+import me.whereareiam.anvil.api.scenario.ScenarioContext;
+import me.whereareiam.identica.testing.environment.Identica;
+import me.whereareiam.identica.testing.environment.Provider;
+import me.whereareiam.identica.testing.environment.ProxyConfiguration;
+import me.whereareiam.identica.testing.fixture.Accounts;
+import me.whereareiam.identica.testing.fixture.Authenticator;
+import me.whereareiam.identica.testing.journey.Journey;
+import me.whereareiam.identica.type.pipeline.journey.JourneyMode;
+import org.junit.jupiter.api.Test;
+
+import java.util.Arrays;
+import java.util.List;
+import java.util.function.Consumer;
+
+import static me.whereareiam.identica.testing.environment.IdenticaNetwork.AUTH;
+import static me.whereareiam.identica.testing.environment.IdenticaNetwork.LOBBY;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
+/**
+ * A player with a Credential account protects it with the built-in authenticator-app (TOTP) verification on a
+ * network whose only provider is Credential. Verification is enabled and optional, as Identica generates it: a
+ * player who enrolled a method is asked for its code after the password, everyone else only types the password.
+ */
+class TotpVerificationTest {
+	private static final String PASSWORD = "Secret-123";
+	/** Recovery codes Identica generates by default. */
+	private static final int RECOVERY_CODES = 8;
+
+	@Test
+	@Identica(mode = JourneyMode.INTERACTIVE, providers = Provider.CREDENTIAL)
+	void asksForTheAuthenticatorCodeAfterThePasswordOnceEnrolled(ScenarioContext anvil) {
+		Enrolled alice = enrolled(anvil);
+
+		alice.journey().leave()
+				.rejoin()
+				.on(AUTH)
+				.sees(m -> m.credential().getScenario().getAuthentication().getPrompt())
+				.login(PASSWORD)
+				.sees(m -> m.credential().getScenario().getAuthentication().getVerification().getPrompt())
+				.remainsOn(AUTH)
+				.command("2fa confirm " + alice.app().code())
+				.on(LOBBY)
+				.sees(m -> m.credential().getCompletion().getAuthentication().getBody());
+	}
+
+	@Test
+	@Identica(mode = JourneyMode.INTERACTIVE, providers = Provider.CREDENTIAL)
+	void refusesAWrongAuthenticatorCodeAndAcceptsTheRightOne(ScenarioContext anvil) {
+		Enrolled alice = enrolled(anvil);
+
+		alice.journey().leave()
+				.rejoin()
+				.on(AUTH)
+				.sees(m -> m.credential().getScenario().getAuthentication().getPrompt())
+				.login(PASSWORD)
+				.sees(m -> m.credential().getScenario().getAuthentication().getVerification().getPrompt())
+				.command("2fa confirm " + alice.app().wrongCode())
+				.sees(m -> m.verification().getCommands().getConfirm().getInvalidCode())
+				.remainsOn(AUTH)
+				.command("2fa confirm " + alice.app().code())
+				.on(LOBBY)
+				.sees(m -> m.credential().getCompletion().getAuthentication().getBody());
+	}
+
+	@Test
+	@Identica(mode = JourneyMode.INTERACTIVE, providers = Provider.CREDENTIAL)
+	void acceptsARecoveryCodeInsteadOfTheAuthenticatorCodeOnlyOnce(ScenarioContext anvil) {
+		Enrolled alice = enrolled(anvil);
+		String recoveryCode = alice.recoveryCodes().getFirst();
+
+		alice.journey().leave()
+				.rejoin()
+				.on(AUTH)
+				.sees(m -> m.credential().getScenario().getAuthentication().getPrompt())
+				.login(PASSWORD)
+				.sees(m -> m.credential().getScenario().getAuthentication().getVerification().getPrompt())
+				.command("2fa confirm " + recoveryCode)
+				.on(LOBBY)
+				.sees(m -> m.credential().getCompletion().getAuthentication().getBody())
+				.leave()
+				.rejoin()
+				.on(AUTH)
+				.sees(m -> m.credential().getScenario().getAuthentication().getPrompt())
+				.login(PASSWORD)
+				.sees(m -> m.credential().getScenario().getAuthentication().getVerification().getPrompt())
+				.command("2fa confirm " + recoveryCode)
+				.sees(m -> m.verification().getCommands().getConfirm().getInvalidCode())
+				.remainsOn(AUTH);
+	}
+
+	@Test
+	@Identica(mode = JourneyMode.INTERACTIVE, providers = Provider.CREDENTIAL)
+	void logsInWithThePasswordAloneOnceTheAuthenticatorIsDisabled(ScenarioContext anvil) {
+		Enrolled alice = enrolled(anvil);
+
+		alice.journey().command("2fa disable totp")
+				.sees(m -> m.verification().getCommands().getDisable().getProtectedPrompt())
+				.command("2fa confirm " + alice.app().code())
+				.sees(m -> m.verification().getCommands().getDisable().getDisabled())
+				.leave()
+				.rejoin()
+				.on(AUTH)
+				.sees(m -> m.credential().getScenario().getAuthentication().getPrompt())
+				.login(PASSWORD)
+				.on(LOBBY)
+				.sees(m -> m.credential().getCompletion().getAuthentication().getBody());
+	}
+
+	@Test
+	@Identica(mode = JourneyMode.INTERACTIVE, providers = Provider.CREDENTIAL)
+	void keepsTheAuthenticatorWhenTheCodeConfirmingItsDisablingIsWrong(ScenarioContext anvil) {
+		Enrolled alice = enrolled(anvil);
+
+		alice.journey().command("2fa disable totp")
+				.sees(m -> m.verification().getCommands().getDisable().getProtectedPrompt())
+				.command("2fa confirm " + alice.app().wrongCode())
+				.sees(m -> m.verification().getCommands().getConfirm().getInvalidCode())
+				.leave()
+				.rejoin()
+				.on(AUTH)
+				.sees(m -> m.credential().getScenario().getAuthentication().getPrompt())
+				.login(PASSWORD)
+				.sees(m -> m.credential().getScenario().getAuthentication().getVerification().getPrompt())
+				.remainsOn(AUTH);
+	}
+
+	@Test
+	@Identica(mode = JourneyMode.INTERACTIVE, providers = Provider.CREDENTIAL)
+	void doesNotEnrollTheAuthenticatorWhenTheConfirmingCodeIsWrong(ScenarioContext anvil) {
+		Journey alice = Accounts.credential(anvil, "Alice", PASSWORD).rejoin()
+				.on(AUTH)
+				.sees(m -> m.credential().getScenario().getAuthentication().getPrompt())
+				.login(PASSWORD)
+				.on(LOBBY);
+		Authenticator app = Authenticator.of(alice.command("2fa enroll totp")
+				.sees(m -> m.verification().getMethods().getTotp().getPending())
+				.reads("secret"));
+
+		alice.command("2fa enroll confirm " + app.wrongCode())
+				.sees(m -> m.verification().getCommands().getConfirm().getInvalidCode())
+				.leave()
+				.rejoin()
+				.on(AUTH)
+				.sees(m -> m.credential().getScenario().getAuthentication().getPrompt())
+				.login(PASSWORD)
+				.on(LOBBY)
+				.sees(m -> m.credential().getCompletion().getAuthentication().getBody());
+	}
+
+	@Test
+	@Identica(mode = JourneyMode.INTERACTIVE, providers = Provider.CREDENTIAL, configure = RequiredVerification.class)
+	void refusesALoginWithoutAMethodWhileVerificationIsRequired(ScenarioContext anvil) {
+		Accounts.credential(anvil, "Alice", PASSWORD).rejoin()
+				.on(AUTH)
+				.sees(m -> m.credential().getScenario().getAuthentication().getPrompt())
+				.login(PASSWORD)
+				.kickedWith(m -> m.credential().getScenario().getAuthentication().getVerification().getRequired());
+	}
+
+	/**
+	 * Registers Alice, logs her in and enrolls an authenticator app: she reads the secret, confirms it with the
+	 * app's code, keeps the recovery codes and confirms she saved them. Alice ends on the lobby, logged in.
+	 */
+	private static Enrolled enrolled(ScenarioContext anvil) {
+		Journey alice = Accounts.credential(anvil, "Alice", PASSWORD).rejoin()
+				.on(AUTH)
+				.sees(m -> m.credential().getScenario().getAuthentication().getPrompt())
+				.login(PASSWORD)
+				.on(LOBBY);
+
+		Authenticator app = Authenticator.of(alice.command("2fa enroll totp")
+				.sees(m -> m.verification().getMethods().getTotp().getPending())
+				.reads("secret"));
+		List<String> recoveryCodes = Arrays.asList(alice.command("2fa enroll confirm " + app.code())
+				.sees(m -> m.verification().getCommands().getConfirm().getRecoveryCodes().getBody())
+				.reads("entries")
+				.split("\\s+"));
+		assertEquals(RECOVERY_CODES, recoveryCodes.size(), "Alice must be shown every recovery code: " + recoveryCodes);
+
+		alice.command("2fa enroll confirm saved")
+				.sees(m -> m.verification().getCommands().getConfirm().getEnabled())
+				.sees(m -> m.verification().getCommands().getConfirm().getAutoSelected());
+		return new Enrolled(alice, app, recoveryCodes);
+	}
+
+	private record Enrolled(Journey journey, Authenticator app, List<String> recoveryCodes) {
+	}
+
+	private static final class RequiredVerification implements Consumer<ProxyConfiguration> {
+		@Override
+		public void accept(ProxyConfiguration proxy) {
+			proxy.verification().getDefaults().setRequired(true);
+		}
+	}
+}

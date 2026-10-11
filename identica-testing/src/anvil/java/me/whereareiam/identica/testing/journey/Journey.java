@@ -54,6 +54,7 @@ public final class Journey {
 	private long console;
 	private int connections;
 	private String matched = "";
+	private MessageText matchedMessage;
 
 	private Journey(ScenarioContext anvil, SimulatedPlayer player, String name, String proxy) {
 		this.name = name;
@@ -201,7 +202,23 @@ public final class Journey {
 	public Journey sees(Function<IdenticaMessages, ?> message) {
 		MessageText expected = text(message);
 		matched = receive(expected::in, List.of(expected));
+		matchedMessage = expected;
 		return this;
+	}
+
+	/**
+	 * Returns what a placeholder holds in the message matched by the previous {@link #sees}, as the player reads
+	 * it, such as a secret or codes the message hands out.
+	 *
+	 * <pre>{@code
+	 * String secret = player.sees(m -> m.verification().getMethods().getTotp().getPending()).reads("secret");
+	 * }</pre>
+	 *
+	 * @param placeholder name of the placeholder in the configured message, without braces
+	 */
+	public String reads(String placeholder) {
+		if (matchedMessage == null) throw new IllegalStateException(name + " has not seen a message to read from");
+		return matchedMessage.value(matched, placeholder);
 	}
 
 	/**
@@ -323,15 +340,17 @@ public final class Journey {
 	}
 
 	/**
-	 * Expects the proxy to disconnect the player for a reason. The proxy reports the disconnect and, on the
-	 * following console lines, the reason. The client receives the same reason, unless the proxy closed the
-	 * connection while the client was switching protocol state: such a client only sees the connection end, so
-	 * the reason is compared whenever the client attributes the disconnect to the server.
+	 * Expects the proxy to disconnect the player for a reason. The proxy reports the disconnect and the reason, on
+	 * the same console line for a single-line reason and on the following lines otherwise. The client receives the
+	 * same reason, unless the proxy closed the connection while the client was switching protocol state: such a
+	 * client only sees the connection end, so the reason is compared whenever the client attributes the disconnect
+	 * to the server.
 	 */
 	public Journey kickedWith(Function<IdenticaMessages, ?> message) {
 		MessageText reason = text(message);
-		reported("[connected player] " + name + " (", "has disconnected");
-		reported(reason.signature(), "");
+		String disconnect = reported("[connected player] " + name + " (", "has disconnected");
+		if (!disconnect.contains(reason.signature()))
+			reported(reason.signature(), "");
 
 		String received = session.kicked(TIMEOUT);
 		assertFalse(session.state().connected(), name + " must be disconnected");
@@ -389,16 +408,16 @@ public final class Journey {
 	}
 
 	/**
-	 * Waits for a proxy console line after the last one this journey matched.
+	 * Waits for a proxy console line after the last one this journey matched and returns it.
 	 */
-	private void reported(String subject, String event) {
+	private String reported(String subject, String event) {
 		Instant deadline = Instant.now().plus(TIMEOUT);
 		while (true) {
 			var output = proxy.read(console, 500);
 			for (var line : output.getLines())
 				if (line.getText().contains(subject) && line.getText().contains(event)) {
 					console = line.getSequence();
-					return;
+					return line.getText();
 				}
 
 			if (Instant.now().isAfter(deadline))
