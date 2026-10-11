@@ -60,6 +60,9 @@ public interface VerificationEnrollmentRepository {
 			""")
 	List<VerificationEnrollmentEntity> findByUniqueId(@Bind("uniqueId") UUID uniqueId);
 
+	@SqlQuery("SELECT COUNT(DISTINCT unique_id) FROM identica_verification_enrollments")
+	long countAccounts();
+
 	@SqlUpdate("""
 			INSERT INTO identica_verification_enrollments (
 				unique_id, method_id, enrollment_id, credential, label, created_at, enabled_at

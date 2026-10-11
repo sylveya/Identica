@@ -2,6 +2,7 @@ package me.whereareiam.identica.platform.velocity;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
 import me.whereareiam.identica.integration.statistics.StatisticsPlatform;
 import me.whereareiam.statistica.common.StatisticaBuilder;
@@ -11,6 +12,8 @@ import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 
 import java.nio.file.Path;
+import java.util.Map;
+import java.util.TreeMap;
 
 @Singleton
 public final class VelocityStatisticsPlatform implements StatisticsPlatform {
@@ -40,5 +43,14 @@ public final class VelocityStatisticsPlatform implements StatisticsPlatform {
 	@Override
 	public @NotNull StatisticaBuilder<?> builder() {
 		return VelocityStatistica.builder(plugin, server, logger, dataPath).bstats(bstats, BSTATS_ID);
+	}
+
+	@Override
+	public @NotNull Map<String, Integer> clientVersions() {
+		Map<String, Integer> versions = new TreeMap<>();
+		for (Player player : server.getAllPlayers())
+			versions.merge(player.getProtocolVersion().getMostRecentSupportedVersion(), 1, Integer::sum);
+
+		return versions;
 	}
 }

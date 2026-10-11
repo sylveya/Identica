@@ -31,12 +31,15 @@ Every 30 minutes, each service receives:
 | `persistence_type`, `replication_type` | the database type and whether Redis replication is on |
 | `unique_id_mode`, `session_concurrency` | the values of [`uniqueIdMode`](../settings/index.mdx#uniqueidmode) and [`concurrencyPolicy`](../settings/index.mdx#concurrencypolicy) |
 | `authentications`, `registrations`, `migrations` | how many ended since the last submission, by result: `completed`, `failed`, `denied`, `cancelled`, `expired` |
+| `logins_by_provider` | completed logins since the last submission, by provider: `credential`, `premium`, and `custom` for any other |
 | `sessions_opened` | how many sessions opened since the last submission |
+| `client_versions` | the players online on the proxy, counted by the Minecraft version of their client |
 | `account_count`, `provider_usage` | how many accounts are stored, in total and by provider |
+| `verified_accounts` | how many accounts have a verification method such as TOTP enabled |
 
 The services add what they collect from every plugin, such as the proxy's version, player count, Java version and operating system.
 
-When several proxies share a database, only one of them sends `account_count` and `provider_usage`, so accounts are not counted once per proxy.
+When several proxies share a database, only one of them sends `account_count`, `provider_usage` and `verified_accounts`, so accounts are not counted once per proxy.
 The proxies agree on it through the `identica_statistics_lease` table; when that proxy stops, another one takes over.
 
 ## What is never sent
