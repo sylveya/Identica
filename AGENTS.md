@@ -162,7 +162,7 @@ See `docs/content/developer/testing/index.mdx`.
 
 - Build each feature, fix, or isolated piece of work in its own `feature/...` branch.
 - Merge feature work into `dev` through a pull request.
-- Release work is merged from `dev` into a `release` branch through a pull request.
+- Releases are cut from `dev`: publishing the release draft tags the current `dev`.
 
 ### Pull Request Checks
 
@@ -172,19 +172,74 @@ See `docs/content/developer/testing/index.mdx`.
 - Development builds are started manually and publish a branch-qualified version. A published GitHub release publishes Maven artifacts, attaches the distribution, and publishes to the stores; a manual run of the release workflow only republishes to the stores.
 - Entry workflows only select a trigger and call `reusable-verify.yml` and `reusable-publish.yml`; shared steps come from `whereareiam/devops` and `whereareiam/blockops`.
 
-### Pull Request Titles
+### Release Notes
 
-Pull request titles are important because they land in release changelogs.
+A merged pull request lands in the release draft as `* <title> ([#<number>](<url>))`, under the category of its label. The draft is written for server admins and players, so the title and the label decide what they read.
 
-- follow the strict format `Category: Description`
-- start with the affected area or group
-- describe what was introduced, changed, or fixed
-- keep titles specific and release-note friendly
+#### Titles
 
-Examples:
+- use the strict format `Area: Description`, with a past-tense description of what changed for the reader: `Introduced`, `Changed`, `Fixed`, `Removed`
+- describe the effect, not the implementation: `Sessions: Fixed logins through another proxy disconnecting the wrong connection`, not `Session: Tied a session to its connection`
+- the draft sorts by the exact area, so spell an area exactly as listed below
 
-- `Engine: Introduced a new pipeline type`
-- `Platform: Fixed Velocity bootstrap provider loading`
+Areas for admins and players:
+
+`Authentication`, `Commands`, `Configuration`, `Credential`, `Database`, `Messages`, `Migration`, `Platform`, `Premium`, `Recognition`, `Replication`, `Restriction`, `Routing`, `Sessions`
+
+- reuse an existing area whenever one fits; a new admin command is `Commands`, a new setting in a feature's file belongs to that feature's area
+- add a new area only for something admins recognise by that name, such as a new feature, provider, or config file, and add it to this list in the same pull request
+- never use module, package, or class names as an area: no `Engine`, `Pipeline`, `Capability`, `Adapter`, `Common`, `Config`
+
+`API:` is for changes a plugin or provider developer compiles against or listens to: public types, events, provider and platform contracts. The drafter moves `API:` changes out of their category into a closing "For developers" section. A change that matters to both admins and developers takes the admin area; mention the API part in the pull request body.
+
+#### Labels
+
+| Label | Use for | Draft section |
+| --- | --- | --- |
+| `feature` | something new for admins, players, or developers | What’s new |
+| `change` | changed behavior, configuration, or API | Enhancements |
+| `bug` | a fix for a bug that shipped in a release | Fixes |
+| `dependencies` | a library update | Dependencies |
+| `skip-changelog` | anything a reader of the release would not notice | not listed |
+
+Use `skip-changelog` for:
+
+- internal refactors with no effect on admins, players, or the public API
+- build, CI, test, and documentation-only changes
+- a fix for a bug that never shipped: when the broken code was introduced after the last release, the fix belongs to the work that introduced it, not to the release notes; compare against the last release tag (`git grep <symbol> <tag>`, `git log <tag>..HEAD -- <path>`) to decide
+- changes to something that was itself added after the last release and never shipped
+
+Add `major` next to the category when admins or developers must act on upgrade: configuration moved or reset without a migration, stored data that is not carried over, or an incompatible public API change. One `major` pull request makes the draft a major version.
+
+#### Release notes file
+
+The drafter rebuilds the draft on every push to `dev`, so text typed into the draft is lost. Everything written by hand, such as the subtitle, the summary, upgrade notes, and security callouts, lives in `.github/release-notes.md` and is changed through pull requests like any other file.
+
+```markdown
+---
+version: 3.0.0
+---
+
+# Update 3.0.0 - Shared Proxies
+
+One or two sentences about the release.
+
+## Upgrading
+
+* Update from 2.2.1; older versions are not supported.
+```
+
+- the content replaces the subtitle and summary placeholders of the draft only while `version` matches the version the draft resolves to; notes of a published release therefore never reach the next draft
+- when a change needs a note, add it to this file in the same pull request; if the file names an already published version, start the notes of the next release by replacing the whole file and setting `version` to the version the draft shows
+- keep the heading as `# Update <version> - <subtitle>`; the stores take the subtitle as the version name
+- bullets in this file are not sorted into the changelog
+
+#### Publishing a release
+
+- fix the changelog part of the draft by editing titles and labels of merged pull requests, then rerun the `Release drafter` workflow
+- the subtitle and summary come from `.github/release-notes.md`; the release workflow stops while a placeholder is left
+- the summary names what admins must do on upgrade (everything labelled `major`) and calls out security fixes
+- the release workflow attaches `release-notes-bbcode.txt` for stores without automatic upload, such as spigotmc.ru
 
 ---
 

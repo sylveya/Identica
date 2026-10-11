@@ -19,6 +19,11 @@ jobs:
     name: Update draft
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: dev
+          persist-credentials: false
+
       - id: drafter
         uses: release-drafter/release-drafter@v7
         with:
@@ -26,9 +31,11 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Group changes by title prefix
+      - name: Group changes and add the release notes
         uses: whereareiam/blockops/primitive/release/draft/regroup@v4
         with:
           release-id: ${{ steps.drafter.outputs.id }}
           release-body: ${{ steps.drafter.outputs.body }}
           developer-prefixes: API
+          notes-file: .github/release-notes.md
+          version: ${{ steps.drafter.outputs.resolved_version }}
