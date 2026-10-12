@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import me.whereareiam.identica.ConnectionCoordinator;
 import me.whereareiam.identica.Serializer;
 import me.whereareiam.identica.annotation.Argument;
+import me.whereareiam.identica.annotation.AvailableWhilePending;
 import me.whereareiam.identica.annotation.Command;
 import me.whereareiam.identica.annotation.Definition;
 import me.whereareiam.identica.identity.actor.Identity;
@@ -28,6 +29,7 @@ public class LoginCommand {
 	private final PipelineStateStore pipelineStateStore;
 	private final Provider<CredentialMessages> messagesProvider;
 
+	@AvailableWhilePending
 	@Definition("login")
 	@Command("login <password>")
 	public void login(@NotNull Actor sender, @Argument(value = "password", parser = "password") String password) {

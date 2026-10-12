@@ -104,4 +104,21 @@ public interface CommandService {
 	 */
 	@NotNull
 	Map<String, CommandDefinition> getRegisteredDefinitions();
+
+	/**
+	 * Returns the commands a player uses before they are authenticated: those of the registered, enabled
+	 * definitions marked {@link me.whereareiam.identica.annotation.AvailableWhilePending}, as a player types them
+	 * without the slash. They follow the aliases an administrator configured, and a subcommand such as
+	 * {@code enroll} appears under every alias of Identica's root command, as {@code identica enroll} and
+	 * {@code id enroll}. A command may have several words; a typed command is allowed when it is one of them or
+	 * starts with one of them followed by a space.
+	 *
+	 * <pre>{@code
+	 * Set<String> allowed = identica.getCommandService().getCommandsAvailableWhilePending();
+	 * }</pre>
+	 *
+	 * @return commands in lower case; changes to the set do not alter registrations
+	 */
+	@NotNull
+	Set<String> getCommandsAvailableWhilePending();
 }

@@ -7,6 +7,8 @@ import me.whereareiam.identica.Reloadable;
 import me.whereareiam.identica.Serializer;
 import me.whereareiam.identica.annotation.Command;
 import me.whereareiam.identica.annotation.Definition;
+import me.whereareiam.identica.event.EventManager;
+import me.whereareiam.identica.event.lifecycle.IdenticaReloadedEvent;
 import me.whereareiam.identica.logging.Logger;
 import me.whereareiam.identica.model.config.Messages;
 import me.whereareiam.keystone.Actor;
@@ -19,15 +21,18 @@ import java.util.Map;
 /**
  * Reloads every component registered in the running proxy, in the registry's order. A component that fails to
  * reload keeps what it had and the others still reload; the answer is a success only when none failed.
+ * Afterwards it calls {@link IdenticaReloadedEvent}, whatever failed, so addons rebuild what they derived.
  */
 public class ReloadCommand {
 	private final Registry<Reloadable> reloadables;
 	private final Provider<Messages> messagesProvider;
+	private final EventManager eventManager;
 
 	@Inject
-	public ReloadCommand(Registry<Reloadable> reloadables, Provider<Messages> messagesProvider) {
+	public ReloadCommand(Registry<Reloadable> reloadables, Provider<Messages> messagesProvider, EventManager eventManager) {
 		this.reloadables = reloadables;
 		this.messagesProvider = messagesProvider;
+		this.eventManager = eventManager;
 	}
 
 	@Definition("admin-reload")
@@ -43,6 +48,8 @@ public class ReloadCommand {
 				failures.add(reason);
 			}
 		}
+
+		eventManager.call(new IdenticaReloadedEvent());
 
 		Messages.Commands.Reload reload = messagesProvider.get().getCommands().getReload();
 		if (failures.isEmpty()) {

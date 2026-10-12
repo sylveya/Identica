@@ -5,6 +5,7 @@ import lombok.Setter;
 import lombok.ToString;
 
 import java.util.List;
+import me.whereareiam.identica.model.config.MessageDocument;
 
 /**
  * Message configuration for the credential provider.
@@ -12,7 +13,7 @@ import java.util.List;
 @Getter
 @Setter
 @ToString
-public class CredentialMessages {
+public class CredentialMessages implements MessageDocument {
 	private Scenario scenario;
 	private Completion completion;
 	private Password password;

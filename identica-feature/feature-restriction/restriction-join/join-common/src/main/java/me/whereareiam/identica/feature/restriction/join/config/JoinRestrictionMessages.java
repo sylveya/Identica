@@ -3,6 +3,7 @@ package me.whereareiam.identica.feature.restriction.join.config;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
+import me.whereareiam.identica.model.config.MessageDocument;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
@@ -13,7 +14,7 @@ import java.util.List;
 @Getter
 @Setter
 @ToString
-public class JoinRestrictionMessages {
+public class JoinRestrictionMessages implements MessageDocument {
 	private @NotNull List<String> denied;
 	private @NotNull Commands commands;
 

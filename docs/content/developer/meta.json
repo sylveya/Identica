@@ -2,6 +2,7 @@
   "title": "Developer",
   "pages": [
     "consuming-api",
+    "writing-addons",
     "features",
     "building",
     "testing",

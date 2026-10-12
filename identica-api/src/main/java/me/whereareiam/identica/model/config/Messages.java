@@ -19,7 +19,7 @@ import java.util.Map;
 @Getter
 @Setter
 @ToString
-public class Messages {
+public class Messages implements MessageDocument {
 	private @NotNull String prefix;
 	private @NotNull Format format;
 	private @NotNull Commands commands;

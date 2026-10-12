@@ -13,7 +13,7 @@ import java.util.List;
 @Getter
 @Setter
 @ToString
-public class UsernameMessages {
+public class UsernameMessages implements MessageDocument {
 	/**
 	 * Messages for each username pipeline stage.
 	 *

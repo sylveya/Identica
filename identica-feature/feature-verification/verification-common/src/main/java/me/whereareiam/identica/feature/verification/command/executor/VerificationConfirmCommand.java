@@ -6,6 +6,7 @@ import com.google.inject.Singleton;
 import me.whereareiam.identica.ConnectionCoordinator;
 import me.whereareiam.identica.Serializer;
 import me.whereareiam.identica.annotation.Argument;
+import me.whereareiam.identica.annotation.AvailableWhilePending;
 import me.whereareiam.identica.annotation.Command;
 import me.whereareiam.identica.annotation.Definition;
 import me.whereareiam.identica.feature.verification.VerificationService;
@@ -77,6 +78,7 @@ public class VerificationConfirmCommand extends ProtectedActionCommand<Void> {
 		return coreMessagesProvider.get().getCommands().getCurrentSessionRequired();
 	}
 
+	@AvailableWhilePending
 	@Definition("verification-confirm")
 	@Command("2fa confirm <input>")
 	public void confirm(@NotNull Actor sender, @Argument("input") String input) {

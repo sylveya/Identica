@@ -7,6 +7,7 @@ import me.whereareiam.commandant.model.message.HelpMessages;
 import me.whereareiam.identica.Serializer;
 import me.whereareiam.identica.adapter.command.suggestion.CrossPlayerSuggestions;
 import me.whereareiam.identica.adapter.command.suggestion.ProviderIdSuggestions;
+import me.whereareiam.identica.annotation.AvailableWhilePending;
 import me.whereareiam.identica.annotation.Command;
 import me.whereareiam.identica.annotation.Definition;
 import me.whereareiam.identica.model.CommandDefinition;
@@ -260,6 +261,26 @@ class DefaultCommandServiceTest {
 		assertEquals(before, service.getCommandCount());
 	}
 
+	@Test
+	void listsTheCommandsMarkedAvailableWhilePendingAsPlayersTypeThem() {
+		service.registerCommandInstance("feature", definition("{command}", "verify"), new FeatureCommand());
+		service.registerCommandInstance("provider", definition("", "Login", "l"), new ProviderCommand());
+		service.registerCommandInstance("enroll", definition("{command}", "enroll"), new EnrollCommand());
+
+		assertEquals(Set.of("login", "l", "identica enroll", "id enroll"), service.getCommandsAvailableWhilePending());
+	}
+
+	@Test
+	void leavesOutDisabledAndUnregisteredCommands() {
+		CommandDefinition disabled = definition("{command}", "enroll").toBuilder().enabled(false).build();
+		service.registerCommandInstance("provider", definition("", "login"), new ProviderCommand());
+		service.registerCommandInstance("enroll", disabled, new EnrollCommand());
+
+		service.unregisterCommands(Set.of("provider"));
+
+		assertEquals(Set.of(), service.getCommandsAvailableWhilePending());
+	}
+
 	private static CommandDefinition definition(String usage, String... aliases) {
 		return CommandDefinition.builder().usage(usage).aliases(List.of(aliases)).build();
 	}
@@ -272,8 +293,17 @@ class DefaultCommandServiceTest {
 	}
 
 	private static final class ProviderCommand {
+		@AvailableWhilePending
 		@Definition("provider")
 		@Command("identica login")
+		public void execute(@NotNull Actor actor) {
+		}
+	}
+
+	private static final class EnrollCommand {
+		@AvailableWhilePending
+		@Definition("enroll")
+		@Command("identica enroll")
 		public void execute(@NotNull Actor actor) {
 		}
 	}

@@ -20,6 +20,8 @@ import me.whereareiam.identica.adapter.command.parser.PasswordParser;
 import me.whereareiam.identica.adapter.command.serializer.ScopedSerializerEngine;
 import me.whereareiam.identica.adapter.command.suggestion.CrossPlayerSuggestions;
 import me.whereareiam.identica.adapter.command.suggestion.ProviderIdSuggestions;
+import me.whereareiam.identica.annotation.AvailableWhilePending;
+import me.whereareiam.identica.annotation.Definition;
 import me.whereareiam.identica.command.CommandService;
 import me.whereareiam.identica.logging.Logger;
 import me.whereareiam.identica.model.CommandDefinition;
@@ -37,6 +39,7 @@ import org.incendo.cloud.suggestion.SuggestionProvider;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.lang.reflect.Method;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -51,6 +54,7 @@ public class DefaultCommandService implements CommandService {
 	private final ProviderIdSuggestions providerIdSuggestions;
 
 	private final Map<String, CommandDefinition> registeredDefinitions = new HashMap<>();
+	private final Set<String> definitionIdsAvailableWhilePending = new LinkedHashSet<>();
 	private final Map<String, AtomicReference<SuggestionProvider<Actor>>> suggestionProviders = new HashMap<>();
 	private IdenticaAnnotationParser<Actor> annotationParser;
 
@@ -162,6 +166,7 @@ public class DefaultCommandService implements CommandService {
 		}
 
 		definitionIds.forEach(registeredDefinitions::remove);
+		definitionIdsAvailableWhilePending.removeAll(definitionIds);
 	}
 
 	private boolean ownsCommand(@NotNull Command<Actor> command, @NotNull Set<String> definitionIds) {
@@ -207,14 +212,48 @@ public class DefaultCommandService implements CommandService {
 		return all;
 	}
 
+	@Override
+	public @NotNull Set<String> getCommandsAvailableWhilePending() {
+		List<String> rootAliases = aliases(lookupDefinition("main"));
+		Set<String> commands = new LinkedHashSet<>();
+		for (String definitionId : definitionIdsAvailableWhilePending) {
+			CommandDefinition definition = lookupDefinition(definitionId);
+			if (definition == null || !definition.isEnabled()) continue;
+
+			for (String alias : aliases(definition)) {
+				if (!isSubcommand(definition)) {
+					commands.add(alias.toLowerCase(Locale.ROOT));
+					continue;
+				}
+
+				for (String root : rootAliases)
+					commands.add((root + " " + alias).toLowerCase(Locale.ROOT));
+			}
+		}
+
+		return commands;
+	}
+
 	private void registerInternal(Object... commandInstances) {
 		CommandManager<Actor> commandManager = commandManagerProvider.get();
 		if (annotationParser == null) {
 			annotationParser = IdenticaAnnotationParser.create(commandManager, Actor.class);
 		}
 
+		for (Object commandInstance : commandInstances)
+			collectAvailableWhilePending(commandInstance);
+
 		Collection<Command<Actor>> parsed = annotationParser.parse(commandInstances);
 		processParsedCommands(parsed, commandManager);
+	}
+
+	private void collectAvailableWhilePending(@NotNull Object commandInstance) {
+		for (Method method : commandInstance.getClass().getMethods()) {
+			Definition definition = method.getAnnotation(Definition.class);
+			if (definition == null || !method.isAnnotationPresent(AvailableWhilePending.class)) continue;
+
+			definitionIdsAvailableWhilePending.add(definition.value());
+		}
 	}
 
 	private void registerSuggestions(@NotNull CommandManager<Actor> commandManager) {
