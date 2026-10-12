@@ -17,6 +17,7 @@ java {
 dependencies {
 	// Identica's configuration and message models and defaults, to build and read the proxy's files through them.
 	anvilImplementation(projects.identicaApi)
+	anvilImplementation(projects.exampleProvider)
 	anvilImplementation(projects.identicaCommon)
 	anvilImplementation(projects.featureRecognitionCommon)
 	anvilImplementation(projects.featureRestrictionJoinCommon)
@@ -52,6 +53,13 @@ fun pluginJar(project: ProjectDependency): Configuration =
 		.apply { isTransitive = false }
 
 /**
+ * The plain jar of a project that bundles nothing, such as the example addon.
+ */
+fun projectJar(project: ProjectDependency): Configuration =
+	configurations.detachedConfiguration(dependencies.project(project.path, "runtimeElements"))
+		.apply { isTransitive = false }
+
+/**
  * Journeys that run at once. Each one has its own network, so the default leaves four processors to every
  * network; a machine with fewer than eight runs one journey after another.
  */
@@ -71,6 +79,8 @@ anvil {
 	artifact("identica", pluginJar(projects.identicaPlatform.bundle))
 	artifact("credential", pluginJar(projects.providerCredentialRuntime))
 	artifact("premium", pluginJar(projects.providerPremiumRuntime))
+	artifact("example-provider", pluginJar(projects.exampleProvider))
+	artifact("example-addon", projectJar(projects.exampleAddon))
 }
 
 tasks.withType<Test>().configureEach {

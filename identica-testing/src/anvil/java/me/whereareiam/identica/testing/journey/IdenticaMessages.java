@@ -5,6 +5,7 @@ import me.whereareiam.configura.Config;
 import me.whereareiam.configura.Configura;
 import me.whereareiam.configura.type.Format;
 import me.whereareiam.identica.common.config.IdenticaModule;
+import me.whereareiam.identica.example.provider.config.ExampleMessages;
 import me.whereareiam.identica.feature.restriction.join.config.JoinRestrictionMessages;
 import me.whereareiam.identica.feature.sentinel.model.config.SentinelMessages;
 import me.whereareiam.identica.feature.verification.config.VerificationMessages;
@@ -49,6 +50,13 @@ public final class IdenticaMessages {
 	 */
 	public PremiumMessages premium() {
 		return read("providers/Premium/messages.yml", PremiumMessages.class);
+	}
+
+	/**
+	 * Returns the example provider's messages; the provider must be enabled in the network.
+	 */
+	public ExampleMessages example() {
+		return read("providers/Example/messages.yml", ExampleMessages.class);
 	}
 
 	/**

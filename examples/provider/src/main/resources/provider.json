@@ -1,0 +1,9 @@
+{
+  "id": "example",
+  "name": "Example",
+  "version": "dev",
+  "main": "me.whereareiam.identica.example.provider.ExampleProvider",
+  "authors": ["whereareiam"],
+  "supportedPlatforms": ["VELOCITY", "BUNGEECORD"],
+  "priority": 10
+}

@@ -26,6 +26,7 @@ public final class Administrator {
 
 	private final ProcessConsole console;
 	private final IdenticaMessages configured;
+	private long lastCommand;
 
 	private Administrator(ScenarioContext anvil, String proxy) {
 		this.console = anvil.processes().proxy(proxy).console();
@@ -194,6 +195,23 @@ public final class Administrator {
 		return this;
 	}
 
+	/**
+	 * Expects the console to show a line containing every text since the previous command was sent, such as what
+	 * an addon logs when it reacts to that command.
+	 */
+	public Administrator seesOnConsole(String... texts) {
+		List<String> expected = List.of(texts);
+		Instant deadline = Instant.now().plus(TIMEOUT);
+		while (true) {
+			List<String> lines = console.read(lastCommand, 2000).getLines().stream().map(line -> line.getText()).toList();
+			if (lines.stream().anyMatch(line -> expected.stream().allMatch(line::contains))) return this;
+			if (Instant.now().isAfter(deadline))
+				fail("The console did not show a line with " + expected + "; console: " + lines);
+
+			pause(100);
+		}
+	}
+
 	private JoinRestrictionMessages.Commands joinRestriction() {
 		return configured.joinRestriction().getCommands();
 	}
@@ -247,6 +265,7 @@ public final class Administrator {
 	private void run(String command, Object answer) {
 		MessageText expected = new MessageText(answer);
 		long before = console.checkpoint();
+		lastCommand = before;
 		console.sendCommand(command);
 
 		Instant deadline = Instant.now().plus(TIMEOUT);

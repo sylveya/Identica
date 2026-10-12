@@ -35,6 +35,8 @@ When changing behavior:
   Compiled features: verification, recognition, sentinel, restriction, and restriction-join. Feature API, implementation, persistence, commands, and pipeline contributions stay in their owning feature modules; join restriction is nested under `feature-restriction/restriction-join`.
 - `identica-integration/*`
   External integrations, such as usage statistics and error reports sent to bStats and FastStats through Statistica.
+- `examples/*`
+  The example addon (a separate Velocity plugin on the public API) and the example provider (a provider jar) that the developer documentation walks through. Not shipped; `identica-testing` runs both on a real proxy, so keep them working when the API changes.
 - `identica-testing`
   Live player journeys against the packaged plugin on a real proxy, run through Anvil. Not part of the shipped plugin.
 - `build-logic/`
