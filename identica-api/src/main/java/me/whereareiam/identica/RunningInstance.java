@@ -15,6 +15,7 @@ import java.util.function.Consumer;
 final class RunningInstance {
 	private static final List<Consumer<IdenticaAPI>> waiting = new ArrayList<>();
 	private static volatile IdenticaAPI instance;
+	private static volatile boolean ready;
 
 	private RunningInstance() {
 		throw new UnsupportedOperationException("This class cannot be instantiated");
@@ -36,7 +37,7 @@ final class RunningInstance {
 		IdenticaAPI current;
 		synchronized (waiting) {
 			current = instance;
-			if (current == null) {
+			if (!ready) {
 				waiting.add(action);
 				return;
 			}
@@ -46,18 +47,29 @@ final class RunningInstance {
 	}
 
 	static void register(@NotNull IdenticaAPI identica) {
-		List<Consumer<IdenticaAPI>> ready;
 		synchronized (waiting) {
 			if (instance != null) throw new IllegalStateException("Identica is already registered");
 
 			instance = identica;
-			ready = List.copyOf(waiting);
+		}
+	}
+
+	static void markReady() {
+		IdenticaAPI current;
+		List<Consumer<IdenticaAPI>> actions;
+		synchronized (waiting) {
+			current = instance;
+			if (current == null) throw new IllegalStateException("Identica is not registered");
+			if (ready) return;
+
+			ready = true;
+			actions = List.copyOf(waiting);
 			waiting.clear();
 		}
 
-		for (Consumer<IdenticaAPI> action : ready) {
+		for (Consumer<IdenticaAPI> action : actions) {
 			try {
-				action.accept(identica);
+				action.accept(current);
 			} catch (RuntimeException failure) {
 				// an addon's failure is not Identica's, so it is not passed on to the error reports
 				Logger.warn("An action waiting for Identica failed: %s", failure);
@@ -68,6 +80,7 @@ final class RunningInstance {
 	static void unregister() {
 		synchronized (waiting) {
 			instance = null;
+			ready = false;
 		}
 	}
 }

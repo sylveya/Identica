@@ -32,8 +32,8 @@ import java.util.function.Consumer;
  * });
  * }</pre>
  *
- * <p>Identica registers its API during startup, before it calls
- * {@link me.whereareiam.identica.event.lifecycle.IdenticaReadyEvent}, and removes it when it shuts down.</p>
+ * <p>Identica registers its API during startup, before it loads providers, and removes it when it shuts down.
+ * {@link #whenReady(Consumer)} waits until the providers are loaded, so their commands and documents are there.</p>
  */
 public interface IdenticaAPI {
 	/**
@@ -56,9 +56,10 @@ public interface IdenticaAPI {
 	}
 
 	/**
-	 * Runs the action with the API: immediately when Identica is running, otherwise once it has started. A
-	 * waiting action runs once, on the thread that starts Identica; one that fails is logged and does not keep
-	 * Identica or the other actions from starting.
+	 * Runs the action with the API once Identica is ready: started, with its providers loaded and their commands
+	 * and documents in place. When it already is, the action runs immediately. A waiting action runs once, on the
+	 * thread that starts Identica; one that fails is logged and does not keep Identica or the other actions from
+	 * starting.
 	 *
 	 * @param action action to run with the API
 	 */
@@ -67,8 +68,8 @@ public interface IdenticaAPI {
 	}
 
 	/**
-	 * Registers the API of the running instance and runs the actions waiting for it. Called by Identica during
-	 * startup; addons never call it.
+	 * Registers the API of the running instance, which {@link #get()} returns from then on. Called by Identica
+	 * during startup, before it loads providers; addons never call it.
 	 *
 	 * @param identica API of the running instance
 	 * @throws IllegalStateException if an instance is already registered
@@ -76,6 +77,17 @@ public interface IdenticaAPI {
 	@ApiStatus.Internal
 	static void register(@NotNull IdenticaAPI identica) {
 		RunningInstance.register(identica);
+	}
+
+	/**
+	 * Marks Identica as ready, once its providers are loaded, and runs the actions waiting in
+	 * {@link #whenReady(Consumer)}. Called by Identica during startup; addons never call it.
+	 *
+	 * @throws IllegalStateException if no instance is registered
+	 */
+	@ApiStatus.Internal
+	static void markReady() {
+		RunningInstance.markReady();
 	}
 
 	/**

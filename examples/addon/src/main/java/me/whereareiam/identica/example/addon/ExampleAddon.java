@@ -1,8 +1,6 @@
 package me.whereareiam.identica.example.addon;
 
 import com.google.inject.Inject;
-import com.velocitypowered.api.event.Subscribe;
-import com.velocitypowered.api.event.proxy.ProxyInitializeEvent;
 import com.velocitypowered.api.plugin.Dependency;
 import com.velocitypowered.api.plugin.Plugin;
 import com.velocitypowered.api.proxy.ProxyServer;
@@ -24,14 +22,14 @@ public final class ExampleAddon {
 	private final ProxyServer proxy;
 	private final Logger logger;
 
+	/**
+	 * Velocity creates the plugin before Identica has started, so the addon waits for Identica to be ready: started,
+	 * with its providers loaded and their commands and documents in place.
+	 */
 	@Inject
 	public ExampleAddon(ProxyServer proxy, Logger logger) {
 		this.proxy = proxy;
 		this.logger = logger;
-	}
-
-	@Subscribe
-	public void onProxyInitialization(ProxyInitializeEvent event) {
 		IdenticaAPI.whenReady(this::enable);
 	}
 

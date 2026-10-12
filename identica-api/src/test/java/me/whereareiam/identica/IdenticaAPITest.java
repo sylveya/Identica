@@ -29,18 +29,37 @@ class IdenticaAPITest {
 		assertEquals(Optional.empty(), IdenticaAPI.find());
 	}
 
-	@DisplayName("Actions registered before startup run once Identica registers, those after run immediately")
+	@DisplayName("Waiting actions run once Identica is ready, not when it registers; later ones run immediately")
 	@Test
-	void whenReadyRunsBeforeAndAfterRegistration() {
+	void whenReadyWaitsForTheProvidersToLoad() {
 		List<String> ran = new ArrayList<>();
 		IdenticaAPI.whenReady(instance -> ran.add("before"));
-		assertEquals(List.of(), ran);
 
 		IdenticaAPI.register(identica);
+		IdenticaAPI.whenReady(instance -> ran.add("registered"));
+		assertEquals(List.of(), ran);
+		assertSame(identica, IdenticaAPI.get());
+
+		IdenticaAPI.markReady();
 		IdenticaAPI.whenReady(instance -> ran.add("after"));
 
-		assertEquals(List.of("before", "after"), ran);
-		assertSame(identica, IdenticaAPI.get());
+		assertEquals(List.of("before", "registered", "after"), ran);
+	}
+
+	@DisplayName("A restarted Identica waits for its providers again")
+	@Test
+	void restartWaitsAgain() {
+		IdenticaAPI.register(identica);
+		IdenticaAPI.markReady();
+		IdenticaAPI.unregister();
+
+		List<String> ran = new ArrayList<>();
+		IdenticaAPI.register(identica);
+		IdenticaAPI.whenReady(instance -> ran.add("restarted"));
+		assertEquals(List.of(), ran);
+
+		IdenticaAPI.markReady();
+		assertEquals(List.of("restarted"), ran);
 	}
 
 	@DisplayName("A failing action does not keep the others or the registration from completing")
@@ -53,6 +72,7 @@ class IdenticaAPITest {
 		IdenticaAPI.whenReady(instance -> ran.add("second"));
 
 		IdenticaAPI.register(identica);
+		IdenticaAPI.markReady();
 
 		assertEquals(List.of("second"), ran);
 		assertSame(identica, IdenticaAPI.get());
