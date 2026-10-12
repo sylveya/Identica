@@ -2,8 +2,8 @@ package me.whereareiam.identica.common.migration;
 
 import com.google.inject.Provider;
 import me.whereareiam.identica.common.config.defaults.EngineDefaults;
-import me.whereareiam.identica.database.AccountPersistenceService;
-import me.whereareiam.identica.database.provider.ProviderLinkPersistenceService;
+import me.whereareiam.identica.persistence.AccountPersistenceService;
+import me.whereareiam.identica.persistence.provider.ProviderLinkPersistenceService;
 import me.whereareiam.identica.event.EventManager;
 import me.whereareiam.identica.event.scenario.migration.MigrationRequiredEvent;
 import me.whereareiam.identica.event.scenario.migration.MigrationResolvedEvent;

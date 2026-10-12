@@ -1,8 +1,8 @@
 package me.whereareiam.identica.common.identity.account;
 
-import me.whereareiam.identica.database.AccountPersistenceService;
-import me.whereareiam.identica.database.AccountReservationPersistenceService;
-import me.whereareiam.identica.database.provider.ProviderLinkPersistenceService;
+import me.whereareiam.identica.persistence.AccountPersistenceService;
+import me.whereareiam.identica.persistence.AccountReservationPersistenceService;
+import me.whereareiam.identica.persistence.provider.ProviderLinkPersistenceService;
 import me.whereareiam.identica.event.EventManager;
 import me.whereareiam.identica.event.account.AccountClearEvent;
 import me.whereareiam.identica.event.account.AccountDeleteEvent;

@@ -1,4 +1,4 @@
-package me.whereareiam.identica.database;
+package me.whereareiam.identica.persistence;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;

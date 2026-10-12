@@ -5,7 +5,7 @@ import com.google.inject.Provider;
 import com.google.inject.Singleton;
 import me.whereareiam.identica.adapter.database.entity.account.AccountReservationEntity;
 import me.whereareiam.identica.adapter.database.repository.account.AccountReservationRepository;
-import me.whereareiam.identica.database.AccountReservationPersistenceService;
+import me.whereareiam.identica.persistence.AccountReservationPersistenceService;
 import me.whereareiam.identica.logging.Logger;
 import me.whereareiam.identica.model.config.persistence.Persistence;
 import org.jetbrains.annotations.NotNull;

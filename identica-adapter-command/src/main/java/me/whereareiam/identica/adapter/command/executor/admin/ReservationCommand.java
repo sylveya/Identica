@@ -6,7 +6,7 @@ import me.whereareiam.identica.Serializer;
 import me.whereareiam.identica.annotation.Argument;
 import me.whereareiam.identica.annotation.Command;
 import me.whereareiam.identica.annotation.Definition;
-import me.whereareiam.identica.database.AccountReservationPersistenceService;
+import me.whereareiam.identica.persistence.AccountReservationPersistenceService;
 import me.whereareiam.identica.model.config.Settings;
 import me.whereareiam.identica.model.config.Messages;
 import me.whereareiam.keystone.Actor;

@@ -2,7 +2,7 @@ package me.whereareiam.identica.provider.credential.pipeline.step.type.authentic
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
-import me.whereareiam.identica.database.provider.ProviderLinkPersistenceService;
+import me.whereareiam.identica.persistence.provider.ProviderLinkPersistenceService;
 import me.whereareiam.identica.feature.FeatureRegistry;
 import me.whereareiam.identica.feature.verification.VerificationService;
 import me.whereareiam.identica.feature.verification.model.resolution.VerificationResolutionResult;

@@ -1,6 +1,6 @@
 package me.whereareiam.identica.engine.pipeline.username;
 
-import me.whereareiam.identica.database.username.AccountUsernameStatePersistenceService;
+import me.whereareiam.identica.persistence.username.AccountUsernameStatePersistenceService;
 import me.whereareiam.identica.model.identity.username.AccountUsernameState;
 import me.whereareiam.identica.type.identity.AccountUsernameSource;
 import me.whereareiam.identica.model.identity.Account;

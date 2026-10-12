@@ -12,7 +12,7 @@ import me.whereareiam.identica.pipeline.ScenarioContext;
 import me.whereareiam.identica.pipeline.state.AbstractGroupState;
 import me.whereareiam.identica.pipeline.state.PipelineState;
 import me.whereareiam.identica.provider.ProviderManager;
-import me.whereareiam.identica.database.username.AccountUsernameStatePersistenceService;
+import me.whereareiam.identica.persistence.username.AccountUsernameStatePersistenceService;
 import me.whereareiam.identica.pipeline.state.scenario.shared.item.UsernameStateItem;
 import me.whereareiam.identica.type.identity.AccountUsernameSource;
 import me.whereareiam.identica.type.pipeline.PipelineStatus;

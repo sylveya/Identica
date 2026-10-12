@@ -1,6 +1,6 @@
 package me.whereareiam.identica.engine.pipeline.scenario;
 
-import me.whereareiam.identica.database.provider.ProviderLinkPersistenceService;
+import me.whereareiam.identica.persistence.provider.ProviderLinkPersistenceService;
 import me.whereareiam.identica.engine.pipeline.PipelineExecutor;
 import me.whereareiam.identica.engine.pipeline.scenario.type.authentication.AuthenticationPipeline;
 import me.whereareiam.identica.engine.pipeline.scenario.type.migration.MigrationPipeline;

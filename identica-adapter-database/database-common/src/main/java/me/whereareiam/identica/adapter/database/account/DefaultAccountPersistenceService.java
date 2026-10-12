@@ -6,7 +6,7 @@ import lombok.RequiredArgsConstructor;
 import me.whereareiam.identica.adapter.database.entity.account.AccountEntity;
 import me.whereareiam.identica.adapter.database.mapper.account.AccountMapper;
 import me.whereareiam.identica.adapter.database.repository.account.AccountRepository;
-import me.whereareiam.identica.database.AccountPersistenceService;
+import me.whereareiam.identica.persistence.AccountPersistenceService;
 import me.whereareiam.identica.event.EventListener;
 import me.whereareiam.identica.event.EventManager;
 import me.whereareiam.identica.event.account.AccountLifecycleEvent;

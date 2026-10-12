@@ -1,4 +1,4 @@
-package me.whereareiam.identica.database.username;
+package me.whereareiam.identica.persistence.username;
 
 import me.whereareiam.identica.model.identity.username.AccountUsernameState;
 import me.whereareiam.identica.type.identity.AccountUsernameSource;

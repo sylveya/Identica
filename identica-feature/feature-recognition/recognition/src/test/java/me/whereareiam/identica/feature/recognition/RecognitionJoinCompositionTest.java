@@ -9,7 +9,7 @@ import com.google.inject.util.Modules;
 import me.whereareiam.identica.Registry;
 import me.whereareiam.identica.Reloadable;
 import me.whereareiam.identica.command.CommandService;
-import me.whereareiam.identica.database.provider.ProviderLinkPersistenceService;
+import me.whereareiam.identica.persistence.provider.ProviderLinkPersistenceService;
 import me.whereareiam.identica.event.EventManager;
 import me.whereareiam.identica.feature.FeatureContext;
 import me.whereareiam.identica.feature.FeatureProviderContext;

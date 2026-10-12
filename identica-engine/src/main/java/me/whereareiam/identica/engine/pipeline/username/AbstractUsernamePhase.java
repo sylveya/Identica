@@ -8,7 +8,7 @@ import me.whereareiam.identica.model.identity.provider.AccountProviderProfile;
 import me.whereareiam.identica.model.provider.InternalProvider;
 import me.whereareiam.identica.model.provider.ProviderDescriptor;
 import me.whereareiam.identica.provider.ProviderManager;
-import me.whereareiam.identica.database.username.AccountUsernameStatePersistenceService;
+import me.whereareiam.identica.persistence.username.AccountUsernameStatePersistenceService;
 import me.whereareiam.identica.model.identity.username.AccountUsernameState;
 import me.whereareiam.identica.type.identity.AccountUsernameSource;
 import me.whereareiam.identica.type.provider.ProviderTrait;

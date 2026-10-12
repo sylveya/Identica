@@ -7,7 +7,7 @@ import me.whereareiam.identica.event.EventListener;
 import me.whereareiam.identica.event.EventManager;
 import me.whereareiam.identica.event.account.AccountLifecycleEvent;
 import me.whereareiam.identica.event.base.IdenticEvent;
-import me.whereareiam.identica.database.username.AccountUsernameHistoryPersistenceService;
+import me.whereareiam.identica.persistence.username.AccountUsernameHistoryPersistenceService;
 import me.whereareiam.identica.adapter.database.mapper.username.UsernameHistoryMapper;
 import me.whereareiam.identica.adapter.database.repository.username.UsernameHistoryRepository;
 import me.whereareiam.identica.model.identity.username.AccountUsernameHistoryEntry;
