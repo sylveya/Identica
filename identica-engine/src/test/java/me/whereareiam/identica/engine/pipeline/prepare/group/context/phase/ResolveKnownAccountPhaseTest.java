@@ -1,7 +1,7 @@
 package me.whereareiam.identica.engine.pipeline.prepare.group.context.phase;
 
-import me.whereareiam.identica.database.AccountPersistenceService;
-import me.whereareiam.identica.database.provider.ProviderLinkPersistenceService;
+import me.whereareiam.identica.persistence.AccountPersistenceService;
+import me.whereareiam.identica.persistence.provider.ProviderLinkPersistenceService;
 import me.whereareiam.identica.identity.actor.ConnectionIdentity;
 import me.whereareiam.identica.model.config.Engine;
 import me.whereareiam.identica.model.identity.Account;

@@ -1,4 +1,4 @@
-package me.whereareiam.identica.database.username;
+package me.whereareiam.identica.persistence.username;
 
 import me.whereareiam.identica.model.identity.username.AccountUsernameHistoryEntry;
 import org.jetbrains.annotations.NotNull;

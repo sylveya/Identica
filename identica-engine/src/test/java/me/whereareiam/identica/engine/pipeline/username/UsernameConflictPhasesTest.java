@@ -1,8 +1,8 @@
 package me.whereareiam.identica.engine.pipeline.username;
 
-import me.whereareiam.identica.database.AccountPersistenceService;
-import me.whereareiam.identica.database.provider.ProviderLinkPersistenceService;
-import me.whereareiam.identica.database.provider.ProviderProfilePersistenceService;
+import me.whereareiam.identica.persistence.AccountPersistenceService;
+import me.whereareiam.identica.persistence.provider.ProviderLinkPersistenceService;
+import me.whereareiam.identica.persistence.provider.ProviderProfilePersistenceService;
 import me.whereareiam.identica.identity.actor.ConnectionIdentity;
 import me.whereareiam.identica.model.auth.AuthContext;
 import me.whereareiam.identica.model.identity.Account;
@@ -21,7 +21,7 @@ import me.whereareiam.identica.pipeline.state.prepare.PrepareGroupState;
 import me.whereareiam.identica.pipeline.state.scenario.type.registration.PolicyState;
 import me.whereareiam.identica.provider.ProviderManager;
 import me.whereareiam.identica.identity.username.UsernameConflictHandler;
-import me.whereareiam.identica.database.username.AccountUsernameStatePersistenceService;
+import me.whereareiam.identica.persistence.username.AccountUsernameStatePersistenceService;
 import me.whereareiam.identica.model.config.UsernameMessages;
 import me.whereareiam.identica.model.identity.username.UsernameConflictResult;
 import me.whereareiam.identica.engine.pipeline.prepare.group.policy.phase.ApplyAuthoritativeUsernamePhase;

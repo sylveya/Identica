@@ -18,7 +18,7 @@ When changing behavior:
 ### Core Module Map
 
 - `identica-api`
-  Public API, contracts, events, shared models, and extension points. It carries no database technology: no Dialectica, Strata or Jdbi.
+  Public API, contracts, events, shared models, and extension points. Its persistence contracts in `me.whereareiam.identica.persistence` are technology-free ports; it carries no database technology: no Dialectica, Strata or Jdbi.
 - `identica-common`
   Shared runtime behavior, configuration defaults, provider coordination, routing, migration, replication integration, username conflict handling, compiled feature lifecycle coordination, and general domain logic.
 - `identica-engine`

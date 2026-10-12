@@ -8,7 +8,7 @@ import me.whereareiam.identica.Serializer;
 import me.whereareiam.identica.annotation.Argument;
 import me.whereareiam.identica.annotation.Command;
 import me.whereareiam.identica.annotation.Definition;
-import me.whereareiam.identica.database.AccountPersistenceService;
+import me.whereareiam.identica.persistence.AccountPersistenceService;
 import me.whereareiam.identica.model.config.Messages;
 import me.whereareiam.identica.model.identity.Account;
 import me.whereareiam.keystone.Actor;

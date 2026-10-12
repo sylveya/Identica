@@ -2,15 +2,15 @@ package me.whereareiam.identica.engine.pipeline.scenario.type.registration.group
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import me.whereareiam.identica.database.AccountPersistenceService;
+import me.whereareiam.identica.persistence.AccountPersistenceService;
 import me.whereareiam.identica.event.EventManager;
 import me.whereareiam.identica.model.registration.RegistrationContext;
 import me.whereareiam.identica.pipeline.ScenarioContext;
 import me.whereareiam.identica.pipeline.state.PipelineState;
 import me.whereareiam.identica.pipeline.state.scenario.type.registration.PolicyState;
 import me.whereareiam.identica.provider.ProviderManager;
-import me.whereareiam.identica.database.username.AccountUsernameHistoryPersistenceService;
-import me.whereareiam.identica.database.username.AccountUsernameStatePersistenceService;
+import me.whereareiam.identica.persistence.username.AccountUsernameHistoryPersistenceService;
+import me.whereareiam.identica.persistence.username.AccountUsernameStatePersistenceService;
 import me.whereareiam.identica.engine.pipeline.username.AbstractPersistUsernamePhase;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;

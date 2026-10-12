@@ -1,6 +1,6 @@
 package me.whereareiam.identica.common.util;
 
-import me.whereareiam.identica.database.AccountReservationPersistenceService;
+import me.whereareiam.identica.persistence.AccountReservationPersistenceService;
 import org.jetbrains.annotations.Nullable;
 
 /**

@@ -1,6 +1,6 @@
 package me.whereareiam.identica.engine.pipeline.scenario.shared.group.journey.rule;
 
-import me.whereareiam.identica.database.provider.ProviderLinkPersistenceService;
+import me.whereareiam.identica.persistence.provider.ProviderLinkPersistenceService;
 import me.whereareiam.identica.identity.actor.ConnectionIdentity;
 import me.whereareiam.identica.model.migration.MigrationContext;
 import me.whereareiam.identica.model.pipeline.journey.JourneyPlan;

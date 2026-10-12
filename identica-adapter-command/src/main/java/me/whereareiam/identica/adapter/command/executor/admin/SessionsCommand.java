@@ -7,7 +7,7 @@ import lombok.RequiredArgsConstructor;
 import me.whereareiam.commandant.Pagination;
 import me.whereareiam.identica.Serializer;
 import me.whereareiam.identica.annotation.*;
-import me.whereareiam.identica.database.AccountPersistenceService;
+import me.whereareiam.identica.persistence.AccountPersistenceService;
 import me.whereareiam.identica.identity.IdentityService;
 import me.whereareiam.identica.identity.actor.Identity;
 import me.whereareiam.identica.identity.session.SessionService;

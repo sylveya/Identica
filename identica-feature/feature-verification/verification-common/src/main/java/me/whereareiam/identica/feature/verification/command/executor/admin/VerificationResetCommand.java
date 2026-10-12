@@ -9,7 +9,7 @@ import me.whereareiam.identica.annotation.Argument;
 import me.whereareiam.identica.annotation.Command;
 import me.whereareiam.identica.annotation.Definition;
 import me.whereareiam.identica.annotation.Suggestions;
-import me.whereareiam.identica.database.AccountPersistenceService;
+import me.whereareiam.identica.persistence.AccountPersistenceService;
 import me.whereareiam.identica.feature.verification.VerificationService;
 import me.whereareiam.identica.feature.verification.config.VerificationMessages;
 import me.whereareiam.identica.feature.verification.type.status.VerificationResetStatus;

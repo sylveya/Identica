@@ -1,6 +1,6 @@
 package me.whereareiam.identica.engine.pipeline.username;
 
-import me.whereareiam.identica.database.AccountPersistenceService;
+import me.whereareiam.identica.persistence.AccountPersistenceService;
 import me.whereareiam.identica.event.EventManager;
 import me.whereareiam.identica.model.pipeline.PipelineResult;
 import me.whereareiam.identica.model.pipeline.phase.PhaseResult;
@@ -9,8 +9,8 @@ import me.whereareiam.identica.pipeline.ScenarioContext;
 import me.whereareiam.identica.pipeline.state.AbstractGroupState;
 import me.whereareiam.identica.pipeline.state.PipelineState;
 import me.whereareiam.identica.provider.ProviderManager;
-import me.whereareiam.identica.database.username.AccountUsernameHistoryPersistenceService;
-import me.whereareiam.identica.database.username.AccountUsernameStatePersistenceService;
+import me.whereareiam.identica.persistence.username.AccountUsernameHistoryPersistenceService;
+import me.whereareiam.identica.persistence.username.AccountUsernameStatePersistenceService;
 import me.whereareiam.identica.event.identity.UsernameChangedEvent;
 import me.whereareiam.identica.model.identity.username.AccountUsernameHistoryEntry;
 import me.whereareiam.identica.pipeline.state.scenario.shared.item.UsernameStateItem;

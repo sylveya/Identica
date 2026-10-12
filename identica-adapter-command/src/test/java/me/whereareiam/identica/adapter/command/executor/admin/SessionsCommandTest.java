@@ -1,7 +1,7 @@
 package me.whereareiam.identica.adapter.command.executor.admin;
 
 import me.whereareiam.identica.Serializer;
-import me.whereareiam.identica.database.AccountPersistenceService;
+import me.whereareiam.identica.persistence.AccountPersistenceService;
 import me.whereareiam.identica.identity.IdentityService;
 import me.whereareiam.identica.identity.session.SessionService;
 import me.whereareiam.identica.model.Session;

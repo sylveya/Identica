@@ -3,7 +3,7 @@ package me.whereareiam.identica.feature.restriction.join;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import lombok.RequiredArgsConstructor;
-import me.whereareiam.identica.database.provider.ProviderLinkPersistenceService;
+import me.whereareiam.identica.persistence.provider.ProviderLinkPersistenceService;
 import me.whereareiam.identica.feature.restriction.contribution.ProviderRestrictionSignalContribution;
 import me.whereareiam.identica.feature.restriction.model.RestrictionEvaluationRequest;
 import me.whereareiam.identica.feature.restriction.type.RestrictionSignal;

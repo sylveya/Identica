@@ -15,14 +15,14 @@ import me.whereareiam.identica.adapter.database.repository.username.UsernameHist
 import me.whereareiam.identica.adapter.database.repository.username.UsernameStateRepository;
 import me.whereareiam.identica.adapter.database.username.DefaultAccountUsernameHistoryPersistenceService;
 import me.whereareiam.identica.adapter.database.username.DefaultAccountUsernameStatePersistenceService;
-import me.whereareiam.identica.database.AccountPersistenceService;
-import me.whereareiam.identica.database.AccountReservationPersistenceService;
+import me.whereareiam.identica.persistence.AccountPersistenceService;
+import me.whereareiam.identica.persistence.AccountReservationPersistenceService;
 import me.whereareiam.identica.database.DatabaseService;
-import me.whereareiam.identica.database.provider.ProviderLinkPersistenceService;
-import me.whereareiam.identica.database.provider.ProviderProfilePersistenceService;
+import me.whereareiam.identica.persistence.provider.ProviderLinkPersistenceService;
+import me.whereareiam.identica.persistence.provider.ProviderProfilePersistenceService;
 import me.whereareiam.identica.database.schema.SchemaInstaller;
-import me.whereareiam.identica.database.username.AccountUsernameHistoryPersistenceService;
-import me.whereareiam.identica.database.username.AccountUsernameStatePersistenceService;
+import me.whereareiam.identica.persistence.username.AccountUsernameHistoryPersistenceService;
+import me.whereareiam.identica.persistence.username.AccountUsernameStatePersistenceService;
 import org.jdbi.v3.core.Jdbi;
 
 import javax.sql.DataSource;

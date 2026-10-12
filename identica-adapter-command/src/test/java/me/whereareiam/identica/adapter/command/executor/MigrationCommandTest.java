@@ -1,9 +1,9 @@
 package me.whereareiam.identica.adapter.command.executor;
 
 import me.whereareiam.identica.Serializer;
-import me.whereareiam.identica.database.AccountPersistenceService;
-import me.whereareiam.identica.database.provider.ProviderLinkPersistenceService;
-import me.whereareiam.identica.database.provider.ProviderProfilePersistenceService;
+import me.whereareiam.identica.persistence.AccountPersistenceService;
+import me.whereareiam.identica.persistence.provider.ProviderLinkPersistenceService;
+import me.whereareiam.identica.persistence.provider.ProviderProfilePersistenceService;
 import me.whereareiam.identica.identity.IdentityService;
 import me.whereareiam.identica.model.config.Messages;
 import me.whereareiam.identica.model.identity.Account;
