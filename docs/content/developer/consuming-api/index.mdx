@@ -94,7 +94,7 @@ Download the matching `javadoc` artifact from the Maven registry or let your IDE
 The API entry point is `me.whereareiam.identica.IdenticaAPI`. Its static methods return the API of the running Identica instance, which offers every service an addon uses. Identica registers it during startup and removes it when it shuts down.
 
 - `IdenticaAPI.get()` returns the API and throws when Identica is not running. Use it when your addon is loaded after Identica.
-- `IdenticaAPI.whenReady(identica -> ...)` runs your code as soon as Identica is running: immediately if it already is, otherwise once it has started. Use it when your addon may start before Identica has finished starting.
+- `IdenticaAPI.whenReady(identica -> ...)` runs your code once Identica is ready, with its providers loaded and their commands and documents in place: immediately if it already is, otherwise once it gets there. Use it to start your addon whenever it is loaded.
 - `IdenticaAPI.find()` returns an `Optional<IdenticaAPI>` and never throws.
 
 Pass the `IdenticaAPI` on to the classes of your addon instead of calling `IdenticaAPI.get()` everywhere. Those classes then depend on an interface you can mock in tests.

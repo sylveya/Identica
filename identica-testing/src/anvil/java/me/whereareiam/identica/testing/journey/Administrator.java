@@ -196,8 +196,8 @@ public final class Administrator {
 	}
 
 	/**
-	 * Expects the console to show a line containing every text since the previous command was sent, such as what
-	 * an addon logs when it reacts to that command.
+	 * Expects the console to show a line containing every text since the previous command was sent, or since the
+	 * proxy started before the first one, such as what an addon logs when it starts or reacts to a command.
 	 */
 	public Administrator seesOnConsole(String... texts) {
 		List<String> expected = List.of(texts);

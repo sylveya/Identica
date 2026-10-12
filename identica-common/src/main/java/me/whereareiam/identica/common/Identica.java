@@ -61,6 +61,7 @@ public class Identica implements EventListener {
 		injector.getInstance(CommandService.class);
 		injector.getInstance(ProviderManager.class).loadProviders();
 		listenerRegistrar.registerListeners();
+		IdenticaAPI.markReady();
 
 		injector.getInstance(WelcomeBannerPrinter.class).print();
 	}

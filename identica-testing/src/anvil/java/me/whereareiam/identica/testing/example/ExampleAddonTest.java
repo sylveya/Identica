@@ -60,6 +60,14 @@ class ExampleAddonTest {
 
 	@Test
 	@Identica(mode = JourneyMode.INTERACTIVE, providers = Provider.CREDENTIAL, addon = true)
+	void startsOnceTheProvidersAreLoaded(ScenarioContext anvil) {
+		// Credential's commands only exist once Identica has loaded its providers
+		Administrator.at(anvil, PROXY)
+				.seesOnConsole("Example addon allows", "login", "passconfirm", "identica enroll");
+	}
+
+	@Test
+	@Identica(mode = JourneyMode.INTERACTIVE, providers = Provider.CREDENTIAL, addon = true)
 	void readsTheCommandsAndMessagesAgainWhenIdenticaReloads(ScenarioContext anvil) {
 		Administrator.at(anvil, PROXY)
 				.reloads()
