@@ -11,7 +11,7 @@ To consume Identica events from an addon plugin:
 
 - implement `EventListener`
 - annotate handler methods with `@IdenticEvent`
-- register the listener through `IdenticaAPI.getEventManager()`
+- register the listener through `identica.getEventManager()`
 
 ### Listener example
 
@@ -30,11 +30,7 @@ public final class ExampleRegistrationListener implements EventListener {
     }
 
     public void register() {
-        if (!IdenticaAPI.isInitialized()) {
-            return;
-        }
-
-        IdenticaAPI.getEventManager().register(this);
+        IdenticaAPI.whenReady(identica -> identica.getEventManager().register(this));
     }
 }
 ```
