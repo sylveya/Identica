@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import me.whereareiam.identica.ConnectionCoordinator;
 import me.whereareiam.identica.Serializer;
 import me.whereareiam.identica.annotation.Argument;
+import me.whereareiam.identica.annotation.AvailableWhilePending;
 import me.whereareiam.identica.annotation.Command;
 import me.whereareiam.identica.annotation.Definition;
 import me.whereareiam.identica.identity.actor.Identity;
@@ -32,6 +33,7 @@ public class EnrollCommand {
 	private final Provider<Engine> engineProvider;
 	private final Provider<Messages> messagesProvider;
 
+	@AvailableWhilePending
 	@Definition("enroll")
 	@Command("identica enroll <eligibility>")
 	public void enroll(

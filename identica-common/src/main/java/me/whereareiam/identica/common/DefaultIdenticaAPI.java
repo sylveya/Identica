@@ -5,15 +5,20 @@ import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Key;
 import com.google.inject.Singleton;
+import com.google.inject.TypeLiteral;
 import me.whereareiam.configura.Configura;
 import me.whereareiam.identica.ConnectionCoordinator;
 import me.whereareiam.identica.IdenticaAPI;
+import me.whereareiam.identica.Registry;
+import me.whereareiam.identica.Reloadable;
 import me.whereareiam.identica.command.CommandService;
+import me.whereareiam.identica.config.ConfigCatalog;
 import me.whereareiam.identica.event.EventManager;
 import me.whereareiam.identica.identity.IdentityService;
 import me.whereareiam.identica.identity.account.AccountService;
 import me.whereareiam.identica.identity.account.RegistrationAccountService;
 import me.whereareiam.identica.identity.session.SessionService;
+import me.whereareiam.identica.pipeline.PendingScenarioService;
 import me.whereareiam.identica.pipeline.extension.PipelineExtensionRegistry;
 import me.whereareiam.identica.provider.ProviderManager;
 import me.whereareiam.identica.provider.ProviderOperations;
@@ -29,6 +34,8 @@ import java.util.Optional;
  */
 @Singleton
 public class DefaultIdenticaAPI implements IdenticaAPI {
+	private static final Key<Registry<Reloadable>> RELOADABLES = Key.get(new TypeLiteral<>() {});
+
 	private final Injector injector;
 
 	@Inject
@@ -99,6 +106,21 @@ public class DefaultIdenticaAPI implements IdenticaAPI {
 	@Override
 	public @NotNull Configura getConfigura() {
 		return injector.getInstance(Configura.class);
+	}
+
+	@Override
+	public @NotNull ConfigCatalog getConfigCatalog() {
+		return injector.getInstance(ConfigCatalog.class);
+	}
+
+	@Override
+	public @NotNull PendingScenarioService getPendingScenarioService() {
+		return injector.getInstance(PendingScenarioService.class);
+	}
+
+	@Override
+	public @NotNull Registry<Reloadable> getReloadables() {
+		return injector.getInstance(RELOADABLES);
 	}
 
 	/**

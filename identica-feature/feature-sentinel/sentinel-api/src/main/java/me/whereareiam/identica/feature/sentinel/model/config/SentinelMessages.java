@@ -3,6 +3,7 @@ package me.whereareiam.identica.feature.sentinel.model.config;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
+import me.whereareiam.identica.model.config.MessageDocument;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
@@ -13,7 +14,7 @@ import java.util.List;
 @Getter
 @Setter
 @ToString
-public class SentinelMessages {
+public class SentinelMessages implements MessageDocument {
 	private @NotNull ResumeSpam resumeSpam;
 
 	/**

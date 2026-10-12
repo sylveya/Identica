@@ -2,11 +2,13 @@ package me.whereareiam.identica;
 
 import me.whereareiam.configura.Configura;
 import me.whereareiam.identica.command.CommandService;
+import me.whereareiam.identica.config.ConfigCatalog;
 import me.whereareiam.identica.event.EventManager;
 import me.whereareiam.identica.identity.IdentityService;
 import me.whereareiam.identica.identity.account.AccountService;
 import me.whereareiam.identica.identity.account.RegistrationAccountService;
 import me.whereareiam.identica.identity.session.SessionService;
+import me.whereareiam.identica.pipeline.PendingScenarioService;
 import me.whereareiam.identica.pipeline.extension.PipelineExtensionRegistry;
 import me.whereareiam.identica.provider.ProviderManager;
 import me.whereareiam.identica.provider.ProviderOperations;
@@ -175,6 +177,30 @@ public interface IdenticaAPI {
 	 * @return base Configura instance
 	 */
 	@NotNull Configura getConfigura();
+
+	/**
+	 * Returns the catalog of loaded configuration documents, such as every messages document of core, the
+	 * features and the loaded providers.
+	 *
+	 * @return config catalog
+	 */
+	@NotNull ConfigCatalog getConfigCatalog();
+
+	/**
+	 * Returns the service that tells whether a connection still has to authenticate, register or migrate.
+	 *
+	 * @return pending scenario service
+	 */
+	@NotNull PendingScenarioService getPendingScenarioService();
+
+	/**
+	 * Returns the registry of components that {@code /identica admin reload} refreshes. An addon registers a
+	 * {@link Reloadable} here to be reloaded after every configuration document, and unregisters it when the
+	 * addon is disabled.
+	 *
+	 * @return reloadable registry
+	 */
+	@NotNull Registry<Reloadable> getReloadables();
 
 	/**
 	 * Finds a service that has no getter here, such as the API of a feature:

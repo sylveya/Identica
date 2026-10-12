@@ -2,6 +2,7 @@ package me.whereareiam.identica.common.config;
 
 import com.google.inject.AbstractModule;
 import me.whereareiam.identica.common.config.provider.*;
+import me.whereareiam.identica.config.ConfigCatalog;
 import me.whereareiam.identica.model.config.*;
 import me.whereareiam.identica.model.config.persistence.Persistence;
 import me.whereareiam.identica.model.config.provider.Conflicts;
@@ -19,5 +20,7 @@ public class ConfigBindings extends AbstractModule {
 		bind(Providers.class).toProvider(ProvidersProvider.class);
 		bind(Persistence.class).toProvider(PersistenceProvider.class);
 		bind(Replication.class).toProvider(ReplicationProvider.class);
+
+		bind(ConfigCatalog.class).to(DefaultConfigCatalog.class);
 	}
 }

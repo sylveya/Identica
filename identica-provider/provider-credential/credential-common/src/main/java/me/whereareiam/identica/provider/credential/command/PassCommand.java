@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import me.whereareiam.identica.ConnectionCoordinator;
 import me.whereareiam.identica.Serializer;
 import me.whereareiam.identica.annotation.Argument;
+import me.whereareiam.identica.annotation.AvailableWhilePending;
 import me.whereareiam.identica.annotation.Command;
 import me.whereareiam.identica.annotation.Definition;
 import me.whereareiam.identica.identity.actor.Identity;
@@ -28,6 +29,7 @@ public class PassCommand {
 	private final PipelineStateStore pipelineStateStore;
 	private final Provider<CredentialMessages> messagesProvider;
 
+	@AvailableWhilePending
 	@Definition("pass")
 	@Command("pass <password>")
 	public void pass(@NotNull Actor sender, @Argument(value = "password", parser = "password") String password) {
@@ -42,6 +44,7 @@ public class PassCommand {
 		handleDecision(identity, pipelineType, advance(identity, new CredentialRegistrationAttempt(password, false)));
 	}
 
+	@AvailableWhilePending
 	@Definition("passconfirm")
 	@Command("passconfirm <password>")
 	public void passConfirm(@NotNull Actor sender, @Argument(value = "password", parser = "password") String repeat) {
