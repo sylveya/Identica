@@ -3,6 +3,7 @@
   "pages": [
     "consuming-api",
     "writing-addons",
+    "writing-providers",
     "features",
     "building",
     "testing",

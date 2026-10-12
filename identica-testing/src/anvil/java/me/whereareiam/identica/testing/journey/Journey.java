@@ -322,6 +322,32 @@ public final class Journey {
 	}
 
 	/**
+	 * Sends a chat message, as the player types it without a leading slash.
+	 */
+	public Journey chat(String message) {
+		messages.chat(message);
+		return this;
+	}
+
+	/**
+	 * Expects a message, arrived after the previous expectation, that contains a text, for messages that are
+	 * not part of Identica's configuration, such as an addon's or a chat message.
+	 */
+	public Journey seesText(String text) {
+		matched = receive(received -> received.contains(text), List.of(new MessageText(text)));
+		matchedMessage = null;
+		return this;
+	}
+
+	/**
+	 * Expects that no message containing a text has arrived since the previous expectation, after giving it time to.
+	 */
+	public Journey doesNotSeeText(String text) {
+		messages.notReceived(received -> received.contains(text), read, SETTLE);
+		return this;
+	}
+
+	/**
 	 * Expects the proxy to refuse the connection before accepting it, with the given message.
 	 */
 	public Journey refusedWith(Function<IdenticaMessages, ?> message) {

@@ -19,7 +19,8 @@ import java.nio.file.Path;
 import java.util.Map;
 
 /**
- * Builds the network Identica runs in: Velocity proxies with the packaged plugin and providers, an auth
+ * Builds the network Identica runs in: Velocity proxies with the packaged plugin, the official providers and the
+ * example provider, optionally the example addon, an auth
  * server where players stay during authentication and registration steps, and a lobby they reach afterwards.
  */
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
@@ -45,23 +46,35 @@ public final class IdenticaNetwork {
 	 * @param sessionServer session server the proxies verify online players against
 	 */
 	public static AnvilScenario velocity(String name, Map<String, Map<String, String>> proxies, URI sessionServer) {
+		return velocity(name, proxies, sessionServer, false);
+	}
+
+	/**
+	 * Builds a network of Velocity proxies, each of which also runs the example addon when asked to.
+	 *
+	 * @param addon whether every proxy runs the example addon next to Identica
+	 */
+	public static AnvilScenario velocity(String name, Map<String, Map<String, String>> proxies, URI sessionServer, boolean addon) {
 		AnvilScenario.AnvilScenarioBuilder scenario = AnvilScenario.builder()
 				.name(name)
 				.entrypoint(proxies.keySet().iterator().next())
 				.server(backend(AUTH))
 				.server(backend(LOBBY));
-		proxies.forEach((proxy, configuration) -> scenario.proxy(proxy(proxy, configuration, sessionServer)));
+		proxies.forEach((proxy, configuration) -> scenario.proxy(proxy(proxy, configuration, sessionServer, addon)));
 
 		return scenario.build();
 	}
 
-	private static MinecraftProxy proxy(String name, Map<String, String> configuration, URI sessionServer) {
+	private static MinecraftProxy proxy(String name, Map<String, String> configuration, URI sessionServer, boolean addon) {
 		WorkspacePlan.WorkspacePlanBuilder workspace = WorkspacePlan.builder()
 				.asset(artifact("identica", Path.of("plugins", "identica.jar")))
 				.asset(artifact("credential", Path.of(DATA, "providers", "credential.jar")))
 				.asset(artifact("premium", Path.of(DATA, "providers", "premium.jar")))
+				.asset(artifact("example-provider", Path.of(DATA, "providers", "example.jar")))
 				.cache(libraries("identica-libraries", Path.of(DATA, ".libraries")))
 				.cache(libraries("identica-provider-libraries", Path.of(DATA, "providers", ".libraries")));
+		if (addon)
+			workspace.asset(artifact("example-addon", Path.of("plugins", "identica-example-addon.jar")));
 		configuration.forEach((file, content) -> workspace.asset(WorkspaceAsset.builder()
 				.group("identica-configuration")
 				.source(AssetSource.text(content))

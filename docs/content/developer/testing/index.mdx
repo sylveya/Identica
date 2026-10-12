@@ -150,7 +150,7 @@ Use `Accounts` for players who already have an account.
 
 The `auth` and `lobby` servers remember earlier tests: a player's position and inventory there belong to no test. Keep expectations on what the proxy and the player's client report, and do not rely on the state of a backend world.
 
-A message expectation names the message through Identica's own configuration models: `m.identica()` is `Messages`, `m.credential()` is `CredentialMessages`, `m.premium()` is `PremiumMessages`, `m.sentinel()` is `SentinelMessages`, `m.verification()` is `VerificationMessages` and `m.joinRestriction()` is `JoinRestrictionMessages`. The models are read from the files the running proxy generated, so the expectation follows the configured text, and a renamed or removed message stops the tests from compiling. Formatting tags are ignored and placeholders match any text. Chain `.with(...)` and `.without(...)` after `.sees(...)` to check what else the same message contains. Do not copy message text into a test.
+A message expectation names the message through Identica's own configuration models: `m.identica()` is `Messages`, `m.credential()` is `CredentialMessages`, `m.premium()` is `PremiumMessages`, `m.sentinel()` is `SentinelMessages`, `m.verification()` is `VerificationMessages`, `m.joinRestriction()` is `JoinRestrictionMessages` and `m.example()` is the example provider's `ExampleMessages`. The models are read from the files the running proxy generated, so the expectation follows the configured text, and a renamed or removed message stops the tests from compiling. Formatting tags are ignored and placeholders match any text. Chain `.with(...)` and `.without(...)` after `.sees(...)` to check what else the same message contains. Do not copy message text into a test.
 
 A player reads what a message hands out, such as a secret or a list of codes, with `.reads(placeholder)` after the `.sees(...)` that matched it. `Authenticator` stands in for an authenticator app, computing the codes for a secret the player read:
 
@@ -159,4 +159,23 @@ Authenticator app = Authenticator.of(alice.command("2fa enroll totp")
 		.sees(m -> m.verification().getMethods().getTotp().getPending())
 		.reads("secret"));
 alice.command("2fa enroll confirm " + app.code());
+```
+
+## The examples
+
+Every test proxy installs the example provider from `examples/provider` next to the official ones, disabled unless the test enables it with `providers = Provider.EXAMPLE`. `@Identica(addon = true)` also installs the example addon from `examples/addon`, a separate Velocity plugin that holds back chat and commands until a player has authenticated. The tests under `example` keep both working against the current API.
+
+Text that belongs to no configuration file, such as an addon's own message or a chat line, is matched as plain text. `.chat(message)` sends a chat message, `.seesText(text)` waits for a message containing the text, and `.doesNotSeeText(text)` expects none to arrive. `Administrator.seesOnConsole(texts...)` expects a console line containing every text since the administrator's previous command, such as what an addon logs when it reacts to a reload:
+
+```java
+@Test
+@Identica(providers = Provider.EXAMPLE, addon = true)
+void holdsBackChat(ScenarioContext anvil) {
+	Journey.offline(anvil, "Alice").join()
+			.on(AUTH)
+			.sees(m -> m.example().getPrompt())
+			.chat("hello")
+			.doesNotSeeText("hello")
+			.seesText("Log in before you chat.");
+}
 ```

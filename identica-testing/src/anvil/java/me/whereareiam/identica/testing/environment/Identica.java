@@ -38,7 +38,7 @@ public @interface Identica {
 	JourneyPolicy policy() default JourneyPolicy.PREFER;
 
 	/**
-	 * Enabled providers; every other official provider is installed but disabled.
+	 * Enabled providers; every other provider is installed but disabled.
 	 */
 	Provider[] providers() default {Provider.PREMIUM, Provider.CREDENTIAL};
 
@@ -68,6 +68,12 @@ public @interface Identica {
 	 * so such a test is skipped without Docker.
 	 */
 	Database database() default Database.SQLITE;
+
+	/**
+	 * Whether the proxy also runs the example addon, which holds back chat and commands until a player has
+	 * authenticated.
+	 */
+	boolean addon() default false;
 
 	/**
 	 * Changes to the proxy's configuration files that the other attributes do not cover, applied in order. Each

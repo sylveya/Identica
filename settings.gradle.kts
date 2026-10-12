@@ -54,6 +54,15 @@ project(":identica-adapter-database-common").projectDir = file("identica-adapter
 include(":identica-adapter-replication")
 project(":identica-adapter-replication").projectDir = file("identica-adapter-replication")
 
+include(":examples")
+project(":examples").projectDir = file("examples")
+
+include(":example-addon")
+project(":example-addon").projectDir = file("examples/addon")
+
+include(":example-provider")
+project(":example-provider").projectDir = file("examples/provider")
+
 include(":identica-integration")
 project(":identica-integration").projectDir = file("identica-integration")
 

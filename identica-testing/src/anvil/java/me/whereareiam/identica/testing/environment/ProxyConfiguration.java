@@ -311,7 +311,8 @@ public final class ProxyConfiguration {
 
 		List<Providers.ProviderEntry> entries = new ArrayList<>();
 		for (Provider provider : Provider.values()) {
-			Providers.ProviderEntry entry = known.get(provider.getId());
+			// Identica's defaults name only the official providers.
+			Providers.ProviderEntry entry = known.computeIfAbsent(provider.getId(), ProxyConfiguration::providerEntry);
 			entry.setEnabled(enabled.contains(provider));
 			entry.setPriority(provider.getPriority());
 			entry.setEntrypoints(entrypoints ? List.of(provider.getEntrypoint()) : List.of());
@@ -320,6 +321,13 @@ public final class ProxyConfiguration {
 		providers.setProviders(entries);
 
 		return providers;
+	}
+
+	private static Providers.ProviderEntry providerEntry(String id) {
+		Providers.ProviderEntry entry = new Providers.ProviderEntry();
+		entry.setId(id);
+
+		return entry;
 	}
 
 	/**
