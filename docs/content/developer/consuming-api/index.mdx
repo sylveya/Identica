@@ -89,28 +89,24 @@ Use development versions only when you intentionally depend on unreleased API ch
 
 Download the matching `javadoc` artifact from the Maven registry or let your IDE resolve it alongside the API dependency.
 
-## Initialization and lifecycle
+## Getting the API
 
-Do not assume the API is ready the moment your addon plugin class is loaded.
+The API entry point is `me.whereareiam.identica.IdenticaAPI`. Its static methods return the API of the running Identica instance, which offers every service an addon uses. Identica registers it during startup and removes it when it shuts down.
 
-The main rules are:
+- `IdenticaAPI.get()` returns the API and throws when Identica is not running. Use it when your addon is loaded after Identica.
+- `IdenticaAPI.whenReady(identica -> ...)` runs your code as soon as Identica is running: immediately if it already is, otherwise once it has started. Use it when your addon may start before Identica has finished starting.
+- `IdenticaAPI.find()` returns an `Optional<IdenticaAPI>` and never throws.
 
-- check `IdenticaAPI.isInitialized()` before accessing services directly
-- or wait until Identica has finished bootstrapping and then resolve services
-
-The API entry point is `me.whereareiam.identica.IdenticaAPI`.
-That class exposes both generic `getService(...)` access and convenience methods for common services.
+Pass the `IdenticaAPI` on to the classes of your addon instead of calling `IdenticaAPI.get()` everywhere. Those classes then depend on an interface you can mock in tests.
 
 Platform startup and lifecycle integration depend on the platform your addon targets.
 
 <ContentTabs items={["Velocity"]}>
   <ContentTab value="Velocity">
-    A Velocity addon should wait until its own platform lifecycle is ready, and then resolve Identica services only after Identica itself is initialized.
-
-    Velocity plugins can also declare plugin dependencies directly in `@Plugin`.
+    Velocity plugins can declare plugin dependencies directly in `@Plugin`.
     That affects plugin load order.
     If your addon really depends on Identica, declare it as a required dependency so Velocity loads Identica before your addon.
-    If your integration is optional, declare it as optional and still guard your API usage with `IdenticaAPI.isInitialized()`.
+    If your integration is optional, declare it as optional and check that the `identica` plugin is present before your addon touches any Identica class, since those classes are missing without it.
 
 ```java
 import com.google.inject.Inject;
@@ -135,12 +131,7 @@ public final class ExampleIdenticaAddon {
 
     @Subscribe
     public void onProxyInitialization(ProxyInitializeEvent event) {
-        if (!IdenticaAPI.isInitialized()) {
-            return;
-        }
-
-        // Safe place to resolve Identica services
-        IdenticaAPI.getProviderManager();
+        IdenticaAPI.whenReady(identica -> new ExampleAddon(identica).inspectProviders());
     }
 }
 ```
@@ -151,16 +142,16 @@ public final class ExampleIdenticaAddon {
 
 ```java
 import me.whereareiam.identica.IdenticaAPI;
-import me.whereareiam.identica.provider.ProviderManager;
 
 public final class ExampleAddon {
-    public void inspectProviders() {
-        if (!IdenticaAPI.isInitialized()) {
-            return;
-        }
+    private final IdenticaAPI identica;
 
-        ProviderManager providerManager = IdenticaAPI.getProviderManager();
-        providerManager.getProviders().forEach(provider -> {
+    public ExampleAddon(IdenticaAPI identica) {
+        this.identica = identica;
+    }
+
+    public void inspectProviders() {
+        identica.getProviderManager().getProviders().forEach(provider -> {
             if (provider != null && provider.getDescriptor() != null) {
                 System.out.println(provider.getDescriptor().getId());
             }
@@ -169,25 +160,26 @@ public final class ExampleAddon {
 }
 ```
 
-## Resolving services generically
+## Finding other services
 
-If there is no convenience method for the service you want, use `getService(...)`.
+Services without a getter on `IdenticaAPI`, such as the API of a feature, are found by type. `findService` returns an empty `Optional` when Identica offers no service of that type.
 
 ```java
-FeatureRegistry features = IdenticaAPI.getService(FeatureRegistry.class);
+Optional<FeatureRegistry> features = identica.findService(FeatureRegistry.class);
 ```
 
-Here `FeatureRegistry` is `me.whereareiam.identica.feature.FeatureRegistry`. Call this only after Identica is initialized.
+Here `FeatureRegistry` is `me.whereareiam.identica.feature.FeatureRegistry`.
 
 ## Feature services and provider policy
 
-Feature implementations are compiled into Identica. After initialization, resolve their APIs normally and check effective provider enablement before running optional integrations.
+Feature implementations are compiled into Identica. Find their APIs by type, and check effective provider enablement before running optional integrations.
 
 ```java
-FeatureRegistry features = IdenticaAPI.getService(FeatureRegistry.class);
+FeatureRegistry features = identica.findService(FeatureRegistry.class).orElseThrow();
 if (features.isEnabled(providerId, "verification")) {
-    VerificationService verification = IdenticaAPI.getService(VerificationService.class);
-    // Resolve verification for this provider.
+    identica.findService(VerificationService.class).ifPresent(verification -> {
+        // Resolve verification for this provider.
+    });
 }
 ```
 
@@ -197,16 +189,17 @@ See [Provider traits and features](../features/index.mdx) for the contracts.
 
 ## Common services worth using
 
-These are some of the most useful API entry points for addon plugins:
+These are some of the most useful services on `IdenticaAPI` for addon plugins:
 
-- `IdenticaAPI.getProviderManager()` for listing and inspecting loaded providers
-- `IdenticaAPI.getProviderOperations()` for provider eligibility and runtime provider operations
-- `IdenticaAPI.getSessionService()` for finding, listing, opening, or closing sessions
-- `IdenticaAPI.getAccountService()` for account lookup and lifecycle operations
-- `IdenticaAPI.getReplicationSystem()` if you intentionally integrate with Identica's replicated caches or channels
-- `IdenticaAPI.getEventManager()` for registering or calling Identica events
+- `getProviderManager()` for listing and inspecting loaded providers
+- `getProviderOperations()` for provider eligibility and runtime provider operations
+- `getSessionService()` for finding, listing, opening, or closing sessions
+- `getAccountService()` for account lookup and lifecycle operations
+- `getIdentityService()` for the identities of the players on this proxy
+- `getReplicationSystem()` if you intentionally integrate with Identica's replicated caches or channels
+- `getEventManager()` for registering or calling Identica events
 
-When `verification` is selected, resolve `VerificationService` for enrollment, challenge, selection, and reset flows, or `VerificationRegistry` for method discovery through `IdenticaAPI.getService(...)`. Both types belong to `me.whereareiam.identica.feature.verification`.
+When `verification` is selected, find `VerificationService` for enrollment, challenge, selection, and reset flows, or `VerificationRegistry` for method discovery, through `identica.findService(...)`. Both types belong to `me.whereareiam.identica.feature.verification`.
 
 ## Session lookup example
 
@@ -217,12 +210,14 @@ import me.whereareiam.identica.identity.session.SessionService;
 import java.util.UUID;
 
 public final class ExampleAddon {
-    public void printSession(UUID uniqueId) {
-        if (!IdenticaAPI.isInitialized()) {
-            return;
-        }
+    private final IdenticaAPI identica;
 
-        SessionService sessionService = IdenticaAPI.getSessionService();
+    public ExampleAddon(IdenticaAPI identica) {
+        this.identica = identica;
+    }
+
+    public void printSession(UUID uniqueId) {
+        SessionService sessionService = identica.getSessionService();
         sessionService.findByUniqueId(uniqueId).thenAccept(optionalSession -> {
             optionalSession.ifPresent(session ->
                 System.out.println(session.getProviderId() + " -> " + session.getEffectiveUsername())

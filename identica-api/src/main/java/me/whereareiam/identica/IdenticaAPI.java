@@ -1,12 +1,8 @@
 package me.whereareiam.identica;
 
-import com.google.inject.Injector;
-import com.google.inject.Key;
-import lombok.Getter;
 import me.whereareiam.configura.Configura;
 import me.whereareiam.identica.command.CommandService;
 import me.whereareiam.identica.event.EventManager;
-import me.whereareiam.identica.event.lifecycle.IdenticaReadyEvent;
 import me.whereareiam.identica.identity.IdentityService;
 import me.whereareiam.identica.identity.account.AccountService;
 import me.whereareiam.identica.identity.account.RegistrationAccountService;
@@ -16,240 +12,180 @@ import me.whereareiam.identica.provider.ProviderManager;
 import me.whereareiam.identica.provider.ProviderOperations;
 import me.whereareiam.identica.replication.ReplicationSystem;
 import me.whereareiam.identica.service.MigrationService;
+import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.Optional;
+import java.util.function.Consumer;
+
 /**
- * Main API access point for the Identica authentication plugin.
+ * Identica's API: the services the running Identica instance offers to other plugins.
  *
- * <p>External plugins should use this class to access Identica services.
- * All services become available after the {@link IdenticaReadyEvent}
- * is fired.</p>
+ * <p>Obtain it through {@link #get()} or {@link #whenReady(Consumer)} and pass it to the classes of your
+ * addon, which then depend on this interface instead of static calls and can be given a mock in tests:</p>
  *
- * <p><b>Example usage:</b></p>
  * <pre>{@code
- * // Check if API is ready
- * if (!IdenticaAPI.isInitialized()) {
- *     getLogger().warning("Identica not ready yet!");
- *     return;
- * }
- *
- * // Get the connection coordinator
- * ConnectionCoordinator connectionCoordinator = IdenticaAPI.getConnectionCoordinator();
- *
- * // Or get any service by class
- * ProviderManager providerManager = IdenticaAPI.getService(ProviderManager.class);
+ * IdenticaAPI.whenReady(identica -> {
+ *     identica.getEventManager().register(new MyListener(identica));
+ * });
  * }</pre>
  *
- * <p><b>Important:</b> Always check {@link #isInitialized()} before accessing services,
- * or wait for {@link IdenticaReadyEvent}.</p>
+ * <p>Identica registers its API during startup, before it calls
+ * {@link me.whereareiam.identica.event.lifecycle.IdenticaReadyEvent}, and removes it when it shuts down.</p>
  */
-@SuppressWarnings("unused")
-public final class IdenticaAPI {
-	private static volatile Injector injector;
-	@Getter
-	private static volatile boolean initialized = false;
-
-	private IdenticaAPI() {
-		throw new UnsupportedOperationException("This class cannot be instantiated");
+public interface IdenticaAPI {
+	/**
+	 * Returns the API of the running Identica instance. Use it when your addon is loaded after Identica.
+	 *
+	 * @return API of the running instance
+	 * @throws IllegalStateException if Identica is not running
+	 */
+	static @NotNull IdenticaAPI get() {
+		return RunningInstance.get();
 	}
 
 	/**
-	 * Initializes the API with the Guice injector.
-	 * <p>This method is called internally by Identica during startup.
-	 * External plugins should never call this method.</p>
+	 * Returns the API of the running Identica instance, or empty when Identica is not running.
 	 *
-	 * @param injector the Guice injector
-	 * @throws IllegalStateException if already initialized
+	 * @return API of the running instance, if any
 	 */
-	public static void initialize(@NotNull Injector injector) {
-		if (IdenticaAPI.injector != null) {
-			throw new IllegalStateException("IdenticaAPI is already initialized");
-		}
-		IdenticaAPI.injector = injector;
-		IdenticaAPI.initialized = true;
+	static @NotNull Optional<IdenticaAPI> find() {
+		return RunningInstance.find();
 	}
 
 	/**
-	 * Shuts down the API and clears the injector reference.
-	 * <p>This method is called internally by Identica during shutdown.
-	 * External plugins should never call this method.</p>
+	 * Runs the action with the API: immediately when Identica is running, otherwise once it has started. A
+	 * waiting action runs once, on the thread that starts Identica; one that fails is logged and does not keep
+	 * Identica or the other actions from starting.
+	 *
+	 * @param action action to run with the API
 	 */
-	public static void shutdown() {
-		IdenticaAPI.injector = null;
-		IdenticaAPI.initialized = false;
+	static void whenReady(@NotNull Consumer<IdenticaAPI> action) {
+		RunningInstance.whenReady(action);
 	}
 
 	/**
-	 * Gets a service instance from the Identica API.
+	 * Registers the API of the running instance and runs the actions waiting for it. Called by Identica during
+	 * startup; addons never call it.
 	 *
-	 * @param serviceClass the service class to retrieve
-	 * @param <T>          the service type
-	 * @return the service instance
-	 * @throws IllegalStateException if the API is not initialized
+	 * @param identica API of the running instance
+	 * @throws IllegalStateException if an instance is already registered
 	 */
-	@NotNull
-	public static <T> T getService(@NotNull Class<T> serviceClass) {
-		return getService(Key.get(serviceClass));
-	}
-
-	@NotNull
-	public static <T> T getService(@NotNull Key<T> key) {
-		Injector currentInjector = injector;
-		if (currentInjector == null) {
-			throw new IllegalStateException(
-					"IdenticaAPI is not initialized. Make sure Identica is loaded and wait for IdenticaReadyEvent."
-			);
-		}
-		return currentInjector.getInstance(key);
-	}
-
-	// ===== Convenience Methods for Common Services =====
-
-	/**
-	 * Gets the EventManager for registering listeners and calling events.
-	 *
-	 * @return the EventManager instance
-	 * @throws IllegalStateException if the API is not initialized
-	 */
-	@NotNull
-	public static EventManager getEventManager() {
-		return getService(EventManager.class);
+	@ApiStatus.Internal
+	static void register(@NotNull IdenticaAPI identica) {
+		RunningInstance.register(identica);
 	}
 
 	/**
-	 * Gets the ConnectionCoordinator for processing connection lifecycle operations.
-	 *
-	 * @return the ConnectionCoordinator instance
-	 * @throws IllegalStateException if the API is not initialized
+	 * Removes the API of the running instance. Called by Identica during shutdown; addons never call it.
 	 */
-	@NotNull
-	public static ConnectionCoordinator getConnectionCoordinator() {
-		return getService(ConnectionCoordinator.class);
+	@ApiStatus.Internal
+	static void unregister() {
+		RunningInstance.unregister();
 	}
 
 	/**
-	 * Gets the ProviderManager for managing authentication providers.
+	 * Returns the event manager for registering listeners and calling events.
 	 *
-	 * @return the ProviderManager instance
-	 * @throws IllegalStateException if the API is not initialized
+	 * @return event manager
 	 */
-	@NotNull
-	public static ProviderManager getProviderManager() {
-		return getService(ProviderManager.class);
-	}
+	@NotNull EventManager getEventManager();
 
 	/**
-	 * Gets runtime provider operations (eligibility, resolver resolution).
+	 * Returns the coordinator of incoming connections.
 	 *
-	 * @return the ProviderOperations instance
-	 * @throws IllegalStateException if the API is not initialized
+	 * @return connection coordinator
 	 */
-	@NotNull
-	public static ProviderOperations getProviderOperations() {
-		return getService(ProviderOperations.class);
-	}
+	@NotNull ConnectionCoordinator getConnectionCoordinator();
 
 	/**
-	 * Gets the CommandService for command operations.
+	 * Returns the manager of loaded providers.
 	 *
-	 * @return the CommandService instance
-	 * @throws IllegalStateException if the API is not initialized
+	 * @return provider manager
 	 */
-	@NotNull
-	public static CommandService getCommandService() {
-		return getService(CommandService.class);
-	}
+	@NotNull ProviderManager getProviderManager();
 
 	/**
-	 * Gets the RegistrationAccountService for account reservation operations.
+	 * Returns provider eligibility and runtime provider operations.
 	 *
-	 * @return the RegistrationAccountService instance
-	 * @throws IllegalStateException if the API is not initialized
+	 * @return provider operations
 	 */
-	@NotNull
-	public static RegistrationAccountService getRegistrationAccountService() {
-		return getService(RegistrationAccountService.class);
-	}
+	@NotNull ProviderOperations getProviderOperations();
 
 	/**
-	 * Gets the AccountService for account lookup and lifecycle operations.
+	 * Returns the service that registers and lists commands.
 	 *
-	 * @return the AccountService instance
-	 * @throws IllegalStateException if the API is not initialized
+	 * @return command service
 	 */
-	@NotNull
-	public static AccountService getAccountService() {
-		return getService(AccountService.class);
-	}
+	@NotNull CommandService getCommandService();
 
 	/**
-	 * Gets the IdentityService for online identity tracking.
+	 * Returns the service that creates accounts during registration.
 	 *
-	 * @return the IdentityService instance
-	 * @throws IllegalStateException if the API is not initialized
+	 * @return registration account service
 	 */
-	@NotNull
-	public static IdentityService getPresenceService() {
-		return getService(IdentityService.class);
-	}
+	@NotNull RegistrationAccountService getRegistrationAccountService();
 
 	/**
-	 * Gets the SessionService for session lifecycle operations.
+	 * Returns the service for account lookup and lifecycle operations.
 	 *
-	 * @return the SessionService instance
-	 * @throws IllegalStateException if the API is not initialized
+	 * @return account service
 	 */
-	@NotNull
-	public static SessionService getSessionService() {
-		return getService(SessionService.class);
-	}
+	@NotNull AccountService getAccountService();
 
 	/**
-	 * Gets the MigrationService for provider migration operations.
+	 * Returns the service for the identities of the connections on this proxy.
 	 *
-	 * @return the MigrationService instance
-	 * @throws IllegalStateException if the API is not initialized
+	 * @return identity service
 	 */
-	@NotNull
-	public static MigrationService getMigrationService() {
-		return getService(MigrationService.class);
-	}
+	@NotNull IdentityService getIdentityService();
 
 	/**
-	 * Gets the ReplicationSystem for replicated caches and channels.
+	 * Returns the service for finding, opening and closing sessions.
 	 *
-	 * @return the ReplicationSystem instance
-	 * @throws IllegalStateException if the API is not initialized
+	 * @return session service
 	 */
-	@NotNull
-	public static ReplicationSystem getReplicationSystem() {
-		return getService(ReplicationSystem.class);
-	}
+	@NotNull SessionService getSessionService();
 
 	/**
-	 * Gets the PipelineExtensionRegistry for registering pipeline extensions.
+	 * Returns the service for account migrations between providers.
 	 *
-	 * @return the PipelineExtensionRegistry instance
-	 * @throws IllegalStateException if the API is not initialized
+	 * @return migration service
 	 */
-	@NotNull
-	public static PipelineExtensionRegistry getPipelineExtensionRegistry() {
-		return getService(PipelineExtensionRegistry.class);
-	}
+	@NotNull MigrationService getMigrationService();
 
 	/**
-	 * Gets the configured base Configura instance used by Identica.
+	 * Returns the replication system shared by the proxies of a network.
 	 *
-	 * <p>External addons can derive their own configuration copies from this instance
-	 * with default providers or document features
-	 * while keeping Identica's configured format and modules.</p>
-	 *
-	 * @return the configured base Configura instance
-	 * @throws IllegalStateException if the API is not initialized
+	 * @return replication system
 	 */
-	@NotNull
-	public static Configura getConfigura() {
-		return getService(Configura.class);
-	}
+	@NotNull ReplicationSystem getReplicationSystem();
 
+	/**
+	 * Returns the registry of pipeline extensions.
+	 *
+	 * @return pipeline extension registry
+	 */
+	@NotNull PipelineExtensionRegistry getPipelineExtensionRegistry();
+
+	/**
+	 * Returns the configured base Configura instance. Addons derive their own configuration from it and keep
+	 * Identica's file format and modules without bundling a library of their own.
+	 *
+	 * @return base Configura instance
+	 */
+	@NotNull Configura getConfigura();
+
+	/**
+	 * Finds a service that has no getter here, such as the API of a feature:
+	 *
+	 * <pre>{@code
+	 * identica.findService(VerificationService.class).ifPresent(verification -> ...);
+	 * }</pre>
+	 *
+	 * @param type service interface
+	 * @param <T> service type
+	 * @return the service, or empty when Identica offers none of that type
+	 */
+	@NotNull <T> Optional<T> findService(@NotNull Class<T> type);
 }

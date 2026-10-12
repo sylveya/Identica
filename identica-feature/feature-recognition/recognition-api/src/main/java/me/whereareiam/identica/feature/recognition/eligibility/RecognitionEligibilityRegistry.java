@@ -10,9 +10,9 @@ import java.util.List;
  * <p>Addons may register additional rules after Identica is initialized.</p>
  *
  * <pre>{@code
- * RecognitionEligibilityRegistry registry =
- *         IdenticaAPI.getService(RecognitionEligibilityRegistry.class);
- * registry.register(new CorporateRule());
+ * IdenticaAPI.get()
+ *         .findService(RecognitionEligibilityRegistry.class)
+ *         .ifPresent(registry -> registry.register(new CorporateRule()));
  * }</pre>
  */
 public interface RecognitionEligibilityRegistry {

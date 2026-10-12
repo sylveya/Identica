@@ -49,7 +49,7 @@ public class Identica implements EventListener {
 		ConfigInitializer.initialize(injector);
 		injector.getInstance(DatabaseService.class);
 
-		IdenticaAPI.initialize(injector);
+		IdenticaAPI.register(injector.getInstance(DefaultIdenticaAPI.class));
 		for (RuntimeLifecycle lifecycle : injector.getInstance(Key.get(new TypeLiteral<Set<RuntimeLifecycle>>() {}))) {
 			lifecycles.add(lifecycle);
 			lifecycle.initialize();
@@ -81,7 +81,7 @@ public class Identica implements EventListener {
 					}
 				}
 				lifecycles.clear();
-				IdenticaAPI.shutdown();
+				IdenticaAPI.unregister();
 				try {
 					injector.getInstance(SharedLibraryClassLoaderFactory.class).close();
 				} catch (java.io.IOException exception) {
