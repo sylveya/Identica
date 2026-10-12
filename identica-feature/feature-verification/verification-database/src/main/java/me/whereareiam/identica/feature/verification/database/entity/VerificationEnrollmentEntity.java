@@ -1,8 +1,17 @@
 package me.whereareiam.identica.feature.verification.database.entity;
 
-import lombok.*;
-import me.whereareiam.dialectica.EntitySchemaProvider;
-import me.whereareiam.dialectica.annotation.Entity;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import me.whereareiam.dialectica.entity.annotation.Id;
+import me.whereareiam.dialectica.entity.annotation.Length;
+import me.whereareiam.dialectica.entity.annotation.Nullable;
+import me.whereareiam.dialectica.entity.annotation.References;
+import me.whereareiam.dialectica.entity.annotation.Table;
+import me.whereareiam.dialectica.schema.type.ReferentialAction;
+import me.whereareiam.identica.database.schema.AccountTable;
 
 import java.util.UUID;
 
@@ -11,43 +20,23 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder(toBuilder = true)
-@Entity(tableName = "identica_verification_enrollments")
-public class VerificationEnrollmentEntity implements EntitySchemaProvider {
+@Table("identica_verification_enrollments")
+public class VerificationEnrollmentEntity {
+	@Id
+	@References(table = AccountTable.NAME, column = AccountTable.KEY, onDelete = ReferentialAction.CASCADE)
 	private UUID uniqueId;
+	@Id
+	@Length(64)
 	private String methodId;
+	@Id
+	@Length(64)
 	private String enrollmentId;
 	private String credential;
+	@Nullable
+	@Length(64)
 	private String label;
-	private long createdAt;
-	private long enabledAt;
-
-	@Override
-	public String statement(String databaseType) {
-		String type = databaseType == null ? "" : databaseType.toUpperCase();
-		String uuidType = switch (type) {
-			case "POSTGRES", "H2" -> "UUID";
-			case "SQLITE" -> "TEXT";
-			default -> "CHAR(36)";
-		};
-		String timeType = "SQLITE".equals(type) ? "INTEGER" : "BIGINT";
-		String credentialType = switch (type) {
-			case "POSTGRES" -> "TEXT";
-			case "H2" -> "CLOB";
-			default -> "TEXT";
-		};
-
-		return """
-				CREATE TABLE IF NOT EXISTS identica_verification_enrollments (
-					unique_id %s NOT NULL,
-					method_id VARCHAR(64) NOT NULL,
-					enrollment_id VARCHAR(64) NOT NULL,
-					credential %s NOT NULL,
-					label VARCHAR(64),
-					created_at %s,
-					enabled_at %s,
-					PRIMARY KEY (unique_id, method_id, enrollment_id),
-					FOREIGN KEY (unique_id) REFERENCES identica_accounts(unique_id) ON DELETE CASCADE
-				)
-				""".formatted(uuidType, credentialType, timeType, timeType);
-	}
+	@Nullable
+	private Long createdAt;
+	@Nullable
+	private Long enabledAt;
 }

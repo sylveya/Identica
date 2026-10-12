@@ -43,7 +43,13 @@ include(":identica-adapter-command")
 project(":identica-adapter-command").projectDir = file("identica-adapter-command")
 
 include(":identica-adapter-database")
-project(":identica-adapter-database").projectDir = file("identica-adapter-database")
+project(":identica-adapter-database").projectDir = file("identica-adapter-database/database")
+
+include(":identica-adapter-database-api")
+project(":identica-adapter-database-api").projectDir = file("identica-adapter-database/database-api")
+
+include(":identica-adapter-database-common")
+project(":identica-adapter-database-common").projectDir = file("identica-adapter-database/database-common")
 
 include(":identica-adapter-replication")
 project(":identica-adapter-replication").projectDir = file("identica-adapter-replication")

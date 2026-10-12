@@ -3,14 +3,14 @@ package me.whereareiam.identica.integration.statistics;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.Singleton;
-import me.whereareiam.identica.database.schema.SchemaBootstrap;
+import me.whereareiam.identica.database.schema.SchemaInstaller;
 import me.whereareiam.identica.event.EventListener;
 import me.whereareiam.identica.event.EventManager;
 import me.whereareiam.identica.event.base.IdenticEvent;
 import me.whereareiam.identica.event.lifecycle.IdenticaReadyEvent;
 import me.whereareiam.identica.event.lifecycle.IdenticaShutdownEvent;
 import me.whereareiam.identica.integration.statistics.database.StatisticsLeaseEntity;
-import me.whereareiam.identica.integration.statistics.database.StatisticsSchemaContributor;
+import me.whereareiam.identica.integration.statistics.database.StatisticsSchema;
 import me.whereareiam.identica.integration.statistics.error.LoggedErrors;
 import me.whereareiam.identica.integration.statistics.error.StatisticsErrors;
 import me.whereareiam.identica.integration.statistics.metric.StatisticsMetrics;
@@ -37,7 +37,7 @@ public final class StatisticsBootstrap implements EventListener {
 	private final @NotNull StatisticsPlatform platform;
 	private final @NotNull StatisticsMetrics metrics;
 	private final @NotNull OfficialProviders officialProviders;
-	private final @NotNull SchemaBootstrap schema;
+	private final @NotNull SchemaInstaller schemaInstaller;
 	private final @NotNull Provider<DataSource> dataSource;
 	private @Nullable Statistica statistica;
 
@@ -46,14 +46,14 @@ public final class StatisticsBootstrap implements EventListener {
 			@NotNull StatisticsPlatform platform,
 			@NotNull StatisticsMetrics metrics,
 			@NotNull OfficialProviders officialProviders,
-			@NotNull SchemaBootstrap schema,
+			@NotNull SchemaInstaller schemaInstaller,
 			@NotNull Provider<DataSource> dataSource,
 			@NotNull EventManager eventManager
 	) {
 		this.platform = platform;
 		this.metrics = metrics;
 		this.officialProviders = officialProviders;
-		this.schema = schema;
+		this.schemaInstaller = schemaInstaller;
 		this.dataSource = dataSource;
 		eventManager.register(this);
 	}
@@ -63,7 +63,7 @@ public final class StatisticsBootstrap implements EventListener {
 		if (statistica != null) return;
 
 		try {
-			schema.apply(new StatisticsSchemaContributor());
+			schemaInstaller.install(new StatisticsSchema());
 
 			Statistica statistica = platform.builder()
 					.faststats(FASTSTATS_TOKEN)

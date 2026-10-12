@@ -3,6 +3,8 @@ package me.whereareiam.identica.feature.verification.database.mapper;
 import me.whereareiam.identica.feature.verification.database.entity.VerificationEnrollmentEntity;
 import me.whereareiam.identica.feature.verification.model.enrollment.VerificationEnrollment;
 
+import java.util.Objects;
+
 public final class VerificationEnrollmentMapper {
 	public static VerificationEnrollment toModel(VerificationEnrollmentEntity entity) {
 		return VerificationEnrollment.builder()
@@ -11,8 +13,8 @@ public final class VerificationEnrollmentMapper {
 				.enrollmentId(entity.getEnrollmentId())
 				.credential(entity.getCredential())
 				.label(entity.getLabel())
-				.createdAt(entity.getCreatedAt())
-				.enabledAt(entity.getEnabledAt())
+				.createdAt(Objects.requireNonNullElse(entity.getCreatedAt(), 0L))
+				.enabledAt(Objects.requireNonNullElse(entity.getEnabledAt(), 0L))
 				.build();
 	}
 

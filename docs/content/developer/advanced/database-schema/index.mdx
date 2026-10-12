@@ -1,0 +1,141 @@
+---
+title: Database schemas
+description: How an add-on declares its tables in Identica's database and upgrades them between versions.
+---
+
+An add-on that stores data in Identica's database declares its tables as a `DatabaseSchema` and installs it through the `SchemaInstaller`, both in Identica's database API. Identica creates the tables on a new installation, runs the add-on's migrations on an existing one, and records how far each schema has come in the `strata_history` table. Proxies that share a database install a schema once: the first one takes a lock and the others wait for it.
+
+Every owner of tables has its own schema, called a stream:
+
+| Stream | Owner | Installed |
+| --- | --- | --- |
+| `identica/account` | Identica: accounts, provider links and profiles, reservations, usernames | when Identica opens the database |
+| `identica/feature/verification` | the verification feature | when the feature is enabled |
+| `identica/provider/credential` | the credential provider | when the provider is loaded |
+| `identica/integration/statistics` | the usage statistics: the lease that elects the proxy sending shared counts | when Identica is ready |
+
+## Dependencies
+
+The database contracts are in `me.whereareiam.identica:database-api`, next to `me.whereareiam.identica:api`. Tables are declared with [Dialectica](https://github.com/whereareiam/Dialectica) annotations, and migrations are [Strata](https://github.com/whereareiam/strata) migrations. Identica provides all of them at runtime, so compile against them:
+
+```kotlin
+dependencies {
+    compileOnly("me.whereareiam.identica:api:<version>")
+    compileOnly("me.whereareiam.identica:database-api:<version>")
+    compileOnly("me.whereareiam:dialectica:3.1.0")
+    compileOnly("me.whereareiam:strata-adapter-database:3.1.1")
+    compileOnly("me.whereareiam:strata-adapter-database-dialectica:3.1.1")
+}
+```
+
+Identica relocates both libraries. An add-on therefore relocates its references to them the same way when it builds its jar, without bundling the libraries, as Identica's own providers do. With Shadow:
+
+```kotlin
+tasks.shadowJar {
+    relocate("me.whereareiam.dialectica", "me.whereareiam.identica.library.dialectica")
+    relocate("me.whereareiam.strata", "me.whereareiam.identica.library.strata")
+}
+```
+
+## Declaring the tables
+
+Each table is an entity class with Dialectica annotations. A table that belongs to an account references Identica's account table by name, through `AccountTable`, so that its rows go when the account goes:
+
+```java
+import me.whereareiam.dialectica.entity.annotation.Id;
+import me.whereareiam.dialectica.entity.annotation.Index;
+import me.whereareiam.dialectica.entity.annotation.Length;
+import me.whereareiam.dialectica.entity.annotation.Nullable;
+import me.whereareiam.dialectica.entity.annotation.References;
+import me.whereareiam.dialectica.entity.annotation.Table;
+import me.whereareiam.dialectica.schema.type.ReferentialAction;
+import me.whereareiam.identica.database.schema.AccountTable;
+
+@Table("example_notes")
+@Index(name = "example_notes_created_at", columns = "createdAt")
+public record NoteEntity(
+        @Id @Length(64) String noteId,
+        @References(table = AccountTable.NAME, column = AccountTable.KEY,
+                onDelete = ReferentialAction.CASCADE) UUID uniqueId,
+        String text,
+        @Nullable Long createdAt
+) {}
+```
+
+Prefix table and index names with the add-on's name. The [Dialectica README](https://github.com/whereareiam/Dialectica#declaring-entities) lists every annotation and the column type each Java type gets on each database.
+
+## Declaring the schema
+
+The schema names its stream, lists its tables in their newest form, and lists the streams whose tables it references:
+
+```java
+import me.whereareiam.dialectica.Dialectica;
+import me.whereareiam.dialectica.schema.Schema;
+import me.whereareiam.identica.database.schema.DatabaseSchema;
+
+public final class NotesSchema implements DatabaseSchema {
+    @Override
+    public @NotNull String stream() {
+        return "example/notes";
+    }
+
+    @Override
+    public @NotNull Schema schema() {
+        return Schema.of(Dialectica.entity(NoteEntity.class).table());
+    }
+
+    @Override
+    public @NotNull Set<String> requires() {
+        return Set.of(ACCOUNT_STREAM);
+    }
+}
+```
+
+A stream name is made of lowercase segments separated by slashes and never changes once released.
+
+## Installing it
+
+Install the schema when the add-on loads, before it reads or writes its tables:
+
+```java
+IdenticaAPI.getService(SchemaInstaller.class).install(new NotesSchema());
+```
+
+A provider binds its schemas in its own module instead, and Identica installs them when it loads the provider:
+
+```java
+Multibinder.newSetBinder(binder(), DatabaseSchema.class).addBinding().to(NotesSchema.class);
+```
+
+Installing refuses a schema whose required streams are not installed yet, and installing the same schema again changes nothing. A schema that cannot be brought up to date throws Strata's `MigrationException`; the add-on must not continue on its tables then.
+
+## Changing the tables later
+
+A released schema changes through migrations. Add each change as the next numbered migration, and change the entity so that `schema()` keeps describing the newest form, which is what a new installation gets:
+
+```java
+@Override
+public @NotNull List<Migration<DatabaseContext>> migrations() {
+    return List.of(
+            SchemaMigration.of(1, "note-title",
+                    new AddColumn("example_notes", ColumnDefinition.builder("title", ColumnType.varchar(64)).build())),
+            new Migration<>(2, "fill-titles", database -> database.update(
+                    "UPDATE example_notes SET title = 'Untitled' WHERE title IS NULL"))
+    );
+}
+```
+
+- Versions start at 1, have no gaps, and are never renumbered or changed once released.
+- `SchemaMigration` applies Dialectica schema changes, which skip what the database already has; a data change is a plain `Migration`.
+- A migration only writes to the add-on's own tables.
+
+Strata runs the migrations an installation has not seen yet, in order, and records each one. When a stream runs for the first time against a database that already has its tables, for example because the add-on created them before it used migrations, its `baseline` says where that database stands. The default treats every such database as a new installation; override it to return the version the existing tables have:
+
+```java
+@Override
+public @NotNull OptionalInt baseline(@NotNull DatabaseContext database, int latest) throws SQLException {
+    return database.tableExists("example_notes") ? OptionalInt.of(0) : OptionalInt.empty();
+}
+```
+
+`OptionalInt.empty()` is a new installation, which gets `schema()`; `0` runs every migration; any other version runs the migrations after it.

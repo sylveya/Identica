@@ -31,10 +31,13 @@ dependencies {
 	anvilImplementation(libs.anvil.yggdrasil.mock)
 	anvilImplementation(libs.commandant)
 	anvilImplementation(libs.configura)
+	anvilImplementation(libs.testcontainers.mariadb)
 	anvilImplementation(libs.testcontainers.postgresql)
 	anvilImplementation(libs.testcontainers.redis)
 
 	anvilRuntimeOnly(libs.anvil.protocol.mcprotocol)
+	// Testcontainers waits for a MariaDB container through its JDBC driver.
+	anvilRuntimeOnly(libs.mariadb)
 
 	testImplementation(libs.junit.jupiter)
 

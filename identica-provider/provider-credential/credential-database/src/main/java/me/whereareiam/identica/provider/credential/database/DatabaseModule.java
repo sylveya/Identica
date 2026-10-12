@@ -4,7 +4,7 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.multibindings.Multibinder;
-import me.whereareiam.identica.database.schema.SchemaContributor;
+import me.whereareiam.identica.database.schema.DatabaseSchema;
 import me.whereareiam.identica.provider.credential.database.repository.CredentialAccountHistoryRepository;
 import me.whereareiam.identica.provider.credential.database.repository.CredentialAccountRepository;
 import org.jdbi.v3.core.Jdbi;
@@ -13,9 +13,9 @@ public class DatabaseModule extends AbstractModule {
 	@Override
 	protected void configure() {
 		bind(CredentialAccountPersistenceService.class).to(DefaultCredentialAccountPersistenceService.class).asEagerSingleton();
-		Multibinder.newSetBinder(binder(), SchemaContributor.class)
+		Multibinder.newSetBinder(binder(), DatabaseSchema.class)
 				.addBinding()
-				.to(CredentialSchemaContributor.class);
+				.to(CredentialSchema.class);
 	}
 
 	@Provides

@@ -9,6 +9,7 @@ import me.whereareiam.strata.adapter.configura.ConfiguraTarget;
 import org.jetbrains.annotations.NotNull;
 
 import java.nio.file.Path;
+import java.util.OptionalInt;
 
 /**
  * The migrations of Identica's configuration: the numbered changes that bring the documents of an
@@ -50,7 +51,7 @@ public final class ConfigMigrations {
 				.target(new ConfiguraTarget(configura, dataPath, versionFile))
 				// Asked once for a directory without a version: one without settings is a new installation,
 				// whose documents are about to be written in their current layout, so nothing has to run.
-				.baseline((files, latest) -> files.exists(versionFile) ? 0 : latest)
+				.baseline((files, latest) -> files.exists(versionFile) ? OptionalInt.of(0) : OptionalInt.empty())
 				// Changes nothing: version 1 is the layout every installation had before migrations existed.
 				.migration(1, "initial-layout", files -> {})
 				.migration(SessionRecordsMigration.VERSION, SessionRecordsMigration.NAME,

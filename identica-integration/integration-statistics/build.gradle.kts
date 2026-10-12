@@ -9,4 +9,8 @@ dependencies {
     implementation(libs.statistica.common)
 
     compileOnly(projects.featureVerificationApi)
+    compileOnly(projects.identicaAdapterDatabaseApi)
+
+    testImplementation(projects.identicaAdapterDatabaseCommon)
+    testImplementation(testFixtures(projects.identicaAdapterDatabaseCommon))
 }

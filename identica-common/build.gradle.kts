@@ -17,9 +17,11 @@ dependencies {
     attache(libs.strata)
     attache(libs.strata.adapter.configura)
 
+    compileOnly(projects.identicaAdapterDatabaseApi)
     compileOnly(libs.strata)
     compileOnly(libs.strata.adapter.configura)
 
+    testImplementation(projects.identicaAdapterDatabaseApi)
     testImplementation(libs.keystone)
     testImplementation(libs.commandant)
     testImplementation(libs.strata)

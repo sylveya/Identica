@@ -25,7 +25,7 @@ import me.whereareiam.identica.conflict.ConflictService;
 import me.whereareiam.identica.database.AccountPersistenceService;
 import me.whereareiam.identica.database.provider.ProviderLinkPersistenceService;
 import me.whereareiam.identica.database.provider.ProviderProfilePersistenceService;
-import me.whereareiam.identica.database.schema.SchemaBootstrap;
+import me.whereareiam.identica.database.schema.SchemaInstaller;
 import me.whereareiam.identica.event.EventListener;
 import me.whereareiam.identica.event.EventManager;
 import me.whereareiam.identica.feature.FeatureRegistry;
@@ -98,7 +98,7 @@ class BundledFeatureCompositionTest {
 	private final EventManager events = mock(EventManager.class);
 	private final PipelineExtensionRegistry pipelines = mock(PipelineExtensionRegistry.class);
 	private final CommandService commands = mock(CommandService.class);
-	private final SchemaBootstrap schema = mock(SchemaBootstrap.class);
+	private final SchemaInstaller schema = mock(SchemaInstaller.class);
 
 	@BeforeEach
 	void configureRealDocumentsAndBoundaryRegistrations() {
@@ -203,7 +203,7 @@ class BundledFeatureCompositionTest {
 				assertFalse(mockingDetails(binding.getProvider().get()).isMock());
 				assertTrue(Files.exists(dataPath.resolve("features").resolve(CONFIG_FILES.get(service.getKey()))));
 			}
-			verify(schema).apply(any());
+			verify(schema).install(any());
 			var providerNodes = Config.configured().readNode(dataPath.resolve("providers/providers.yml")).get("providers");
 			assertEquals("custom-value", providerNodes.get(0).path("features").path("custom-extension").path("retained").asText());
 			runtime.shutdown();
@@ -268,7 +268,7 @@ class BundledFeatureCompositionTest {
 			bind(EventManager.class).toInstance(events);
 			bind(PipelineExtensionRegistry.class).toInstance(pipelines);
 			bind(CommandService.class).toInstance(commands);
-			bind(SchemaBootstrap.class).toInstance(schema);
+			bind(SchemaInstaller.class).toInstance(schema);
 			bind(ProviderManager.class).toInstance(mock(ProviderManager.class));
 			bind(ProviderOperations.class).toInstance(mock(ProviderOperations.class));
 			bind(SessionService.class).toInstance(mock(SessionService.class));

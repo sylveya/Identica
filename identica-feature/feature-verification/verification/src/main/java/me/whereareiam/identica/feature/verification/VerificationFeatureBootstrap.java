@@ -9,7 +9,7 @@ import me.whereareiam.identica.Reloadable;
 import me.whereareiam.identica.config.ConfigProvider;
 import me.whereareiam.identica.event.EventManager;
 import me.whereareiam.identica.feature.IdenticaFeature;
-import me.whereareiam.identica.database.schema.SchemaBootstrap;
+import me.whereareiam.identica.database.schema.SchemaInstaller;
 import me.whereareiam.identica.feature.verification.database.DefaultVerificationPersistenceService;
 import me.whereareiam.identica.feature.verification.challenge.VerificationChallengeStore;
 import me.whereareiam.identica.feature.verification.command.VerificationCommandRegistrar;
@@ -17,7 +17,7 @@ import me.whereareiam.identica.feature.verification.config.provider.Verification
 import me.whereareiam.identica.feature.verification.config.provider.VerificationMessagesProvider;
 import me.whereareiam.identica.feature.verification.config.provider.VerificationProvidersProvider;
 import me.whereareiam.identica.feature.verification.config.provider.VerificationSettingsProvider;
-import me.whereareiam.identica.feature.verification.database.VerificationSchemaContributor;
+import me.whereareiam.identica.feature.verification.database.VerificationSchema;
 import me.whereareiam.identica.feature.verification.enrollment.VerificationEnrollmentStore;
 import me.whereareiam.identica.feature.FeatureContext;
 import org.jetbrains.annotations.NotNull;
@@ -53,7 +53,7 @@ public final class VerificationFeatureBootstrap implements IdenticaFeature {
 		if (!shutdownActions.isEmpty())
 			throw new IllegalStateException("Verification is already initialized");
 		Injector injector = context.requireInjector();
-		injector.getInstance(SchemaBootstrap.class).apply(new VerificationSchemaContributor());
+		injector.getInstance(SchemaInstaller.class).install(new VerificationSchema());
 		loadConfig(injector, VerificationSettingsProvider.class);
 		loadConfig(injector, VerificationMessagesProvider.class);
 		loadConfig(injector, VerificationCommandsProvider.class);

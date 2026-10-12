@@ -7,6 +7,8 @@ dependencies {
 
     implementation(projects.featureVerificationCommon)
     implementation(projects.featureVerificationDatabase)
+
+    compileOnly(projects.identicaAdapterDatabaseApi)
 }
 
 toolkitPublish {
