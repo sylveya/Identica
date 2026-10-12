@@ -38,7 +38,6 @@ tasks.register("pluginJars") {
 
 // Files a development build or a release ships; assembleDistribution writes them to build/distribution.
 toolkitDistribution {
-    file("API", ":identica-api", "jar")
     file("BUNDLE", ":identica-platform:bundle", "shadowJar")
     // Modrinth takes each proxy jar on its own; the GitHub release ships both proxies in one archive.
     file("BUNGEECORD", ":platform-bungeecord-bootstrap", "shadowJar")
