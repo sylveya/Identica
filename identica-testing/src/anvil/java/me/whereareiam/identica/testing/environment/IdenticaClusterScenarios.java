@@ -6,7 +6,6 @@ import me.whereareiam.anvil.environment.yggdrasil.YggdrasilMock;
 import me.whereareiam.anvil.integration.junit.AnvilScenarioFactory;
 import me.whereareiam.anvil.integration.junit.ScenarioResources;
 import me.whereareiam.identica.adapter.database.testing.DatabaseContainers;
-import me.whereareiam.identica.common.config.defaults.ReplicationDefaults;
 import me.whereareiam.identica.model.config.Replication;
 import me.whereareiam.identica.model.config.persistence.external.PostgresPersistence;
 import me.whereareiam.identica.type.pipeline.journey.JourneyMode;
@@ -51,7 +50,7 @@ public final class IdenticaClusterScenarios implements AnvilScenarioFactory<Iden
 					EnumSet.of(Provider.CREDENTIAL), false, true, step(cluster, stepServers, proxy), cluster.complete(), yggdrasil);
 			configuration.put("persistence.yml", persistence(database));
 			if (redis != null)
-				configuration.put("replication.yml", replication(proxy, redis));
+				replicate(configuration.replication(), proxy, redis);
 			for (Class<? extends Consumer<ProxyConfiguration>> change : cluster.configure())
 				IdenticaScenarios.instantiate(change).accept(configuration);
 			proxies.put(proxy, configuration);
@@ -96,13 +95,10 @@ public final class IdenticaClusterScenarios implements AnvilScenarioFactory<Iden
 	/**
 	 * Each proxy is its own replication peer on the shared Redis.
 	 */
-	private static Replication replication(String proxy, RedisContainer redis) {
-		Replication replication = new ReplicationDefaults().supply(new Replication());
+	private static void replicate(Replication replication, String proxy, RedisContainer redis) {
 		replication.setEnabled(true);
 		replication.setServerId(proxy);
 		replication.getRedis().setHost(redis.getHost());
 		replication.getRedis().setPort(redis.getFirstMappedPort());
-
-		return replication;
 	}
 }
